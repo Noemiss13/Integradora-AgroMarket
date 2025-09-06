@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+</head>
+<body>
+<header>
+    <nav class="menu">
+        <ul>
+            <li class="logo">AgroMarket</li>
+            <li><a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a></li>
+            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
+            <li><a href="{{ url_for('vendedor.productos') }}" class="active">Mis Productos</a></li>
+            <li class="user-name">Hola, {{ nombre }}</li>
+            <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
+
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <h1>Mis Productos</h1>
+    {% if productos %}
+        <div class="productos-container">
+            {% for p in productos %}
+                <div class="producto-card">
+                    {% if p.imagen %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ p.imagen) }}" alt="{{ p.nombre }}">
+                    {% endif %}
+                    <h3>{{ p.nombre }}</h3>
+                    <p>Categoría: {{ p.categoria }}</p>
+                    <p>Precio: ${{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No tienes productos publicados aún.</p>
+    {% endif %}
+</main>
+</body>
+</html>

@@ -1,0 +1,125 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header y menú */
+header {
+    background-color: #2e8b57;
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.menu ul {
+    list-style: none;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2rem;
+}
+
+.menu ul li a {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    transition: background 0.3s, color 0.3s;
+    border-radius: 5px;
+}
+
+.menu ul li a:hover {
+    background-color: #1e5f3f;
+}
+
+/* Separar el botón de cerrar sesión a la derecha */
+.menu ul li.logout {
+    margin-left: auto;
+}
+
+/* Contenido principal */
+main {
+    padding: 2rem;
+    text-align: center;
+}
+
+main h1 {
+    margin-bottom: 1rem;
+    color: #2e8b57;
+}
+
+main p {
+    font-size: 1.1rem;
+    color: #333;
+}
+.menu ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.menu ul li.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    margin-right: 2rem;
+}
+
+.menu ul li.user-name {
+    margin-left: auto;
+    font-weight: bold;
+    color: white;
+}
+
+.menu ul li.logout a {
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.menu ul li.logout a:hover {
+    background-color: #1e5f3f;
+}
+
+.menu ul li a.active {
+    background-color: #1e5f3f; /* color destacado del módulo activo */
+    color: #fff;
+}
+
+/* estilos para el de agregar producto*/
+main form {
+    display: flex;
+    flex-direction: column;
+    max-width: 600px;
+    margin: 2rem auto;
+    gap: 1rem;
+}
+
+main form input,
+main form textarea,
+main form select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+main form button {
+    background-color: #2e8b57;
+    color: white;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+main form button:hover {
+    background-color: #1e5f3f;
+}

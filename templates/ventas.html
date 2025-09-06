@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+</head>
+<body>
+<header>
+    <nav class="menu">
+        <ul>
+            <li class="logo">AgroMarket</li>
+            <li><a href="{{ url_for('panel_vendedor') }}">Home</a></li>
+            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
+            <li><a href="{{ url_for('vendedor.productos') }}">Ver Productos</a></li>
+            <li><a href="{{ url_for('vendedor.ventas') }}" class="active">Ventas</a></li>
+            <li class="logout"><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <h1>Ventas</h1>
+    {% if ventas %}
+        <ul>
+            {% for v in ventas %}
+                <li>{{ v }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay ventas registradas aún.</p>
+    {% endif %}
+</main>
+</body>
+</html>

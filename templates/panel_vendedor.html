@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Vendedor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+</head>
+<body>
+<header>
+    <nav class="menu">
+        <ul>
+            <li class="logo">AgroMarket</li>
+            <li><a href="{{ url_for('vendedor.panel_vendedor') }}" class="{% if request.path == '/vendedor/panel' %}active{% endif %}">Home</a></li>
+            <li><a href="{{ url_for('vendedor.agregar_producto') }}" class="{% if request.path == '/vendedor/agregar' %}active{% endif %}">Agregar Productos</a></li>
+            <li><a href="{{ url_for('vendedor.productos') }}" class="{% if request.path == '/vendedor/productos' %}active{% endif %}">Mis Productos</a></li>
+            <li><a href="{{ url_for('vendedor.ventas') }}" class="{% if request.path == '/vendedor/ventas' %}active{% endif %}">Ventas</a></li>
+            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <h1>Bienvenido, {{ nombre }}</h1>
+    <p>Este es tu panel principal donde podrás administrar tus productos y ventas.</p>
+</main>
+</body>
+</html>

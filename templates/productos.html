@@ -27,12 +27,19 @@
         <div class="productos-container">
             {% for p in productos %}
                 <div class="producto-card">
-                    {% if p.imagen %}
-                        <img src="{{ url_for('static', filename='uploads/' ~ p.imagen) }}" alt="{{ p.nombre }}">
-                    {% endif %}
-                    <h3>{{ p.nombre }}</h3>
-                    <p>Categoría: {{ p.categoria }}</p>
-                    <p>Precio: ${{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
+                    <div class="producto-img">
+                        {% if p.imagen %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ p.imagen) }}" alt="{{ p.nombre }}">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/no-image.png') }}" alt="Sin imagen">
+                        {% endif %}
+                    </div>
+                    <div class="producto-info">
+                        <h3>{{ p.nombre }}</h3>
+                        <p class="categoria">{{ p.categoria }}</p>
+                        <p class="precio">$ {{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
+                       
+                    </div>
                 </div>
             {% endfor %}
         </div>
@@ -40,5 +47,6 @@
         <p>No tienes productos publicados aún.</p>
     {% endif %}
 </main>
+
 </body>
 </html>

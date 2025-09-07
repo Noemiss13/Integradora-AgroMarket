@@ -123,3 +123,128 @@ main form button {
 main form button:hover {
     background-color: #1e5f3f;
 }
+.productos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.producto-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.producto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.producto-img {
+    width: 100%;
+    height: 180px;       /* altura fija para todas las tarjetas */
+    overflow: hidden;    /* recorta lo que se salga del contenedor */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* centra la imagen vertical y horizontalmente */
+    background-color: #f5f5f5; /* color de fondo si la imagen no llena todo */
+}
+
+.producto-img img {
+    width: auto;       /* mantiene proporción horizontal */
+    height: 100%;      /* llena la altura sin deformarse */
+    object-fit: contain; /* asegura que toda la imagen se vea */
+}
+
+
+.producto-info {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.producto-info h3 {
+    font-size: 1.1rem;
+    color: #333;
+    margin: 0;
+}
+
+.producto-info .categoria {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.producto-info .precio {
+    font-size: 1rem;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.btn-editar {
+    margin-top: 10px;
+    padding: 6px 12px;
+    background-color: #3498db;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.btn-editar:hover {
+    background-color: #2980b9;
+}
+
+/* Tabla de ventas */
+table {
+    width: 90%;
+    margin: 2rem auto;
+    border-collapse: collapse;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.95rem;
+}
+
+thead {
+    background-color: #2e8b57;
+    color: white;
+}
+
+thead th {
+    padding: 12px;
+    text-align: left;
+}
+
+tbody td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #e6f2e6;
+}
+
+h1 {
+    text-align: center;
+    color: #2e8b57;
+    margin-top: 2rem;
+}
+
+p {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #555;
+}

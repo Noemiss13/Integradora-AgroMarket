@@ -11,11 +11,13 @@
     <nav class="menu">
         <ul>
             <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('panel_vendedor') }}">Home</a></li>
+            <li><a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a></li>
+
             <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}">Ver Productos</a></li>
             <li><a href="{{ url_for('vendedor.ventas') }}" class="active">Ventas</a></li>
-            <li class="logout"><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
+
         </ul>
     </nav>
 </header>
@@ -23,14 +25,30 @@
 <main>
     <h1>Ventas</h1>
     {% if ventas %}
-        <ul>
-            {% for v in ventas %}
-                <li>{{ v }}</li>
-            {% endfor %}
-        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in ventas %}
+                <tr>
+                    <td>{{ v.producto }}</td>
+                    <td>{{ v.cantidad }}</td>
+                    <td>${{ v.total }}</td>
+                    <td>{{ v.fecha_venta.strftime('%d/%m/%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
         <p>No hay ventas registradas aún.</p>
     {% endif %}
 </main>
+
 </body>
 </html>

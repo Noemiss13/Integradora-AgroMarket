@@ -91,5 +91,19 @@ def ventas():
     if session.get("rol") != "vendedor":
         return redirect(url_for("auth.login"))
 
-    ventas = []  # temporal
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT p.nombre AS producto, v.cantidad, v.total, v.fecha_venta
+        FROM ventas v
+        JOIN productos p ON v.producto_id = p.id
+        WHERE p.vendedor_id = %s
+        ORDER BY v.fecha_venta DESC
+    """, (session["usuario_id"],))
+
+    ventas = cursor.fetchall()
+    conn.close()
+
     return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"))
+

@@ -1,0 +1,84 @@
+/* Reset y tipografía */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background-color: #f4f6f8;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Header */
+.header {
+  background-color: #2e8b57;
+  color: white;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+/* Sección equipo */
+.equipo {
+  padding: 4rem 1rem;
+  text-align: center;
+}
+
+.equipo h3 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: #2e8b57;
+}
+
+.miembros {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.miembro-card {
+  background-color: white;
+  padding: 2rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  width: 250px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.miembro-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.miembro-card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #2e8b57;
+}
+
+.miembro-card p {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  background-color: #2e8b57;
+  color: white;
+  margin-top: 3rem;
+}

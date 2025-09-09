@@ -1,0 +1,257 @@
+/* ================== Reset y base ================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background-color: #fdfdfd;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ================== Navbar ================== */
+header {
+  background: white;
+  border-bottom: 1px solid #eee;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #2e8b57;
+}
+
+.menu {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+}
+
+.menu li a {
+  color: #444;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.menu li a:hover {
+  color: #2e8b57;
+}
+
+/* ================== Hero ================== */
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4rem 8%;
+  background: linear-gradient(to right, #2e8b57, #3ca374);
+  color: white;
+  flex-wrap: wrap;
+}
+
+.hero-content {
+  max-width: 500px;
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.95;
+}
+
+.btn-cta {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  background: white;
+  color: #2e8b57;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-cta:hover {
+  background: #f0f0f0;
+}
+
+.hero-img {
+  width: 40%;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* Quiénes somos mejorado */
+.quienes-somos {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  padding: 5rem 5%;
+  background: #ffffff;
+  flex-wrap: wrap;
+}
+
+.quienes-img img {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.quienes-img img:hover {
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+
+.quienes-text {
+  flex: 1;
+  animation: fadeInRight 1s ease-out;
+}
+
+.quienes-text h2 {
+  font-size: 2.2rem;
+  color: #2e8b57;
+  margin-bottom: 1rem;
+}
+
+.quienes-text p {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+@keyframes fadeInLeft {
+  0% {opacity: 0; transform: translateX(-20px);}
+  100% {opacity: 1; transform: translateX(0);}
+}
+
+@keyframes fadeInRight {
+  0% {opacity: 0; transform: translateX(20px);}
+  100% {opacity: 1; transform: translateX(0);}
+}
+
+
+/* ================== Secciones generales ================== */
+.info-section {
+  padding: 4rem 8%;
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  gap: 2rem;
+}
+
+.info-card {
+  background: rgb(121, 175, 118);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.info-card img {
+  width: 80px;
+  margin-bottom: 1rem;
+}
+
+.info-card h2 {
+  color: #2e8b57;
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+}
+
+.info-card p {
+  font-size: 1rem;
+  color: #555;
+}
+
+/* ================== Grid layouts ================== */
+.grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* ================== Contacto ================== */
+.with-image {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.with-image img {
+  width: 45%;
+  border-radius: 12px;
+}
+.contacto {
+  background: #2e8b57;
+  color: white;
+  text-align: center;
+
+  width: 100%;           /* ocupa todo el ancho */
+  max-width: none;       /* evita límite de ancho heredado */
+  padding: 2rem 0;       /* controla la altura */
+  margin: 0;             /* elimina márgenes */
+}
+
+.contacto h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.contacto p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+/* ================== Footer ================== */
+footer {
+  background: #191919;
+  color: #555;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  
+}
+/* Estado inicial (oculto) */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s ease;
+}
+
+/* Estado visible */
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}

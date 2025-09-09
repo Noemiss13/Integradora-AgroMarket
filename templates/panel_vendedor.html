@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Vendedor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+
+    <!-- PWA: Manifest y theme color -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2e8b57">
+
+    <!-- Iconos para que se muestre al instalar -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icon-192.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/icon-512.png') }}">
 </head>
 <body>
 <header>
@@ -15,6 +23,7 @@
             <li><a href="{{ url_for('vendedor.agregar_producto') }}" class="{% if request.path == '/vendedor/agregar' %}active{% endif %}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}" class="{% if request.path == '/vendedor/productos' %}active{% endif %}">Mis Productos</a></li>
             <li><a href="{{ url_for('vendedor.ventas') }}" class="{% if request.path == '/vendedor/ventas' %}active{% endif %}">Ventas</a></li>
+            <a href="{{ url_for('vendedor.sobre_nosotros_vendedor') }}">Sobre Nosotros</a>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
     </nav>
@@ -24,5 +33,14 @@
     <h1>Bienvenido, {{ nombre }}</h1>
     <p>Este es tu panel principal donde podrás administrar tus productos y ventas.</p>
 </main>
+
+<!-- PWA: Registrar Service Worker -->
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then((reg) => console.log("✅ Service Worker registrado:", reg))
+    .catch((err) => console.error("❌ Error al registrar el SW:", err));
+  }
+</script>
 </body>
 </html>

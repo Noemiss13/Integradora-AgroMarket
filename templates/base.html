@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}AgroMarket{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+  <!-- Si quieres un CSS distinto para “Sobre” puedes añadirlo también -->
+  {% block extra_css %}{% endblock %}
+  <style>
+    /* Navbar básica (puedes moverlo a tu CSS) */
+    .navbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#0a7a3b;color:#fff}
+    .navbar a{color:#fff;text-decoration:none;margin:0 10px}
+    .navbar__brand{font-weight:700;letter-spacing:.5px}
+    .navbar__links{display:flex;align-items:center;gap:12px}
+    .container{max-width:980px;margin:0 auto;padding:24px 16px}
+    footer{margin-top:48px;padding:16px 0;color:#666;text-align:center;border-top:1px solid #eee}
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar__brand"><a href="{{ url_for('informacion') }}">AgroMarket</a></div>
+    <div class="navbar__links">
+      <a href="{{ url_for('informacion') }}">Inicio</a>
+      <a href="{{ url_for('informacion') }}">Sobre nosotros</a>
+      <a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>&copy; 2025 AgroMarket - Proyecto académico y comercial</p>
+  </footer>
+</body>
+</html>

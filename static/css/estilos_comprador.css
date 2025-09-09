@@ -1,0 +1,240 @@
+/* ===== Estilos generales ===== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f9f4;
+}
+
+/* ===== Menú superior ===== */
+nav {
+    background-color: #2e8b57; /* verde principal */
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1rem;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Saludo ===== */
+.saludo {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* ===== Filtros y búsqueda ===== */
+.filtros {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.filtros input, .filtros select, .filtros button {
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+.filtros button {
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.filtros button:hover {
+    background-color: #276b45;
+}
+
+/* ===== Productos ===== */
+.productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    padding: 2rem;
+}
+
+.producto-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.producto-card img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.producto-card .precio {
+    font-weight: bold;
+    margin: 0.5rem 0;
+}
+
+.producto-card button {
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.producto-card button:hover {
+    background-color: #276b45;
+}
+
+/* ===== Carrito ===== */
+.carrito {
+    position: fixed;
+    right: 0;
+    top: 100px;
+    width: 250px;
+    background-color: #f4f9f4;
+    padding: 1rem;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    display: none; /* se puede mostrar al agregar productos */
+}
+
+/* ===== Estilos generales ===== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f9f4;
+}
+
+/* ===== Menú superior ===== */
+nav {
+    background-color: #2e8b57;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1rem;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Saludo ===== */
+.saludo {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* ===== Filtros y búsqueda ===== */
+.filtros {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.filtros input, .filtros select, .filtros button {
+    padding: 0.5rem;
+    font-size: 1rem;
+}
+
+.filtros button {
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.filtros button:hover {
+    background-color: #276b45;
+}
+
+/* ===== Menú superior ===== */
+nav {
+    background-color: #2e8b57; /* verde principal */
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+nav .logo h2 {
+    margin: 0;
+}
+
+nav .menu a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+nav .menu a:hover {
+    color: #a1e2a1; /* verde más claro al pasar el mouse */
+}
+
+/* ===== Saludo ===== */
+.saludo {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* ===== Filtros y búsqueda ===== */
+.filtros {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.filtros input, .filtros select, .filtros button {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.filtros button {
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.filtros button:hover {
+    background-color: #276b45;
+}

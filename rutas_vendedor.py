@@ -108,7 +108,3 @@ def ventas():
     return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"))
 
 
-# Nueva ruta de Sobre Nosotros
-@vendedor_bp.route("/sobre_nosotros")
-def sobre_nosotros_vendedor():
-    return render_template("sobre_nosotros.html")

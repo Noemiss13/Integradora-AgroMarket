@@ -7,19 +7,19 @@
 }
 
 body {
-  background-color: #fdfdfd;
-  color: #333;
-  line-height: 1.6;
+  background: linear-gradient(180deg, #ecebebaf 0%, #b5b4b4 100%);
 }
 
-/* ================== Navbar ================== */
+
+/* ================== Navbar ================== */  
 header {
-  background: white;
-  border-bottom: 1px solid #eee;
-  padding: 1rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 1rem 3rem;
   position: sticky;
   top: 0;
   z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .navbar {
@@ -29,9 +29,10 @@ header {
 }
 
 .logo {
-  font-size: 1.6rem;
-  font-weight: bold;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: #2e8b57;
+  letter-spacing: 1px;
 }
 
 .menu {
@@ -44,84 +45,104 @@ header {
   color: #444;
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.3s ease;
+  font-size: 1rem;
+  transition: color 0.3s ease, border-bottom 0.3s ease;
+  padding-bottom: 4px;
 }
 
 .menu li a:hover {
   color: #2e8b57;
+  border-bottom: 2px solid #2e8b57;
 }
+
+/* Botón de login */
+.acciones .btn-login {
+  background: #2e8b57;
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.acciones .btn-login:hover {
+  background: #256d47;
+}
+
 
 /* ================== Hero ================== */
 .hero {
+  position: relative;
+  width: 100%;
+  height: 50vh;
   display: flex;
+  justify-content: center;
   align-items: center;
-  justify-content: space-between;
-  padding: 4rem 8%;
-  background: linear-gradient(to right, #2e8b57, #3ca374);
-  color: white;
-  flex-wrap: wrap;
+  text-align: center;
+  color: #fff; /* texto blanco */
+  background-image: url('../images/fds.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: contrast(180%);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.47); /* un poco más oscuro que 0.4 */
+  z-index: 0;
 }
 
 .hero-content {
-  max-width: 500px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.8); /* sombra negra suave */
 }
 
-.hero h1 {
+/* Opcional: darle estilo a título y párrafo */
+.hero-content h1 {
   font-size: 2.8rem;
+  font-weight: bold;
   margin-bottom: 1rem;
-  font-weight: 700;
+  color: #fff;
 }
 
-.hero p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  opacity: 0.95;
+.hero-content p {
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: #d7bfbf; /* gris claro en lugar de blanco puro */
 }
 
-.btn-cta {
-  display: inline-block;
-  padding: 0.8rem 1.6rem;
-  background: white;
-  color: #2e8b57;
-  border-radius: 30px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.btn-cta:hover {
-  background: #f0f0f0;
-}
-
-.hero-img {
-  width: 40%;
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-
-/* Quiénes somos mejorado */
+/* Sección Quiénes Somos */
 .quienes-somos {
   display: flex;
   align-items: center;
   gap: 3rem;
-  padding: 5rem 5%;
-  background: #ffffff;
+  padding: 5rem 8%;
+  background: #a9bfaa; /* fondo gris claro sobrio */
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 4rem auto; /* centrado elegante */
 }
 
 .quienes-img img {
   width: 100%;
-  max-width: 300px;
-  border-radius: 20px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  max-width: 320px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .quienes-img img:hover {
-  transform: translateY(-10px) scale(1.05);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
 }
-
 
 .quienes-text {
   flex: 1;
@@ -129,26 +150,18 @@ header {
 }
 
 .quienes-text h2 {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   color: #2e8b57;
-  margin-bottom: 1rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
 }
 
 .quienes-text p {
   font-size: 1.1rem;
-  color: #555;
+  color: #444;
   margin-bottom: 1rem;
-  line-height: 1.6;
-}
-
-@keyframes fadeInLeft {
-  0% {opacity: 0; transform: translateX(-20px);}
-  100% {opacity: 1; transform: translateX(0);}
-}
-
-@keyframes fadeInRight {
-  0% {opacity: 0; transform: translateX(20px);}
-  100% {opacity: 1; transform: translateX(0);}
+  line-height: 1.8;
+  text-align: justify;
 }
 
 
@@ -237,21 +250,80 @@ header {
 /* ================== Footer ================== */
 footer {
   background: #191919;
-  color: #555;
+  color: #aaa;
   text-align: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
   font-size: 0.9rem;
-  
-}
-/* Estado inicial (oculto) */
-.reveal {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: all 0.8s ease;
 }
 
-/* Estado visible */
-.reveal.active {
-  opacity: 1;
-  transform: translateY(0);
+.footer-content {
+  max-width: 1100px;
+  margin: auto;
 }
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 0.8rem;
+}
+
+.footer-links li a {
+  color: #aaa;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links li a:hover {
+  color: #2e8b57;
+}
+
+/* ================== Divisor Elegante ================== */
+.divisor-elegante {
+  width: 100%;
+  margin: 5rem 0;   /* separación arriba y abajo */
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden; /* 🔹 evita que el overlay o texto sobresalga */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); /* sombra elegante */
+}
+
+.divisor-elegante img {
+  width: 100%;
+  height: 220px;  /* ajusta según el diseño */
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s ease; /* 🔹 efecto hover */
+}
+
+.divisor-elegante:hover img {
+  transform: scale(1.05); /* zoom sutil al pasar el mouse */
+}
+
+/* Overlay con degradado elegante */
+.divisor-elegante::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(to right, rgba(0,0,0,0.65), rgba(0,0,0,0.25));
+  z-index: 0;
+}
+
+/* Texto institucional centrado */
+.divisor-texto {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem 2rem;
+  z-index: 1;
+  text-shadow: 2px 2px 10px rgba(0,0,0,0.9); /* 🔹 contraste fuerte */
+  letter-spacing: 1px;
+}
+
+

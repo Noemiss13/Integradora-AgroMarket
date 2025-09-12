@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Comprador</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 </head>
 <body>
-    <!-- Menú superior -->
+    <!-- ===== Menú superior ===== -->
     <nav>
         <div class="logo">
             <h2>AgroMarket</h2>
@@ -15,18 +16,16 @@
         <div class="menu">
             <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
             <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-            
-
             <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
         </div>
     </nav>
 
-    <!-- Saludo -->
+    <!-- ===== Saludo ===== -->
     <header class="saludo">
         <h1>Bienvenido, {{ nombre }}</h1>
     </header>
 
-    <!-- Filtros y búsqueda -->
+    <!-- ===== Filtros y búsqueda ===== -->
     <section class="filtros">
         <input type="text" id="busqueda" placeholder="Buscar producto...">
         <select id="categoria">
@@ -39,7 +38,7 @@
         <button id="btnBuscar">Buscar</button>
     </section>
 
-    <!-- Productos -->
+    <!-- ===== Productos publicados (solo visualización) ===== -->
     <section class="productos">
         {% for producto in productos %}
         <div class="producto-card">
@@ -47,18 +46,19 @@
             <h3>{{ producto.nombre }}</h3>
             <p>{{ producto.descripcion }}</p>
             <p class="precio">Precio: ${{ producto.precio }}</p>
-            <button class="comprar">Agregar al carrito</button>
+            <!-- Sin botón de compra, solo vista -->
         </div>
         {% endfor %}
     </section>
 
-    <!-- Carrito (opcional, puede ser modal o sección lateral) -->
-    <section class="carrito" id="carrito">
-        <h2>Mi carrito</h2>
-        <ul id="listaCarrito"></ul>
-        <button id="btnComprar">Comprar</button>
-    </section>
-
-    <script src="{{ url_for('static', filename='js/comprador.js') }}"></script>
+    <!-- ===== Scripts ===== -->
+    <script>
+    // Registrar el Service Worker para soporte offline
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+        .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
+        .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
+    }
+    </script>
 </body>
 </html>

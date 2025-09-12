@@ -12,36 +12,39 @@
 <body>
   <!-- Navbar -->
   <header class="reveal">
-    <nav class="navbar">
-      <div class="logo">AgroMarket</div>
-      <ul class="menu">
-        <a href="{{ url_for('auth.login') }}">Iniciar sesión</a>
-        <li><a href="{{ url_for('sobre_nosotros') }}">Quiénes somos</a></li>
-        <li><a href="#quienes">Quiénes somos</a></li>
-        <li><a href="#servicios">Servicios</a></li>
-        <li><a href="#beneficios">Beneficios</a></li>
-        <li><a href="#contacto">Contacto</a></li>
-      </ul>
-    </nav>
-  </header>
-
- <!-- Hero -->
-  <section class="hero reveal">
-    <div class="hero-content">
-      <h1>Conectando el campo con el mundo</h1>
-      <p>La plataforma digital que impulsa el comercio agrícola sostenible en Latinoamérica.</p>
-      <a href="{{ url_for('auth.login') }}" class="btn-cta">Comenzar ahora</a>
+  <nav class="navbar">
+    <div class="logo">AGROMARKET</div>
+    <ul class="menu">
+      <li><a href="{{ url_for('sobre_nosotros') }}">Sobre nosotros</a></li>
+      <li><a href="#quienes">Quiénes somos</a></li>
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#beneficios">Beneficios</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <div class="acciones">
+      <a href="{{ url_for('auth.login') }}" class="btn-login">Iniciar sesión</a>
     </div>
-    <img src="{{ url_for('static', filename='images/fondo1.jpg') }}" alt="Ilustración agrícola" class="hero-img">
-  </section>
+  </nav>
+</header>
 
- <!-- Quiénes somos -->
-<section id="quienes" class="info-section quienes-somos reveal">
-  <div class="quienes-img">
-    <img src="{{ url_for('static', filename='images/agri.jpg') }}" alt="Productores agrícolas">
-    <img src="{{ url_for('static', filename='images/corn-3705687_1280.jpg') }}" alt="Productores agrícolas">
-    <img src="{{ url_for('static', filename='images/strawberries-8177601_1280.jpg') }}" alt="Productores agrícolas">
+<!-- Hero -->
+<section class="hero reveal">
+  <div class="hero-content">
+    <h1>Conectando el campo con el mundo</h1>
+    <p>La plataforma digital que impulsa el comercio agrícola sostenible.</p>
+    <a href="{{ url_for('auth.login') }}" class="btn-cta">Comenzar ahora</a>
   </div>
+</section>
+
+<!-- Divisor -->
+<div class="divisor-elegante">
+  <img src="{{ url_for('static', filename='images/agri.jpg') }}" alt="Divisor agrícola">
+  <div class="divisor-texto">Unimos tradición y tecnología</div>
+</div>
+
+
+<!-- Quiénes somos -->
+<section id="quienes" class="info-section quienes-somos reveal">
   <div class="quienes-text">
     <h2>¿Quiénes somos?</h2>
     <p>
@@ -55,17 +58,22 @@
   </div>
 </section>
 
+
   <!-- Misión y visión -->
   <section id="mision-vision" class="info-section grid-2">
     <div class="info-card reveal">
       <img src="{{ url_for('static', filename='images/mision.png') }}" alt="Misión">
       <h2>Misión</h2>
-      <p>Facilitar el acceso al comercio digital agrícola, mejorando la vida de productores y consumidores.</p>
+      <p>Facilitar a los productores del programa Sembrando Vida la venta directa de sus productos 
+        a través de una plataforma web accesible y confiable, 
+        conectando a los agricultores con consumidores interesados 
+        en productos frescos, locales y sustentables.</p>
     </div>
     <div class="info-card reveal">
       <img src="{{ url_for('static', filename='images/vision.png') }}" alt="Visión">
       <h2>Visión</h2>
-      <p>Convertirnos en la plataforma líder de comercio agrícola sostenible en Latinoamérica.</p>
+      <p>Ser la plataforma líder en México que impulse el comercio justo y sostenible de productos agrícolas, mejorando la calidad de 
+        vida de los productores y promoviendo un consumo responsable en el mercado nacional e internacional.</p>
     </div>
   </section>
 
@@ -109,9 +117,17 @@
   </section>
 
   <!-- Footer -->
-  <footer class="reveal">
-    <p>&copy; 2025 AgroMarket - Proyecto académico y comercial</p>
-  </footer>
+ <footer>
+  <div class="footer-content">
+    <p>&copy; 2025 AgroMarket. Todos los derechos reservados.</p>
+    <ul class="footer-links">
+      <li><a href="#politica">Política de privacidad</a></li>
+      <li><a href="#terminos">Términos y condiciones</a></li>
+      <li><a href="#soporte">Soporte</a></li>
+    </ul>
+  </div>
+</footer>
+
 
   <!-- Script animaciones scroll -->
   <script>

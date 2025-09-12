@@ -82,3 +82,18 @@ body {
   color: white;
   margin-top: 3rem;
 }
+.btn-logout {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #28a745; /* verde */
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-logout:hover {
+  background-color: #218838; /* verde más oscuro al pasar el mouse */
+}
+

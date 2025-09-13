@@ -13,38 +13,69 @@
     <div class="header-content">
       <h1>AgroMarket</h1>
       <h2>Conoce al equipo de desarrollo</h2>
-      <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+      <a href="{{ url_for('home') }}" class="btn-logout">Volver a Información</a>
+
+
     </div>
   </header>
-  <main>
-    <section class="equipo">
-      <h3>Equipo de Programadores</h3>
-      <div class="miembros">
-        <div class="miembro">
-          <div class="miembro-card">
-            <h4>Noemisabel Zavala Ovando</h4>
-            <p>Full Stack Developer & QA</p>
-          </div>
-        </div>
-        <div class="miembro">
-          <div class="miembro-card">
-            <h4>Cristian López</h4>
-            <p>Backend Developer & Base de Datos</p>
-          </div>
-        </div>
-        <div class="miembro">
-          <div class="miembro-card">
-            <h4>Gerardo</h4>
-            <p>Frontend Developer & UX Designer</p>
-          </div>
+
+<main>
+  <section class="equipo">
+    <h3>Equipo de Programadores</h3>
+    <div class="miembros">
+
+      <!-- Noemisabel -->
+      <div class="miembro-card">
+        <img src="{{ url_for('static', filename='images/nzo.png') }}" alt="Noemisabel Zavala" class="perfil">
+        <h4>Noemisabel Zavala Ovando</h4>
+        <p class="rol">Full Stack Developer & QA</p>
+        <p><strong>Lenguajes:</strong> Python, JavaScript, PHP</p>
+        <p><strong>Experiencia:</strong> Desarrollo de sistemas de comercio electrónico y apps web académicas</p>
+        <p><strong>Educación:</strong> Técnico Superior Universitario en Desarrollo de Software</p>
+        <p><strong>Habilidades blandas:</strong> Liderazgo, comunicación, trabajo en equipo</p>
+        <p class="frase">"Innovar es la clave para crecer"</p>
+        <div class="redes">
+         
         </div>
       </div>
-    </section>
 
-    
-    <footer class="footer">
-      <p>&copy; 2025 AgroMarket</p>
-    </footer>
-  </main>
+      <!-- Cristian -->
+      <div class="miembro-card">
+        <img src="{{ url_for('static', filename='images/cristian.png') }}" alt="Cristian López" class="perfil">
+        <h4>Cristian López</h4>
+        <p class="rol">Backend Developer & Base de Datos</p>
+        <p><strong>Lenguajes:</strong> Python, SQL, PHP</p>
+        <p><strong>Experiencia:</strong> Sistemas de gestión y bases de datos</p>
+        <p><strong>Educación:</strong> Técnico Superior Universitario en Desarrollo de Software</p>
+        <p><strong>Habilidades blandas:</strong> Análisis, organización, trabajo en equipo</p>
+        <p class="frase">"La precisión es la base de todo buen sistema"</p>
+        <div class="redes">
+          
+        </div>
+      </div>
+
+      <!-- Gerardo -->
+      <div class="miembro-card">
+        <img src="{{ url_for('static', filename='images/image.png') }}" alt="Gerardo" class="perfil">
+        <h4>Gerardo</h4>
+        <p class="rol">Frontend Developer & UX Designer</p>
+        <p><strong>Lenguajes:</strong> HTML, CSS, JavaScript, React</p>
+        <p><strong>Experiencia:</strong> Diseño de interfaces atractivas y experiencia de usuario</p>
+        <p><strong>Educación:</strong> Técnico Superior Universitario en Desarrollo de Software</p>
+        <p><strong>Habilidades blandas:</strong> Creatividad, diseño, comunicación</p>
+        <p class="frase">"El diseño bien hecho habla por sí mismo"</p>
+        <div class="redes">
+         
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+
+  <footer class="footer">
+    <p>&copy; 2025 AgroMarket - Todos los derechos reservados</p>
+  </footer>
 </body>
 </html>

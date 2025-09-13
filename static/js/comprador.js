@@ -5,9 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectCategoria = document.getElementById("categoria");
     const btnBuscar = document.getElementById("btnBuscar");
     const contadorCarrito = document.getElementById("contadorCarrito");
-    const btnVerCarrito = document.getElementById("btnVerCarrito");
+    const btnVerCarrito = document.getElementById("btnCarrito");
+    const btnComprar = document.getElementById("btnComprar");
 
-    let carrito = [];
+    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
     const productos = document.querySelectorAll(".producto-card");
 
     // Crear botones "Agregar al carrito" dinámicamente
@@ -17,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const precio = parseFloat(producto.dataset.precio);
 
         const btn = document.createElement("button");
-        btn.textContent = "Agregar al carrito";
+        btn.textContent = "Agregar al carrito 🛒";
         btn.className = "comprar";
         btn.dataset.id = id;
         btn.dataset.nombre = nombre;
@@ -32,9 +33,14 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 carrito.push({ id, nombre, precio, cantidad: 1 });
             }
-            actualizarCarrito();
+            guardarYActualizarCarrito();
         });
     });
+
+    function guardarYActualizarCarrito() {
+        localStorage.setItem("carrito", JSON.stringify(carrito));
+        actualizarCarrito();
+    }
 
     function actualizarCarrito() {
         listaCarrito.innerHTML = "";
@@ -44,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
             total += producto.precio * producto.cantidad;
             const li = document.createElement("li");
             li.innerHTML = `
-                ${producto.nombre} - $${producto.precio} x ${producto.cantidad}
+                ${producto.nombre} - $${producto.precio.toFixed(2)} x ${producto.cantidad}
                 <button class="eliminar" data-id="${producto.id}">❌</button>
             `;
             listaCarrito.appendChild(li);
@@ -58,23 +64,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Botones eliminar
         document.querySelectorAll(".eliminar").forEach(boton => {
-            boton.addEventListener("click", () => {
+            boton.onclick = () => {
                 const id = boton.dataset.id;
                 carrito = carrito.filter(p => p.id !== id);
-                actualizarCarrito();
-            });
+                guardarYActualizarCarrito();
+            };
         });
     }
 
+    // Inicializar carrito al cargar la página
+    actualizarCarrito();
+
     // Botón comprar
-    document.getElementById("btnComprar").addEventListener("click", () => {
+    btnComprar.addEventListener("click", () => {
         if (carrito.length === 0) {
             alert("El carrito está vacío.");
             return;
         }
         alert("Compra realizada con éxito ✅");
         carrito = [];
-        actualizarCarrito();
+        guardarYActualizarCarrito();
     });
 
     // Búsqueda por nombre o categoría

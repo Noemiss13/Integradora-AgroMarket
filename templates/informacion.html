@@ -1,182 +1,239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgroMarket - Información</title>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+  <!-- Iconos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_informacion.css') }}">
-  <!-- Fuente elegante -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Navbar -->
-  <header class="reveal">
-    <nav class="navbar">
-      <div class="logo">AGROMARKET</div>
-      <ul class="menu">
-        <li><a href="{{ url_for('sobre_nosotros') }}">Sobre nosotros</a></li>
-        <li><a href="#quienes">Quiénes somos</a></li>
-        <li><a href="#servicios">Servicios</a></li>
-        <li><a href="#beneficios">Beneficios</a></li>
-        <li><a href="#contacto">Contacto</a></li>
-      </ul>
-      <div class="acciones">
-        <a href="{{ url_for('auth.login') }}" class="btn-login">Iniciar sesión</a>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="wrap">
+      <div class="left">
+        <span>Productos agrícolas 100% orgánicos</span>
       </div>
-    </nav>
+      <div class="right">
+        <span><i class="fa-solid fa-location-dot"></i> Ciudad de México</span>
+        <span><i class="fa-solid fa-phone"></i> +52 55 1234 5678</span>
+        <a href="#" aria-label="facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" aria-label="twitter"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="#" aria-label="linkedin"><i class="fa-brands fa-linkedin-in"></i></a>
+        <span class="ask"><i class="fa-regular fa-comments"></i> contacto@agromarket.com</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="site-header">
+    <div class="wrap nav">
+      <div class="brand">
+        <img src="{{ url_for('static', filename='images/logo_leaf.png') }}" alt="AgroMarket" class="logo">
+        <span>AGROMARKET</span>
+      </div>
+      <nav class="menu">
+        <a href="{{ url_for('sobre_nosotros') }}">Sobre nosotros</a>
+        <a href="#quienes">Quiénes somos</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#beneficios">Beneficios</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-sm">Iniciar sesión</a>
+    </div>
   </header>
 
   <!-- Hero -->
-  <section class="hero reveal">
-    <div class="hero-content">
-      <h1>Conectando el campo con el mundo</h1>
-      <p>La plataforma digital que impulsa el comercio agrícola sostenible.</p>
-      <a href="{{ url_for('auth.login') }}" class="btn-cta">Comenzar ahora</a>
+  <section class="hero" style="background-image:url('{{ url_for('static', filename='images/fds.jpg') }}');">
+    <div class="overlay"></div>
+    <div class="wrap hero-inner">
+      <div class="badge">Comercio Agrícola</div>
+      <h1 class="hero-title">
+        <span class="line script">Conectando el campo</span>
+        <span class="line solid">con el mundo</span>
+      </h1>
+      <p class="hero-sub">La plataforma digital que impulsa el comercio agrícola sostenible.</p>
+      <a href="#quienes" class="btn btn-lg">Descubrir más</a>
     </div>
   </section>
 
-  <!-- Divisor elegante -->
-  <div class="divisor-elegante reveal">
-    <img src="{{ url_for('static', filename='images/agri.jpg') }}" alt="Divisor agrícola">
-    <div class="divisor-texto">Unimos tradición y tecnología</div>
+ <!-- Quiénes somos -->
+<section id="quienes" class="wrap future">
+  <div class="pic">
+    <img src="{{ url_for('static', filename='images/agri.jpg') }}" alt="Cabin">
+    <img class="pic-small" src="{{ url_for('static', filename='images/farmer_round.jpg') }}" alt="Farmer">
+  </div>
+  <div class="future-text">
+    <h2>Agricultura para<br><span>el desarrollo sostenible</span></h2>
+    <p>
+      AgroMarket conecta a productores, clientes y proveedores a través de un comercio agrícola justo, eficiente y transparente.
+    </p>
+    <ul class="checks">
+      <li>Productos frescos y de calidad</li>
+      <li>Eliminación de intermediarios</li>
+      <li>Comercio justo y sostenible</li>
+    </ul>
   </div>
 
-  <!-- Quiénes somos -->
-<section id="quienes" class="info-section quienes-somos reveal-left">
-  <div class="quienes-text">
-    <h2>¿Quiénes somos?</h2>
-    <p>
-      AgroMarket es una plataforma que nace con la misión de digitalizar el comercio agrícola, 
-      conectando a productores, clientes y proveedores de manera justa, eficiente y transparente.
-    </p>
-    <p>
-      Ofrecemos herramientas de compra, venta y comunicación directa, fomentando la transparencia y 
-      la sostenibilidad en el comercio agrícola.
-    </p>
+  <div class="sticky-cards">
+    <article class="note green">
+      <div class="icon"><i class="fa-solid fa-seedling"></i></div>
+      <h3>Producción Natural</h3>
+      <p>Impulsamos prácticas agrícolas responsables y sostenibles.</p>
+    </article>
+    <article class="note yellow">
+      <div class="icon"><i class="fa-solid fa-certificate"></i></div>
+      <h3>Calidad Garantizada</h3>
+      <p>Productos agrícolas certificados y confiables.</p>
+    </article>
   </div>
 </section>
 
-<!-- Divisor elegante -->
-<div class="section-divider"></div>
+<!-- Nuestra Identidad (Misión, Visión, Valores, Objetivos) -->
+<section class="wrap">
+  <h2 style="text-align:center; margin-bottom:2rem;">Nuestra Identidad</h2>
+  <div class="cards">
+    <!-- Misión -->
+    <div class="card" style="border-left:6px solid #35a76b;">
+      <div class="thumb">
+        <img src="{{ url_for('static', filename='images/mision.png') }}" alt="Misión">
+      </div>
+      <h4>Misión</h4>
+      <p>
+        Ofrecer soluciones innovadoras en el sector agrícola mediante tecnología,
+        promoviendo el comercio justo y el desarrollo sostenible de productores y compradores.
+      </p>
+    </div>
 
-<!-- Misión y visión -->
-<section id="mision-vision" class="info-section grid-2">
-  <div class="info-card reveal-left">
-    <img src="{{ url_for('static', filename='images/mision.png') }}" alt="Misión">
-    <h2>Misión</h2>
-    <p>
-      Facilitar a los productores del programa Sembrando Vida la venta directa de sus productos 
-      a través de una plataforma web accesible y confiable, conectando a los agricultores con 
-      consumidores interesados en productos frescos, locales y sustentables.
-    </p>
-  </div>
-  <div class="info-card reveal-right">
-    <img src="{{ url_for('static', filename='images/vision.png') }}" alt="Visión">
-    <h2>Visión</h2>
-    <p>
-      Ser la plataforma líder en México que impulse el comercio justo y sostenible de productos 
-      agrícolas, mejorando la calidad de vida de los productores y promoviendo un consumo responsable 
-      en el mercado nacional e internacional.
-    </p>
+    <!-- Visión -->
+    <div class="card" style="border-left:6px solid #f7b84b;">
+      <div class="thumb">
+        <img src="{{ url_for('static', filename='images/vision.png') }}" alt="Visión">
+      </div>
+      <h4>Visión</h4>
+      <p>
+        Ser la plataforma líder en comercio agrícola digital en la región, 
+        impulsando la modernización y competitividad del sector.
+      </p>
+    </div>
+
+    <!-- Valores -->
+    <div class="card" style="border-left:6px solid #3b82f6;">
+      <div class="thumb">
+        <img src="{{ url_for('static', filename='images/valores.jpg') }}" alt="Valores">
+      </div>
+      <h4>Valores</h4>
+      <p>
+        Transparencia, compromiso, innovación, sostenibilidad y confianza en cada transacción.
+      </p>
+    </div>
+
+    <!-- Objetivos -->
+    <div class="card" style="border-left:6px solid #f97316;">
+      <div class="thumb">
+        <img src="{{ url_for('static', filename='images/objetivos.png') }}" alt="Objetivos">
+      </div>
+      <h4>Objetivos</h4>
+      <p>
+        Facilitar la conexión entre productores y compradores, 
+        reduciendo intermediarios y potenciando la economía agrícola.
+      </p>
+    </div>
   </div>
 </section>
 
 
   <!-- Servicios -->
-  <section id="servicios" class="info-section grid-3">
-    <div class="info-card reveal-left">
-      <img src="{{ url_for('static', filename='images/compra.png') }}" alt="Catálogo">
-      <h2>Catálogo digital</h2>
+  <section id="servicios" class="wrap cards">
+    <article class="card">
+      <div class="thumb"><img src="{{ url_for('static', filename='images/compra.png') }}" alt=""></div>
+      <h4>Catálogo digital</h4>
       <p>Explora productos agrícolas por categorías como frutas, verduras y semillas.</p>
-    </div>
-    <div class="info-card reveal">
-      <img src="{{ url_for('static', filename='images/chat.png') }}" alt="Chat">
-      <h2>Comunicación directa</h2>
+    </article>
+    <article class="card">
+      <div class="thumb"><img src="{{ url_for('static', filename='images/chat.png') }}" alt=""></div>
+      <h4>Comunicación directa</h4>
       <p>Chat interactivo entre productores y clientes sin intermediarios.</p>
-    </div>
-    <div class="info-card reveal-right">
-      <img src="{{ url_for('static', filename='images/pagos.png') }}" alt="Pagos">
-      <h2>Pagos integrados</h2>
+    </article>
+    <article class="card">
+      <div class="thumb"><img src="{{ url_for('static', filename='images/pagos.png') }}" alt=""></div>
+      <h4>Pagos integrados</h4>
       <p>Realiza compras de forma rápida y segura.</p>
+    </article>
+  </section>
+
+  <!-- Banner -->
+  <section class="healthy">
+    <div class="wrap">
+      <h2 class="script big">Vive Saludable con</h2>
+      <h2 class="script big alt">Productos Frescos</h2>
     </div>
   </section>
 
-<!-- Beneficios -->
-<section id="beneficios" class="info-section beneficios reveal">
-  <h2>Beneficios</h2>
-  <p>En AgroMarket cada usuario tiene ventajas únicas. ¡Descubre lo que ganas al unirte!</p>
-
-  <div class="beneficios-grid">
-    <!-- Vendedor -->
-    <div class="beneficio-card reveal-left">
-      <h3>Si eres Vendedor</h3>
-      <ul>
-        <li>📈 Acceso a un mercado digital en crecimiento.</li>
-        <li>💰 Mayor ganancia eliminando intermediarios.</li>
-        <li>🔎 Visibilidad para tus productos a nivel nacional.</li>
-        <li>🤝 Comunicación directa con compradores interesados.</li>
-      </ul>
+  <!-- Beneficios -->
+  <section id="beneficios" class="wrap beneficios">
+    <h2>Beneficios</h2>
+    <div class="benef-grid">
+      <div class="benef">
+        <h3>Si eres Vendedor</h3>
+        <ul>
+          <li>Acceso a un mercado digital en crecimiento.</li>
+          <li>Mayor ganancia eliminando intermediarios.</li>
+          <li>Visibilidad nacional para tus productos.</li>
+          <li>Comunicación directa con compradores.</li>
+        </ul>
+      </div>
+      <div class="benef">
+        <h3>Si eres Comprador</h3>
+        <ul>
+          <li>Compra directa al productor.</li>
+          <li>Productos frescos y de calidad.</li>
+          <li>Entregas rápidas y seguras.</li>
+          <li>Comercio justo y sostenible.</li>
+        </ul>
+      </div>
     </div>
-
-    <!-- Comprador -->
-    <div class="beneficio-card reveal-right">
-      <h3>Si eres Comprador</h3>
-      <ul>
-        <li>🛒 Compra directa al productor, sin sobreprecios.</li>
-        <li>🥬 Productos frescos y de calidad garantizada.</li>
-        <li>🚚 Opciones de entrega rápidas y seguras.</li>
-        <li>🌱 Fomento al comercio justo y sostenible.</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Botón de llamado a la acción -->
-  <div class="cta-beneficios">
-    <a href="{{ url_for('auth.register') }}" class="btn-cta">🚀 ¡Únete a nosotros!</a>
-  </div>
-</section>
-
+    <a href="{{ url_for('auth.register') }}" class="btn btn-lg">🚀 ¡Únete ahora!</a>
+  </section>
 
   <!-- Contacto -->
-  <section id="contacto" class="info-section contacto reveal-top">
-    <h2>Contacto</h2>
-    <p>📍 Dirección: Universidad [Nombre], Ciudad de México</p>
-    <p>📧 Correo: contacto@agromarket.com</p>
-    <p>📞 Teléfono: +52 55 1234 5678</p>
+  <section id="contacto" class="contacto">
+    <div class="wrap">
+      <h2>Contacto</h2>
+      <p>📍 Universidad [Nombre], Ciudad de México</p>
+      <p>📧 contacto@agromarket.com · 📞 +52 55 1234 5678</p>
+    </div>
   </section>
 
   <!-- Footer -->
-  <footer>
-    <div class="footer-content">
-      <p>&copy; 2025 AgroMarket. Todos los derechos reservados.</p>
-      <ul class="footer-links">
-        <li><a href="#politica">Política de privacidad</a></li>
-        <li><a href="#terminos">Términos y condiciones</a></li>
-        <li><a href="#soporte">Soporte</a></li>
-      </ul>
+  <footer class="footer">
+    <div class="wrap foot">
+      <p>© 2025 AgroMarket. Todos los derechos reservados.</p>
+      <nav>
+        <a href="#politica">Política de privacidad</a>
+        <a href="#terminos">Términos</a>
+        <a href="#soporte">Soporte</a>
+      </nav>
     </div>
   </footer>
 
-  <!-- Script animaciones scroll y parallax -->
+  <!-- Animaciones -->
   <script>
-    // Animaciones reveal
-    const reveals = document.querySelectorAll(".reveal");
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("active");
-          observer.unobserve(entry.target);
+    const obs = new IntersectionObserver(es=>{
+      es.forEach(e=>{
+        if(e.isIntersecting){
+          e.target.classList.add('in');
+          obs.unobserve(e.target);
         }
       });
-    }, { threshold: 0.1 });
-    reveals.forEach(el => observer.observe(el));
-
-    // Parallax hero
-    const hero = document.querySelector(".hero");
-    window.addEventListener("scroll", function() {
-      let offset = window.pageYOffset;
-      hero.style.backgroundPositionY = offset * 0.4 + "px";
-    });
+    }, {threshold:.15});
+    document.querySelectorAll('.future, .cards .card, .what, .benef, .healthy .wrap').forEach(n=>obs.observe(n));
   </script>
 </body>
 </html>

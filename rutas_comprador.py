@@ -84,3 +84,40 @@ def eliminar_del_carrito(producto_id):
     carrito = [item for item in carrito if item["id"] != producto_id]
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
+
+@comprador.route("/panel", endpoint="panel_comprador_v2")
+def panel_comprador_detallado():
+    if session.get("rol") != "comprador":
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT id, nombre, descripcion, precio, imagen, categoria, fecha_agregado, ventas FROM productos"
+    )
+    productos = cursor.fetchall()
+    conn.close()
+
+    total_productos = len(productos)
+    productos_recientes = sorted(productos, key=lambda x: x.get('fecha_agregado', '1970-01-01'), reverse=True)[:5]
+    productos_destacados = sorted(productos, key=lambda x: x.get('ventas', 0), reverse=True)[:5]
+
+    # ===== Conteo de productos por categoría =====
+    categorias = {}
+    for p in productos:
+        categoria = p.get('categoria', 'Sin categoría')
+        categorias[categoria] = categorias.get(categoria, 0) + 1
+
+    # ===== Historial de compras (simulado o desde sesión) =====
+    historial_compras = session.get("historial_compras", [])
+
+    return render_template(
+        "panel_comprador.html",
+        nombre=session.get("nombre"),
+        productos=productos,
+        total_productos=total_productos,
+        productos_recientes=productos_recientes,
+        productos_destacados=productos_destacados,
+        categorias=categorias,
+        historial_compras=historial_compras
+    )

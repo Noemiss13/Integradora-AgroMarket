@@ -70,6 +70,7 @@
     <img class="pic-small" src="{{ url_for('static', filename='images/farmer_round.jpg') }}" alt="Farmer">
   </div>
   <div class="future-text">
+    <h1>Quiénes somo</h1>
     <h2>Agricultura para<br><span>el desarrollo sostenible</span></h2>
     <p>
       AgroMarket conecta a productores, clientes y proveedores a través de un comercio agrícola justo, eficiente y transparente.
@@ -168,39 +169,54 @@
     </article>
   </section>
 
-  <!-- Banner -->
-  <section class="healthy">
-    <div class="wrap">
-      <h2 class="script big">Vive Saludable con</h2>
-      <h2 class="script big alt">Productos Frescos</h2>
-    </div>
-  </section>
+
+<!-- Banner -->
+<section class="healthy">
+  <div class="wrap">
+    <h2 class="big">Vive Saludable con</h2>
+    <h2 class="big alt">Productos Frescos</h2>
+    <p class="sub-banner">Impulsamos el comercio agrícola sostenible y de calidad</p>
+      
+  </div>
+</section>
+
 
   <!-- Beneficios -->
-  <section id="beneficios" class="wrap beneficios">
-    <h2>Beneficios</h2>
-    <div class="benef-grid">
-      <div class="benef">
-        <h3>Si eres Vendedor</h3>
-        <ul>
-          <li>Acceso a un mercado digital en crecimiento.</li>
-          <li>Mayor ganancia eliminando intermediarios.</li>
-          <li>Visibilidad nacional para tus productos.</li>
-          <li>Comunicación directa con compradores.</li>
-        </ul>
-      </div>
-      <div class="benef">
-        <h3>Si eres Comprador</h3>
-        <ul>
-          <li>Compra directa al productor.</li>
-          <li>Productos frescos y de calidad.</li>
-          <li>Entregas rápidas y seguras.</li>
-          <li>Comercio justo y sostenible.</li>
-        </ul>
-      </div>
+<section id="beneficios" class="wrap beneficios">
+  <h2>Beneficios</h2>
+
+  <div class="benef-grid">
+    <!-- Vendedores -->
+    <div class="benef benef-vendedor">
+      <h3><i class="fa-solid fa-tractor"></i> Si eres Vendedor</h3>
+      <ul>
+        <li><i class="fa-solid fa-chart-line"></i> Acceso a un mercado digital en crecimiento.</li>
+        <li><i class="fa-solid fa-hand-holding-dollar"></i> Mayor ganancia eliminando intermediarios.</li>
+        <li><i class="fa-solid fa-globe"></i> Visibilidad nacional para tus productos.</li>
+        <li><i class="fa-solid fa-comments"></i> Comunicación directa con compradores.</li>
+      </ul>
     </div>
-    <a href="{{ url_for('auth.register') }}" class="btn btn-lg">🚀 ¡Únete ahora!</a>
-  </section>
+
+    <!-- Compradores -->
+    <div class="benef benef-comprador">
+      <h3><i class="fa-solid fa-cart-shopping"></i> Si eres Comprador</h3>
+      <ul>
+        <li><i class="fa-solid fa-box-open"></i> Compra directa al productor.</li>
+        <li><i class="fa-solid fa-leaf"></i> Productos frescos y de calidad.</li>
+        <li><i class="fa-solid fa-truck"></i> Entregas rápidas y seguras.</li>
+        <li><i class="fa-solid fa-handshake"></i> Comercio justo y sostenible.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-benef">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-lg cta-btn">
+      🚀 ¡Únete ahora y comienza a vender o comprar!
+    </a>
+  </div>
+</section>
+
 
   <!-- Contacto -->
   <section id="contacto" class="contacto">

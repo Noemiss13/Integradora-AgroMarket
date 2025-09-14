@@ -238,3 +238,108 @@ nav .menu a:hover {
 .filtros button:hover {
     background-color: #276b45;
 }
+
+/* ===== Panel Comprador ===== */
+.resumen-ventas {
+  background: var(--bg);
+  padding: 2rem 0;
+}
+
+.resumen-ventas h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: var(--green-900);
+}
+
+.estadisticas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: .8rem;
+  padding: 1.2rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(0,0,0,0.15);
+}
+
+.stat-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: .6rem;
+  color: var(--green-900);
+}
+
+.stat-card p {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+/* ===== Productos panel ===== */
+.productos {
+  padding: 3rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.productos h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--green-900);
+}
+
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.6rem;
+}
+
+.producto-card {
+  background: var(--card);
+  border-radius: .8rem;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s, box-shadow 0.3s;
+  text-align: center;
+  padding-bottom: 1rem;
+}
+
+.producto-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,.12);
+}
+
+.producto-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.producto-card h3 {
+  margin: 0.8rem 0 0.4rem;
+  font-size: 1.1rem;
+  color: var(--green-900);
+}
+
+.producto-card .precio {
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 0.4rem;
+}
+
+.producto-card .categoria {
+  font-size: 0.9rem;
+  color: var(--muted);
+}

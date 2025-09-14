@@ -23,7 +23,6 @@
             <li><a href="{{ url_for('vendedor.agregar_producto') }}" class="{% if request.path == '/vendedor/agregar' %}active{% endif %}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}" class="{% if request.path == '/vendedor/productos' %}active{% endif %}">Mis Productos</a></li>
             <li><a href="{{ url_for('vendedor.ventas') }}" class="{% if request.path == '/vendedor/ventas' %}active{% endif %}">Ventas</a></li>
-            <a href="{{ url_for('vendedor.sobre_nosotros_vendedor') }}">Sobre Nosotros</a>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
     </nav>

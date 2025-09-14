@@ -6,15 +6,14 @@
     <title>Panel Comprador</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- ===== Menú superior ===== -->
     <nav>
-        <div class="logo">
-            <h2>AgroMarket</h2>
-        </div>
+        <div class="logo"><h2>AgroMarket</h2></div>
         <div class="menu">
-            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <a href="{{ url_for('comprador.panel_comprador_v2') }}">Inicio</a>
             <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
             <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
         </div>
@@ -25,40 +24,122 @@
         <h1>Bienvenido, {{ nombre }}</h1>
     </header>
 
-    <!-- ===== Filtros y búsqueda ===== -->
-    <section class="filtros">
-        <input type="text" id="busqueda" placeholder="Buscar producto...">
-        <select id="categoria">
-            <option value="">Todas las categorías</option>
-            <option value="semillas">Semillas</option>
-            <option value="frutas">Frutas</option>
-            <option value="verduras">Verduras</option>
-            <option value="herramientas">Herramientas</option>
-        </select>
-        <button id="btnBuscar">Buscar</button>
+    <!-- ===== Resumen de productos ===== -->
+    <section class="resumen-ventas">
+        <h2>Resumen de productos en venta</h2>
+        <div class="estadisticas">
+            <div class="stat-card">
+                <h3>Total de productos</h3>
+                <p>{{ total_productos }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Productos destacados</h3>
+                <p>{{ productos_destacados|length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3>Productos recientes</h3>
+                <p>{{ productos_recientes|length }}</p>
+            </div>
+        </div>
     </section>
 
-    <!-- ===== Productos publicados (solo visualización) ===== -->
+    <!-- ===== Productos por categoría ===== -->
     <section class="productos">
-        {% for producto in productos %}
-        <div class="producto-card">
-            <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}">
-            <h3>{{ producto.nombre }}</h3>
-            <p>{{ producto.descripcion }}</p>
-            <p class="precio">Precio: ${{ producto.precio }}</p>
-            <!-- Sin botón de compra, solo vista -->
+        <h2>Explora por categoría</h2>
+        <div class="productos-grid">
+            {% set categorias = {} %}
+            {% for p in productos %}
+                {% set categorias = categorias.update({p.categoria: categorias.get(p.categoria, []) + [p]}) or categorias %}
+            {% endfor %}
+            {% for cat, prods in categorias.items() %}
+            <div class="producto-card">
+                <h3>{{ cat }}</h3>
+                {% if prods[0].imagen %}
+                    <img src="{{ url_for('static', filename='images/' ~ prods[0].imagen) }}" alt="{{ cat }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/default.png') }}" alt="{{ cat }}">
+                {% endif %}
+                <p>{{ prods|length }} productos</p>
+                <a href="{{ url_for('comprador.ver_productos') }}?categoria={{ cat }}">
+                    <button>Ver productos</button>
+                </a>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+    </section>
+
+    <!-- ===== Gráficos ===== -->
+    <section class="graficos" style="max-width:1200px;margin:2rem auto;">
+        <h2>Visualización de productos</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:2rem;">
+            <canvas id="productosCategoria" width="400" height="300"></canvas>
+            <canvas id="productosVendidos" width="400" height="300"></canvas>
+            <canvas id="historialCompras" width="400" height="300"></canvas>
+        </div>
     </section>
 
     <!-- ===== Scripts ===== -->
     <script>
-    // Registrar el Service Worker para soporte offline
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
-        .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
-        .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
-    }
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+            .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
+            .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
+        }
+
+        // Datos para gráficos
+        const productos = {{ productos | default([]) | tojson }};
+        const compras = {{ historial_compras | default([]) | tojson }};
+
+        // Productos por categoría
+        const categoriasCount = {};
+        productos.forEach(p => {
+            categoriasCount[p.categoria] = (categoriasCount[p.categoria] || 0) + 1;
+        });
+        const ctxCategoria = document.getElementById('productosCategoria').getContext('2d');
+        new Chart(ctxCategoria, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(categoriasCount),
+                datasets: [{
+                    label: 'Productos por categoría',
+                    data: Object.values(categoriasCount),
+                    backgroundColor: '#2e8b57'
+                }]
+            },
+            options: { responsive:true }
+        });
+
+        // Productos más vendidos
+        const productosOrdenados = productos.sort((a,b) => (b.ventas||0) - (a.ventas||0));
+        const top5 = productosOrdenados.slice(0,5);
+        const ctxVendidos = document.getElementById('productosVendidos').getContext('2d');
+        new Chart(ctxVendidos, {
+            type: 'bar',
+            data: {
+                labels: top5.map(p => p.nombre),
+                datasets: [{
+                    label: 'Ventas',
+                    data: top5.map(p => p.ventas || 0),
+                    backgroundColor: '#a1e2a1'
+                }]
+            },
+            options: { responsive:true }
+        });
+
+        // Historial de compras
+        const ctxHistorial = document.getElementById('historialCompras').getContext('2d');
+        new Chart(ctxHistorial, {
+            type: 'pie',
+            data: {
+                labels: compras.map(c => c.nombre),
+                datasets: [{
+                    label: 'Historial de compras',
+                    data: compras.map(c => c.cantidad),
+                    backgroundColor: compras.map(() => '#' + Math.floor(Math.random()*16777215).toString(16))
+                }]
+            },
+            options: { responsive:true }
+        });
     </script>
 </body>
 </html>

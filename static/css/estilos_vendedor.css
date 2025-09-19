@@ -11,62 +11,38 @@ header {
     background-color: #2e8b57;
     color: white;
     padding: 1rem 2rem;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .menu ul {
     list-style: none;
     display: flex;
-    justify-content: flex-start;
     align-items: center;
     gap: 2rem;
+}
+
+.menu ul li.logo {
+    font-size: 1.7rem;
+    font-weight: bold;
+    color: #fff;
 }
 
 .menu ul li a {
     text-decoration: none;
     color: white;
-    font-weight: bold;
+    font-weight: 600;
     padding: 0.5rem 1rem;
-    transition: background 0.3s, color 0.3s;
+    transition: all 0.3s ease;
     border-radius: 5px;
 }
 
-.menu ul li a:hover {
+.menu ul li a:hover,
+.menu ul li a.active {
     background-color: #1e5f3f;
-}
-
-/* Separar el botón de cerrar sesión a la derecha */
-.menu ul li.logout {
-    margin-left: auto;
-}
-
-/* Contenido principal */
-main {
-    padding: 2rem;
-    text-align: center;
-}
-
-main h1 {
-    margin-bottom: 1rem;
-    color: #2e8b57;
-}
-
-main p {
-    font-size: 1.1rem;
-    color: #333;
-}
-.menu ul {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.menu ul li.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    margin-right: 2rem;
+    color: #fff;
 }
 
 .menu ul li.user-name {
@@ -76,64 +52,45 @@ main p {
 }
 
 .menu ul li.logout a {
+    background-color: #e74c3c;
     color: white;
     font-weight: bold;
     padding: 0.5rem 1rem;
-    text-decoration: none;
     border-radius: 5px;
 }
 
 .menu ul li.logout a:hover {
-    background-color: #1e5f3f;
+    background-color: #c0392b;
 }
 
-.menu ul li a.active {
-    background-color: #1e5f3f; /* color destacado del módulo activo */
-    color: #fff;
+/* Contenido principal */
+main {
+    padding: 2rem;
+    background-color: #f8f9f8;
+    min-height: calc(100vh - 80px);
 }
 
-/* estilos para el de agregar producto*/
-main form {
-    display: flex;
-    flex-direction: column;
-    max-width: 600px;
-    margin: 2rem auto;
-    gap: 1rem;
+/* Título */
+main h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #2e8b57;
+    font-size: 2rem;
 }
 
-main form input,
-main form textarea,
-main form select {
-    padding: 0.5rem;
-    font-size: 1rem;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
-main form button {
-    background-color: #2e8b57;
-    color: white;
-    padding: 0.7rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-main form button:hover {
-    background-color: #1e5f3f;
-}
+/* Contenedor de productos */
 .productos-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
-    padding: 20px;
+    padding: 0 1rem;
 }
 
+/* Tarjeta de producto */
 .producto-card {
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -142,26 +99,26 @@ main form button:hover {
 
 .producto-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
+/* Imagen del producto */
 .producto-img {
     width: 100%;
-    height: 180px;       /* altura fija para todas las tarjetas */
-    overflow: hidden;    /* recorta lo que se salga del contenedor */
+    height: 180px;
     display: flex;
     justify-content: center;
-    align-items: center; /* centra la imagen vertical y horizontalmente */
-    background-color: #f5f5f5; /* color de fondo si la imagen no llena todo */
+    align-items: center;
+    background-color: #f5f5f5;
 }
 
 .producto-img img {
-    width: auto;       /* mantiene proporción horizontal */
-    height: 100%;      /* llena la altura sin deformarse */
-    object-fit: contain; /* asegura que toda la imagen se vea */
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
-
+/* Información del producto */
 .producto-info {
     padding: 15px;
     display: flex;
@@ -170,7 +127,7 @@ main form button:hover {
 }
 
 .producto-info h3 {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: #333;
     margin: 0;
 }
@@ -186,6 +143,19 @@ main form button:hover {
     font-weight: bold;
 }
 
+.producto-info .stock {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2e8b57;
+}
+
+/* Stock bajo */
+.producto-info .stock.bajo {
+    color: #e67e22; /* naranja para stock bajo */
+    font-weight: bold;
+}
+
+/* Botón editar (opcional) */
 .btn-editar {
     margin-top: 10px;
     padding: 6px 12px;
@@ -202,49 +172,11 @@ main form button:hover {
     background-color: #2980b9;
 }
 
-/* Tabla de ventas */
-table {
-    width: 90%;
-    margin: 2rem auto;
-    border-collapse: collapse;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    font-size: 0.95rem;
+/* Responsivo */
+@media (max-width: 768px) {
+    .productos-container {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
 }
 
-thead {
-    background-color: #2e8b57;
-    color: white;
-}
 
-thead th {
-    padding: 12px;
-    text-align: left;
-}
-
-tbody td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-tbody tr:hover {
-    background-color: #e6f2e6;
-}
-
-h1 {
-    text-align: center;
-    color: #2e8b57;
-    margin-top: 2rem;
-}
-
-p {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #555;
-}

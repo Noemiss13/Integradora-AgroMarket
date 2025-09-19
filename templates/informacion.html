@@ -53,7 +53,6 @@
   <section class="hero" style="background-image:url('{{ url_for('static', filename='images/fds.jpg') }}');">
     <div class="overlay"></div>
     <div class="wrap hero-inner">
-      <div class="badge">Comercio Agrícola</div>
       <h1 class="hero-title">
         <span class="line script">Conectando el campo</span>
         <span class="line solid">con el mundo</span>
@@ -63,14 +62,15 @@
     </div>
   </section>
 
- <!-- Quiénes somos -->
-<section id="quienes" class="wrap future">
+
+  <!-- Quiénes somos -->
+<section id="quienes" class="wrap future reveal reveal-left">
   <div class="pic">
     <img src="{{ url_for('static', filename='images/agri.jpg') }}" alt="Cabin">
     <img class="pic-small" src="{{ url_for('static', filename='images/farmer_round.jpg') }}" alt="Farmer">
   </div>
   <div class="future-text">
-    <h1>Quiénes somo</h1>
+    <h1>Quiénes somos</h1>
     <h2>Agricultura para<br><span>el desarrollo sostenible</span></h2>
     <p>
       AgroMarket conecta a productores, clientes y proveedores a través de un comercio agrícola justo, eficiente y transparente.
@@ -83,12 +83,12 @@
   </div>
 
   <div class="sticky-cards">
-    <article class="note green">
+    <article class="note green reveal reveal-zoom">
       <div class="icon"><i class="fa-solid fa-seedling"></i></div>
       <h3>Producción Natural</h3>
       <p>Impulsamos prácticas agrícolas responsables y sostenibles.</p>
     </article>
-    <article class="note yellow">
+    <article class="note yellow reveal reveal-zoom">
       <div class="icon"><i class="fa-solid fa-certificate"></i></div>
       <h3>Calidad Garantizada</h3>
       <p>Productos agrícolas certificados y confiables.</p>
@@ -96,12 +96,19 @@
   </div>
 </section>
 
-<!-- Nuestra Identidad (Misión, Visión, Valores, Objetivos) -->
-<section class="wrap">
+<!-- Separador -->
+<div class="separator">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 200">
+    <path fill="#ffffff" d="M0,128L1440,0L1440,320L0,320Z"></path>
+  </svg>
+</div>
+
+<!-- Nuestra Identidad -->
+<section id="identidad" class="wrap identity reveal reveal-zoom">
   <h2 style="text-align:center; margin-bottom:2rem;">Nuestra Identidad</h2>
   <div class="cards">
     <!-- Misión -->
-    <div class="card" style="border-left:6px solid #35a76b;">
+    <div class="card reveal reveal-zoom" style="border-left:6px solid #35a76b;">
       <div class="thumb">
         <img src="{{ url_for('static', filename='images/mision.png') }}" alt="Misión">
       </div>
@@ -113,7 +120,7 @@
     </div>
 
     <!-- Visión -->
-    <div class="card" style="border-left:6px solid #f7b84b;">
+    <div class="card reveal reveal-zoom" style="border-left:6px solid #f7b84b;">
       <div class="thumb">
         <img src="{{ url_for('static', filename='images/vision.png') }}" alt="Visión">
       </div>
@@ -125,7 +132,7 @@
     </div>
 
     <!-- Valores -->
-    <div class="card" style="border-left:6px solid #3b82f6;">
+    <div class="card reveal reveal-zoom" style="border-left:6px solid #3b82f6;">
       <div class="thumb">
         <img src="{{ url_for('static', filename='images/valores.jpg') }}" alt="Valores">
       </div>
@@ -136,7 +143,7 @@
     </div>
 
     <!-- Objetivos -->
-    <div class="card" style="border-left:6px solid #f97316;">
+    <div class="card reveal reveal-zoom" style="border-left:6px solid #f97316;">
       <div class="thumb">
         <img src="{{ url_for('static', filename='images/objetivos.png') }}" alt="Objetivos">
       </div>
@@ -149,25 +156,34 @@
   </div>
 </section>
 
+<!-- Separador -->
+<div class="separator">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 200">
+    <path fill="#f0fdf4" d="M0,128L1440,0L1440,320L0,320Z"></path>
+  </svg>
+</div>
 
-  <!-- Servicios -->
-  <section id="servicios" class="wrap cards">
-    <article class="card">
+<!-- Servicios -->
+<section id="servicios" class="wrap services reveal reveal-right">
+  <h2 style="text-align:center; margin-bottom:2rem;">Servicios</h2>
+  <div class="cards">
+    <article class="card reveal reveal-right">
       <div class="thumb"><img src="{{ url_for('static', filename='images/compra.png') }}" alt=""></div>
       <h4>Catálogo digital</h4>
       <p>Explora productos agrícolas por categorías como frutas, verduras y semillas.</p>
     </article>
-    <article class="card">
+    <article class="card reveal reveal-right">
       <div class="thumb"><img src="{{ url_for('static', filename='images/chat.png') }}" alt=""></div>
       <h4>Comunicación directa</h4>
       <p>Chat interactivo entre productores y clientes sin intermediarios.</p>
     </article>
-    <article class="card">
+    <article class="card reveal reveal-right">
       <div class="thumb"><img src="{{ url_for('static', filename='images/pagos.png') }}" alt=""></div>
       <h4>Pagos integrados</h4>
       <p>Realiza compras de forma rápida y segura.</p>
     </article>
-  </section>
+  </div>
+</section>
 
 
 <!-- Banner -->
@@ -212,7 +228,7 @@
   <!-- CTA -->
   <div class="cta-benef">
     <a href="{{ url_for('auth.register') }}" class="btn btn-lg cta-btn">
-      🚀 ¡Únete ahora y comienza a vender o comprar!
+      ¡Únete ahora y comienza a vender o comprar!
     </a>
   </div>
 </section>
@@ -251,5 +267,7 @@
     }, {threshold:.15});
     document.querySelectorAll('.future, .cards .card, .what, .benef, .healthy .wrap').forEach(n=>obs.observe(n));
   </script>
+  <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+
 </body>
 </html>

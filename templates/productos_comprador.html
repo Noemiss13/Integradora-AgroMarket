@@ -40,23 +40,24 @@
     </section>
 
     <!-- Listado de productos -->
-    <section class="productos" id="productos">
-        {% for producto in productos %}
-        <div class="producto-card" 
-             data-id="{{ producto.id }}" 
-             data-nombre="{{ producto.nombre }}" 
-             data-precio="{{ producto.precio }}"
-             data-categoria="{{ producto.categoria|lower }}">
-             
-            <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}">
-            <h3>{{ producto.nombre }}</h3>
-            <p>{{ producto.descripcion }}</p>
-            <p class="precio">Precio: ${{ producto.precio }}</p>
-            
-            <!-- Botón "Agregar al carrito" se agregará dinámicamente -->
-        </div>
-        {% endfor %}
-    </section>
+<section class="productos" id="productos">
+    {% for producto in productos %}
+    <div class="producto-card" 
+     data-id="{{ producto.id }}" 
+     data-nombre="{{ producto.nombre }}" 
+     data-precio="{{ producto.precio }}"
+     data-categoria="{{ producto.categoria|lower }}">
+         
+    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}">
+    <h3>{{ producto.nombre }}</h3>
+    <p>{{ producto.descripcion }}</p>
+    <p class="precio">Precio: ${{ producto.precio }}</p>
+    <p><strong>Vendedor:</strong> {{ producto.vendedor }}</p>
+</div>
+
+    {% endfor %}
+</section>
+
 
     <!-- Carrito lateral -->
     <section class="carrito" id="carrito">

@@ -15,8 +15,7 @@
             <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}" class="active">Mis Productos</a></li>
             <li class="user-name">Hola, {{ nombre }}</li>
-            <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
-
+            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
     </nav>
 </header>
@@ -38,7 +37,7 @@
                         <h3>{{ p.nombre }}</h3>
                         <p class="categoria">{{ p.categoria }}</p>
                         <p class="precio">$ {{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
-                       
+                        <p class="stock">Disponibles: {{ p.stock }}</p> <!-- Stock agregado -->
                     </div>
                 </div>
             {% endfor %}

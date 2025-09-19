@@ -7,29 +7,46 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-    <h1>Mi carrito</h1>
+    <!-- ===== Menú superior comprador ===== -->
+    <nav>
+        <div class="logo">
+            <h2>AgroMarket</h2>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>    
+            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito 🛒</a>
+            <a href="{{ url_for('auth.logout') }}">Salir</a>
+        </div>
+    </nav>
 
-    <table border="1" cellpadding="10" id="tablaCarrito">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
-                <th>Acción</th>
-            </tr>
-        </thead>
-        <tbody id="listaCarrito">
-            <!-- Productos se agregan dinámicamente con JS -->
-        </tbody>
-    </table>
+    <!-- ===== Contenedor del carrito ===== -->
+    <div class="carrito-container">
+        <h1>🛒 Mi carrito</h1>
 
-    <p><strong>Total:</strong> $<span id="totalCarrito">0</span></p>
+        <table id="tablaCarrito">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody id="listaCarrito">
+                <!-- Productos se agregan dinámicamente con JS -->
+            </tbody>
+        </table>
 
-    <button id="btnFinalizar">Finalizar compra ✅</button>
-    <br><br>
-    <a href="{{ url_for('comprador.ver_productos') }}">Ver productos</a>
+        <p class="total"><strong>Total:</strong> $<span id="totalCarrito">0</span></p>
 
+        <button id="btnFinalizar">Finalizar compra ✅</button>
+        <br><br>
+        <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
+    </div>
+
+    <!-- ===== Script carrito ===== -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const listaCarrito = document.getElementById("listaCarrito");

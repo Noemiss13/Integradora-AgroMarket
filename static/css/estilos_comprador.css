@@ -1,116 +1,11 @@
-/* ===== Estilos generales ===== */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f9f4;
-}
-
-/* ===== Menú superior ===== */
-nav {
-    background-color: #2e8b57; /* verde principal */
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    margin-left: 1rem;
-    font-weight: bold;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-/* ===== Saludo ===== */
-.saludo {
-    padding: 2rem;
-    text-align: center;
-}
-
-/* ===== Filtros y búsqueda ===== */
-.filtros {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin: 1rem 0;
-}
-
-.filtros input, .filtros select, .filtros button {
-    padding: 0.5rem;
-    font-size: 1rem;
-}
-
-.filtros button {
-    background-color: #2e8b57;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.filtros button:hover {
-    background-color: #276b45;
-}
-
-/* ===== Productos ===== */
-.productos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1rem;
-    padding: 2rem;
-}
-
-.producto-card {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.producto-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 5px;
-}
-
-.producto-card .precio {
-    font-weight: bold;
-    margin: 0.5rem 0;
-}
-
-.producto-card button {
-    background-color: #2e8b57;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.producto-card button:hover {
-    background-color: #276b45;
-}
-
-/* ===== Carrito ===== */
-.carrito {
-    position: fixed;
-    right: 0;
-    top: 100px;
-    width: 250px;
-    background-color: #f4f9f4;
-    padding: 1rem;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-    display: none; /* se puede mostrar al agregar productos */
+/* ===== Variables globales ===== */
+:root {
+    --green: #2e8b57;
+    --green-900: #276b45;
+    --card: #ffffff;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --muted: #666666;
+    --bg: #f4f9f4;
 }
 
 /* ===== Estilos generales ===== */
@@ -118,68 +13,18 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f9f4;
+    background-color: var(--bg);
+    color: #333;
 }
 
-/* ===== Menú superior ===== */
-nav {
-    background-color: #2e8b57;
-    color: white;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
-
-nav a {
-    color: white;
+a {
     text-decoration: none;
-    margin-left: 1rem;
-    font-weight: bold;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-/* ===== Saludo ===== */
-.saludo {
-    padding: 2rem;
-    text-align: center;
-}
-
-/* ===== Filtros y búsqueda ===== */
-.filtros {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin: 1rem 0;
-}
-
-.filtros input, .filtros select, .filtros button {
-    padding: 0.5rem;
-    font-size: 1rem;
-}
-
-.filtros button {
-    background-color: #2e8b57;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-.filtros button:hover {
-    background-color: #276b45;
+    color: inherit;
 }
 
 /* ===== Menú superior ===== */
 nav {
-    background-color: #2e8b57; /* verde principal */
+    background-color: var(--green);
     color: white;
     padding: 1rem 2rem;
     display: flex;
@@ -196,15 +41,19 @@ nav .logo h2 {
 }
 
 nav .menu a {
-    color: white;
-    text-decoration: none;
     margin-left: 1.5rem;
     font-weight: bold;
     transition: color 0.3s;
 }
 
 nav .menu a:hover {
-    color: #a1e2a1; /* verde más claro al pasar el mouse */
+    color: #a1e2a1;
+}
+
+.menu a.activo {
+    color: #a1e2a1;
+    border-bottom: 2px solid #a1e2a1;
+    padding-bottom: 2px;
 }
 
 /* ===== Saludo ===== */
@@ -217,8 +66,10 @@ nav .menu a:hover {
 .filtros {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 1rem;
-    margin: 1rem 0;
+    margin: 1rem auto;
+    max-width: 800px;
 }
 
 .filtros input, .filtros select, .filtros button {
@@ -229,117 +80,294 @@ nav .menu a:hover {
 }
 
 .filtros button {
-    background-color: #2e8b57;
+    background-color: var(--green);
     color: white;
     border: none;
     cursor: pointer;
 }
 
 .filtros button:hover {
-    background-color: #276b45;
+    background-color: var(--green-900);
 }
 
-/* ===== Panel Comprador ===== */
+/* ===== Panel de estadísticas ===== */
 .resumen-ventas {
-  background: var(--bg);
-  padding: 2rem 0;
+    background: var(--bg);
+    padding: 2rem 0;
 }
 
 .resumen-ventas h2 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: var(--green-900);
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: var(--green-900);
 }
 
 .estadisticas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  max-width: 1000px;
-  margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .stat-card {
-  background: var(--card);
-  border-radius: .8rem;
-  padding: 1.2rem;
-  text-align: center;
-  box-shadow: var(--shadow);
-  transition: transform 0.3s, box-shadow 0.3s;
+    background: var(--card);
+    border-radius: .8rem;
+    padding: 1.2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .stat-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 36px rgba(0,0,0,0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px rgba(0,0,0,0.15);
 }
 
 .stat-card h3 {
-  font-size: 1.1rem;
-  margin-bottom: .6rem;
-  color: var(--green-900);
+    font-size: 1.1rem;
+    margin-bottom: .6rem;
+    color: var(--green-900);
 }
 
 .stat-card p {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--green);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--green);
 }
 
-/* ===== Productos panel ===== */
-.productos {
-  padding: 3rem 0;
-  max-width: 1200px;
-  margin: 0 auto;
+/* ===== Categorías ===== */
+.categorias {
+    padding: 2rem 0;
+    text-align: center;
 }
 
-.productos h2 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 2rem;
-  color: var(--green-900);
+.categorias h2 {
+    font-size: 2rem;
+    color: var(--green-900);
+    margin-bottom: 1.5rem;
+}
+
+.categorias-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.categoria-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    text-align: center;
+    width: 200px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    color: #333;
+}
+
+.categoria-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px rgba(0,0,0,0.15);
+}
+
+.categoria-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+.categoria-nombre {
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--green);
+}
+
+/* ===== Productos ===== */
+.productos, 
+.productos-categoria {
+    padding: 3rem 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.productos h2, 
+.productos-categoria h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--green-900);
 }
 
 .productos-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1.6rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.6rem;
 }
 
+/* Tarjeta de producto */
 .producto-card {
-  background: var(--card);
-  border-radius: .8rem;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: transform 0.3s, box-shadow 0.3s;
-  text-align: center;
-  padding-bottom: 1rem;
+    background: var(--card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    padding-bottom: 1rem;
 }
 
 .producto-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0,0,0,.12);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.12);
 }
 
 .producto-card img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
 }
 
 .producto-card h3 {
-  margin: 0.8rem 0 0.4rem;
-  font-size: 1.1rem;
-  color: var(--green-900);
+    margin: 0.8rem 0 0.4rem;
+    font-size: 1.1rem;
+    color: var(--green-900);
+}
+
+.producto-card p {
+    margin: 0.4rem 1rem;
+    font-size: 0.95rem;
+    color: var(--muted);
 }
 
 .producto-card .precio {
-  font-weight: 600;
-  color: var(--green);
-  margin-bottom: 0.4rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-top: 0.5rem;
 }
 
-.producto-card .categoria {
-  font-size: 0.9rem;
-  color: var(--muted);
+.producto-card .stock {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--green-900);
+}
+
+/* Botones dentro de tarjeta */
+.producto-card button {
+    margin-top: 0.6rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: var(--green);
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.producto-card button:hover {
+    background-color: var(--green-900);
+}
+
+/* ===== Carrito ===== */
+.carrito {
+    position: fixed;
+    right: 0;
+    top: 100px;
+    width: 280px;
+    background-color: var(--card);
+    padding: 1rem;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    display: none;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
+}
+
+.carrito h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    color: var(--green-900);
+}
+
+.carrito ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+}
+
+.carrito li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.95rem;
+}
+
+.carrito button {
+    width: 100%;
+    padding: 0.7rem;
+    background-color: var(--green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.carrito button:hover {
+    background-color: var(--green-900);
+}
+
+/* Contenedor de productos en forma de grid */
+.productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+/* Estilo de cada tarjeta */
+.producto-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 1rem;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Imagen del producto */
+.producto-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* Hover animación */
+.producto-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+/* Nombre del producto */
+.producto-card h3 {
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+    color: #2e8b57;
+}
+
+/* Descripción */
+.producto-card p {
+    font-size: 0.95rem;
+    color: #555;
+}
+
+/* Precio */
+.producto-card .precio {
+    font-weight: bold;
+    color: #e67e22;
+    margin-top: 0.5rem;
 }

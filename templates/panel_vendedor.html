@@ -15,14 +15,16 @@
     <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/icon-512.png') }}">
 </head>
 <body>
-<header>
+ <!--Menu-->
+ <header>
     <nav class="menu">
         <ul>
             <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('vendedor.panel_vendedor') }}" class="{% if request.path == '/vendedor/panel' %}active{% endif %}">Home</a></li>
-            <li><a href="{{ url_for('vendedor.agregar_producto') }}" class="{% if request.path == '/vendedor/agregar' %}active{% endif %}">Agregar Productos</a></li>
-            <li><a href="{{ url_for('vendedor.productos') }}" class="{% if request.path == '/vendedor/productos' %}active{% endif %}">Mis Productos</a></li>
-            <li><a href="{{ url_for('vendedor.ventas') }}" class="{% if request.path == '/vendedor/ventas' %}active{% endif %}">Ventas</a></li>
+            <li><a href="{{ url_for('vendedor.panel_vendedor') }}"class="active">Home</a></li>
+            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
+            <li><a href="{{ url_for('vendedor.productos') }}">Mis Productos</a></li>
+            <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
+            <li class="user-name">Hola, {{ nombre }}</li>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
     </nav>

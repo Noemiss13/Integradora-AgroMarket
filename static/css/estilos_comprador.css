@@ -24,37 +24,50 @@ a {
 
 /* ===== Menú superior ===== */
 nav {
-    background-color: var(--green);
-    color: white;
-    padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0.8rem 2rem;
+    background-color: var(--green);
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-nav .logo h2 {
-    margin: 0;
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; /* separación entre logo y saludo */
 }
 
-nav .menu a {
+.saludo-usuario {
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.3rem 0.8rem;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 8px;
+}
+
+.menu a {
     margin-left: 1.5rem;
     font-weight: bold;
-    transition: color 0.3s;
+    transition: all 0.3s;
+    padding: 0.3rem 0.6rem;
+    border-radius: 5px;
 }
 
-nav .menu a:hover {
-    color: #a1e2a1;
+.menu a:hover {
+    background-color: rgba(255,255,255,0.2);
+    color: #fff;
 }
 
 .menu a.activo {
-    color: #a1e2a1;
     border-bottom: 2px solid #a1e2a1;
-    padding-bottom: 2px;
+    color: #a1e2a1;
 }
+
 
 /* ===== Saludo ===== */
 .saludo {
@@ -329,7 +342,7 @@ nav .menu a:hover {
 
 /* Estilo de cada tarjeta */
 .producto-card {
-    background: #fff;
+    background: #d6eddb;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     padding: 1rem;
@@ -370,4 +383,98 @@ nav .menu a:hover {
     font-weight: bold;
     color: #e67e22;
     margin-top: 0.5rem;
+}
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.saludo-usuario {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-left: 1rem;
+    color: white; /* si tu nav es oscuro */
+}
+
+.carrito-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    border-radius: 12px;
+}
+
+.carrito-container h1 {
+    text-align: center;
+    color: var(--green-900);
+    margin-bottom: 1.5rem;
+}
+
+#tablaCarrito {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+#tablaCarrito th, #tablaCarrito td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: center;
+}
+
+#tablaCarrito th {
+    background-color: var(--green);
+    color: white;
+}
+
+#tablaCarrito tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#tablaCarrito button.eliminar {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.7rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#tablaCarrito button.eliminar:hover {
+    background-color: #c0392b;
+}
+
+.total {
+    font-size: 1.2rem;
+    text-align: right;
+    margin-bottom: 1rem;
+}
+
+#btnFinalizar {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: var(--green);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#btnFinalizar:hover {
+    background-color: var(--green-900);
+}
+
+a {
+    color: var(--green-900);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }

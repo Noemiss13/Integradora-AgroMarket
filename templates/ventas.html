@@ -16,6 +16,7 @@
             <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}">Ver Productos</a></li>
             <li><a href="{{ url_for('vendedor.ventas') }}" class="active">Ventas</a></li>
+            <li class="user-name">Hola, {{ nombre }}</li>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
 
         </ul>

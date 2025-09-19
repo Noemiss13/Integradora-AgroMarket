@@ -7,102 +7,100 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-    <!-- ===== Menú superior comprador ===== -->
-    <nav>
-        <div class="logo">
-            <h2>AgroMarket</h2>
-        </div>
-        <div class="menu">
-            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>    
-            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito 🛒</a>
-            <a href="{{ url_for('auth.logout') }}">Salir</a>
-        </div>
-    </nav>
+   <!-- Menú superior -->
+   <nav>
+       <div class="nav-left">
+           <div class="logo"><h2>AgroMarket</h2></div>
+           <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+       </div>
+       <div class="menu">
+           <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+           <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+           <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito 🛒</a>
+           <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+       </div>
+   </nav>
 
-    <!-- ===== Contenedor del carrito ===== -->
-    <div class="carrito-container">
-        <h1>🛒 Mi carrito</h1>
+   <!-- Contenedor del carrito -->
+   <div class="carrito-container">
+       <h1>🛒 Mi carrito</h1>
+       <table id="tablaCarrito">
+           <thead>
+               <tr>
+                   <th>Producto</th>
+                   <th>Precio</th>
+                   <th>Cantidad</th>
+                   <th>Subtotal</th>
+                   <th>Acción</th>
+               </tr>
+           </thead>
+           <tbody id="listaCarrito">
+               <tr><td colspan="5">Cargando carrito...</td></tr>
+           </tbody>
+       </table>
 
-        <table id="tablaCarrito">
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody id="listaCarrito">
-                <!-- Productos se agregan dinámicamente con JS -->
-            </tbody>
-        </table>
+       <p class="total"><strong>Total:</strong> $<span id="totalCarrito">0.00</span></p>
+       <button id="btnFinalizar">Finalizar compra ✅</button>
+       <br><br>
+       <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
+   </div>
 
-        <p class="total"><strong>Total:</strong> $<span id="totalCarrito">0</span></p>
+   <!-- Script carrito -->
+   <script>
+       document.addEventListener("DOMContentLoaded", () => {
+           const listaCarrito = document.getElementById("listaCarrito");
+           const totalCarrito = document.getElementById("totalCarrito");
+           const btnFinalizar = document.getElementById("btnFinalizar");
 
-        <button id="btnFinalizar">Finalizar compra ✅</button>
-        <br><br>
-        <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
-    </div>
+           let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
-    <!-- ===== Script carrito ===== -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const listaCarrito = document.getElementById("listaCarrito");
-            const totalCarrito = document.getElementById("totalCarrito");
-            const btnFinalizar = document.getElementById("btnFinalizar");
+           function actualizarCarrito() {
+               listaCarrito.innerHTML = "";
+               if (carrito.length === 0) {
+                   listaCarrito.innerHTML = '<tr><td colspan="5">Tu carrito está vacío.</td></tr>';
+                   totalCarrito.textContent = "0.00";
+                   return;
+               }
 
-            let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+               let total = 0;
+               carrito.forEach(item => {
+                   total += item.precio * item.cantidad;
+                   const tr = document.createElement("tr");
+                   tr.innerHTML = `
+                       <td>${item.nombre}</td>
+                       <td>$${item.precio.toFixed(2)}</td>
+                       <td>${item.cantidad}</td>
+                       <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
+                       <td><button class="eliminar" data-id="${item.id}">❌</button></td>
+                   `;
+                   listaCarrito.appendChild(tr);
+               });
 
-            function actualizarCarrito() {
-                listaCarrito.innerHTML = "";
-                if (carrito.length === 0) {
-                    listaCarrito.innerHTML = '<tr><td colspan="5">Tu carrito está vacío.</td></tr>';
-                    totalCarrito.textContent = "0.00";
-                    return;
-                }
+               totalCarrito.textContent = total.toFixed(2);
 
-                let total = 0;
-                carrito.forEach(item => {
-                    total += item.precio * item.cantidad;
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${item.nombre}</td>
-                        <td>$${item.precio.toFixed(2)}</td>
-                        <td>${item.cantidad}</td>
-                        <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
-                        <td><button class="eliminar" data-id="${item.id}">❌</button></td>
-                    `;
-                    listaCarrito.appendChild(tr);
-                });
+               document.querySelectorAll(".eliminar").forEach(boton => {
+                   boton.onclick = () => {
+                       const id = boton.dataset.id;
+                       carrito = carrito.filter(p => p.id !== id);
+                       localStorage.setItem("carrito", JSON.stringify(carrito));
+                       actualizarCarrito();
+                   };
+               });
+           }
 
-                totalCarrito.textContent = total.toFixed(2);
+           btnFinalizar.addEventListener("click", () => {
+               if (carrito.length === 0) {
+                   alert("El carrito está vacío.");
+                   return;
+               }
+               alert("Compra realizada con éxito ✅");
+               carrito = [];
+               localStorage.setItem("carrito", JSON.stringify(carrito));
+               actualizarCarrito();
+           });
 
-                // Botones eliminar
-                document.querySelectorAll(".eliminar").forEach(boton => {
-                    boton.onclick = () => {
-                        const id = boton.dataset.id;
-                        carrito = carrito.filter(p => p.id !== id);
-                        localStorage.setItem("carrito", JSON.stringify(carrito));
-                        actualizarCarrito();
-                    };
-                });
-            }
-
-            btnFinalizar.addEventListener("click", () => {
-                if (carrito.length === 0) {
-                    alert("El carrito está vacío.");
-                    return;
-                }
-                alert("Compra realizada con éxito ✅");
-                carrito = [];
-                localStorage.setItem("carrito", JSON.stringify(carrito));
-                actualizarCarrito();
-            });
-
-            actualizarCarrito();
-        });
-    </script>
+           actualizarCarrito();
+       });
+   </script>
 </body>
 </html>

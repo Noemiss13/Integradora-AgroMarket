@@ -8,23 +8,20 @@
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 </head>
 <body>
-    <!-- Menú superior -->
-    <nav>
+   
+ <!-- Menú superior -->
+<nav>
+    <div class="nav-left">
         <div class="logo"><h2>AgroMarket</h2></div>
-        <div class="menu">
-    <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-    <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-    <!-- Botón de carrito -->
-<a href="{{ url_for('comprador.ver_carrito') }}" id="btnCarrito">🛒 Carrito (<span id="contadorCarrito">0</span>)</a>
-    <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
-</div>
-
-    </nav>
-
-    <!-- Saludo -->
-    <header class="saludo">
-        <h1>Bienvenido, {{ nombre }}</h1>
-    </header>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+    </div>
+    <div class="menu">
+        <a href="{{ url_for('comprador.panel_comprador') }}" class="{% if page=='inicio' %}activo{% endif %}">Inicio</a>
+        <a href="{{ url_for('comprador.ver_productos') }}" class="{% if page=='productos' %}activo{% endif %}">Productos</a>
+        <a href="{{ url_for('comprador.ver_carrito') }}" class="{% if page=='carrito' %}activo{% endif %}">🛒 Carrito (<span id="contadorCarrito">0</span>)</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+    </div>
+</nav>
 
     <!-- Filtros y búsqueda -->
     <section class="filtros">
@@ -42,17 +39,18 @@
     <!-- Listado de productos -->
 <section class="productos" id="productos">
     {% for producto in productos %}
-    <div class="producto-card" 
+<div class="producto-card" 
      data-id="{{ producto.id }}" 
      data-nombre="{{ producto.nombre }}" 
      data-precio="{{ producto.precio }}"
      data-categoria="{{ producto.categoria|lower }}">
-         
-    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}">
+     
+    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) if producto.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ producto.nombre }}">
     <h3>{{ producto.nombre }}</h3>
     <p>{{ producto.descripcion }}</p>
     <p class="precio">Precio: ${{ producto.precio }}</p>
-    <p><strong>Vendedor:</strong> {{ producto.vendedor }}</p>
+    <p class="stock">Stock: {{ producto.stock }} kg</p>
+    <p class="vendedor">Vendedor: {{ producto.vendedor }}</p>
 </div>
 
     {% endfor %}

@@ -32,12 +32,23 @@ def agregar_producto():
         categoria = request.form.get("categoria")
         unidad = request.form.get("unidad")
 
+        # Guardar stock
+        try:
+            stock = int(request.form.get("stock"))
+            if stock < 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            flash("Stock inválido", "danger")
+            return redirect(request.url)
+
+        # Guardar precio
         try:
             precio = float(request.form.get("precio"))
         except (ValueError, TypeError):
             flash("Precio inválido", "danger")
             return redirect(request.url)
 
+        # Guardar imagen
         file = request.files.get("imagen")
         if not file or file.filename == '':
             flash("No se seleccionó ningún archivo.", "danger")
@@ -50,13 +61,14 @@ def agregar_producto():
         filename = secure_filename(file.filename)
         file.save(os.path.join(UPLOAD_FOLDER, filename))
 
+        # Guardar en la base de datos
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO productos (nombre, descripcion, categoria, precio, unidad, imagen, vendedor_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (nombre, descripcion, categoria, precio, unidad, filename, session["usuario_id"]))
+                INSERT INTO productos (nombre, descripcion, categoria, precio, unidad, stock, imagen, vendedor_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (nombre, descripcion, categoria, precio, unidad, stock, filename, session["usuario_id"]))
             conn.commit()
             conn.close()
             flash("Producto publicado correctamente", "success")
@@ -77,7 +89,7 @@ def productos():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
-        SELECT id, nombre, descripcion, categoria, precio, unidad, imagen
+        SELECT id, nombre, descripcion, categoria, precio, unidad, stock, imagen
         FROM productos
         WHERE vendedor_id = %s
     """, (session["usuario_id"],))
@@ -93,7 +105,6 @@ def ventas():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-
     cursor.execute("""
         SELECT p.nombre AS producto, v.cantidad, v.total, v.fecha_venta
         FROM ventas v
@@ -101,10 +112,7 @@ def ventas():
         WHERE p.vendedor_id = %s
         ORDER BY v.fecha_venta DESC
     """, (session["usuario_id"],))
-
     ventas = cursor.fetchall()
     conn.close()
 
     return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"))
-
-

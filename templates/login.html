@@ -8,37 +8,35 @@
 </head>
 <body>
     <div class="login-wrapper">
-        <!-- Lado izquierdo: formulario -->
-        <div class="form-container">
-            <h1>Iniciar Sesión</h1>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <form method="POST">
-    <input type="email" name="email" placeholder="Correo electrónico" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">Entrar</button>
-</form>
-
-    <a href="{{ url_for('auth.register') }}">Crear cuenta</a>
-    <a href="{{ url_for('home') }}">Sobre AgroMarket</a>
-
-
-
-
-        </div>
-
-        <!-- Lado derecho: info en cuadro -->
-        <div class="info-container">
+        <!-- Bloque completo -->
+        <div class="login-box">
+            <!-- Lado izquierdo -->
             <div class="info-box">
-                <h2>AgroMarket</h2>
-                <p>Bienvenido a AgroMarket, tu plataforma para comprar y vender productos agrícolas de manera fácil y rápida.</p>
+                <h2>¡Bienvenido!</h2>
+                <p>Ingresa tus datos personales para utilizar todas las funciones del sitio</p>
+                <a href="{{ url_for('auth.register') }}" class="btn-register">Regístrate</a>
+            </div>
+
+            <!-- Lado derecho -->
+            <div class="form-container">
+                <h1>Iniciar Sesión</h1>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <input type="email" name="email" placeholder="Correo electrónico" required>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                    <button type="submit">Iniciar Sesión</button>
+                </form>
+
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <a href="{{ url_for('home') }}">Sobre AgroMarket</a>
             </div>
         </div>
     </div>

@@ -1,15 +1,84 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request
 from db import get_db_connection
 
-# Usamos un solo Blueprint
+# Blueprint del comprador
 comprador = Blueprint('comprador', __name__, template_folder="templates")
 
-# ===== Panel del comprador =====
+# ===== Función para obtener noticias desde la base de datos =====
+def obtener_noticias():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT id, titulo, descripcion, url, imagen
+        FROM noticias
+        ORDER BY fecha DESC
+        LIMIT 5
+    """)
+    noticias = cursor.fetchall()
+    conn.close()
+    return noticias
+
+
+
+# ===== Panel del comprador con categorías (sin tabla separada) =====
 @comprador.route("/panel")
 def panel_comprador():
     if session.get("rol") != "comprador":
         return redirect(url_for("auth.login"))
-    return render_template("panel_comprador.html", nombre=session.get("nombre"))
+
+    noticias = obtener_noticias()
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Obtener categorías distintas con una imagen representativa
+    cursor.execute("""
+        SELECT categoria AS nombre, MIN(imagen) AS imagen
+        FROM productos
+        GROUP BY categoria
+    """)
+    categorias = cursor.fetchall()
+
+    # Productos destacados
+    cursor.execute("""
+        SELECT id, nombre, descripcion, precio, imagen, stock
+        FROM productos
+        WHERE temporada=1
+        LIMIT 6
+    """)
+    productos_destacados = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "panel_comprador.html",
+        nombre=session.get("nombre"),
+        noticias=noticias,
+        categorias=categorias,
+        productos_destacados=productos_destacados
+    )
+
+
+# ===== Ver productos por categoría =====
+@comprador.route("/categoria/<categoria>")
+def ver_categoria(categoria):
+    if session.get("rol") != "comprador":
+        return redirect(url_for("auth.login"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT p.id, p.nombre, p.descripcion, p.precio, p.imagen, p.stock,
+               u.nombre AS vendedor
+        FROM productos p
+        JOIN usuarios u ON p.vendedor_id = u.id
+        WHERE p.categoria=%s
+    """, (categoria,))
+    productos = cursor.fetchall()
+    conn.close()
+
+    return render_template("productos_categoria.html", productos=productos, categoria=categoria, nombre=session.get("nombre"))
+
 
 # ===== Catálogo de productos =====
 @comprador.route("/productos")
@@ -19,7 +88,12 @@ def ver_productos():
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id, nombre, descripcion, precio, imagen, categoria FROM productos")
+    cursor.execute("""
+        SELECT p.id, p.nombre, p.descripcion, p.precio, p.imagen, p.categoria,
+               u.nombre AS vendedor
+        FROM productos p
+        JOIN usuarios u ON p.vendedor_id = u.id
+    """)
     productos = cursor.fetchall()
     conn.close()
 
@@ -46,8 +120,6 @@ def agregar_carrito(producto_id):
         session["carrito"] = []
 
     carrito = session["carrito"]
-
-    # Si ya existe el producto en el carrito, sumamos cantidad
     for item in carrito:
         if item["id"] == producto["id"]:
             item["cantidad"] += 1
@@ -73,8 +145,7 @@ def finalizar_compra():
     if not carrito:
         return redirect(url_for("comprador.ver_productos"))
 
-    # Aquí se podría guardar la compra en la BD
-    session.pop("carrito", None)  # Vaciar carrito
+    session.pop("carrito", None)
     return "<h1>¡Compra realizada con éxito! ✅</h1><a href='/productos'>Volver a productos</a>"
 
 # ===== Eliminar producto del carrito =====
@@ -84,40 +155,3 @@ def eliminar_del_carrito(producto_id):
     carrito = [item for item in carrito if item["id"] != producto_id]
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
-
-@comprador.route("/panel", endpoint="panel_comprador_v2")
-def panel_comprador_detallado():
-    if session.get("rol") != "comprador":
-        return redirect(url_for("auth.login"))
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(
-        "SELECT id, nombre, descripcion, precio, imagen, categoria, fecha_agregado, ventas FROM productos"
-    )
-    productos = cursor.fetchall()
-    conn.close()
-
-    total_productos = len(productos)
-    productos_recientes = sorted(productos, key=lambda x: x.get('fecha_agregado', '1970-01-01'), reverse=True)[:5]
-    productos_destacados = sorted(productos, key=lambda x: x.get('ventas', 0), reverse=True)[:5]
-
-    # ===== Conteo de productos por categoría =====
-    categorias = {}
-    for p in productos:
-        categoria = p.get('categoria', 'Sin categoría')
-        categorias[categoria] = categorias.get(categoria, 0) + 1
-
-    # ===== Historial de compras (simulado o desde sesión) =====
-    historial_compras = session.get("historial_compras", [])
-
-    return render_template(
-        "panel_comprador.html",
-        nombre=session.get("nombre"),
-        productos=productos,
-        total_productos=total_productos,
-        productos_recientes=productos_recientes,
-        productos_destacados=productos_destacados,
-        categorias=categorias,
-        historial_compras=historial_compras
-    )

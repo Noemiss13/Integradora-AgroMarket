@@ -1,19 +1,22 @@
-/* Reset básico */
+/* Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Fondo de toda la página */
+/* Fondo */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('../images/fondo.png') no-repeat center center fixed;
+    background: url('../images/farmer_round.jpg') no-repeat center center fixed;
     background-size: cover;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Overlay para mejor legibilidad */
+/* Overlay */
 body::before {
     content: "";
     position: fixed;
@@ -25,37 +28,72 @@ body::before {
     z-index: -1;
 }
 
-/* Wrapper para separar en dos columnas */
-.login-wrapper {
+/* Caja general */
+.login-box {
     display: flex;
-    justify-content: center;
-    align-items: center; /* centra verticalmente los cuadros */
-    height: 100vh;
-    gap: 50px;
-    padding: 20px;
-}
-
-
-/* Contenedor del formulario */
-.form-container {
-    background-color: white;
-    padding: 40px 30px;
+    width: 750px;
+    height: 450px;
     border-radius: 10px;
-    width: 350px;
-    height: 450px; /* asegura altura igual */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
 }
 
-/* Título del formulario */
+/* Lado izquierdo (verde) */
+.info-box {
+    background: linear-gradient(135deg, #2e8b57, #3cb371);
+    color: white;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 30px;
+    text-align: center;
+}
+
+.info-box h2 {
+    font-size: 26px;
+    margin-bottom: 15px;
+}
+
+.info-box p {
+    font-size: 15px;
+    margin-bottom: 25px;
+}
+
+.btn-register {
+    display: inline-block;
+    padding: 12px 20px;
+    background: white;
+    color: #2e8b57;
+    border-radius: 20px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.btn-register:hover {
+    background: #f0f0f0;
+}
+
+/* Lado derecho (formulario) */
+.form-container {
+    background: white;
+    flex: 1;
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .form-container h1 {
     text-align: center;
     color: #2e8b57;
     margin-bottom: 25px;
+    font-size: 24px;
 }
 
-/* Inputs y select */
-.form-container input,
-.form-container select {
+.form-container input {
     width: 100%;
     padding: 12px 10px;
     margin-bottom: 15px;
@@ -63,7 +101,6 @@ body::before {
     border-radius: 5px;
 }
 
-/* Botón */
 .form-container button {
     width: 100%;
     padding: 12px;
@@ -80,7 +117,6 @@ body::before {
     background-color: #256d47;
 }
 
-/* Links */
 .form-container a {
     display: block;
     text-align: center;
@@ -89,60 +125,6 @@ body::before {
     text-decoration: none;
     font-size: 14px;
 }
-
 .form-container a:hover {
     text-decoration: underline;
-}
-
-/* Mensajes flash */
-.flash {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.flash.success {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.flash.danger {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.flash.info {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-/* Lado derecho con info */
-.info-container {
-    display: flex;
-    align-items: center;
-}
-
-/* Lado derecho con info */
-.info-box {
-    background-color: white;
-    padding: 40px 30px;
-    border-radius: 10px;
-    width: 350px;
-    height: 450px; /* misma altura que formulario */
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    color: #2e8b57;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.info-box h2 {
-    font-size: 28px;
-    margin-bottom: 15px;
-}
-
-.info-box p {
-    font-size: 16px;
-    line-height: 1.5;
 }

@@ -4,7 +4,7 @@ from db import get_db_connection
 # Blueprint del comprador
 comprador = Blueprint('comprador', __name__, template_folder="templates")
 
-# ===== Función para obtener noticias desde la base de datos =====
+# ===== Función para obtener noticias =====
 def obtener_noticias():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -18,20 +18,17 @@ def obtener_noticias():
     conn.close()
     return noticias
 
-
-
-# ===== Panel del comprador con categorías (sin tabla separada) =====
+# ===== Panel del comprador =====
 @comprador.route("/panel")
 def panel_comprador():
     if session.get("rol") != "comprador":
         return redirect(url_for("auth.login"))
 
     noticias = obtener_noticias()
-
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Obtener categorías distintas con una imagen representativa
+    # Categorías
     cursor.execute("""
         SELECT categoria AS nombre, MIN(imagen) AS imagen
         FROM productos
@@ -47,7 +44,6 @@ def panel_comprador():
         LIMIT 6
     """)
     productos_destacados = cursor.fetchall()
-
     conn.close()
 
     return render_template(
@@ -55,9 +51,9 @@ def panel_comprador():
         nombre=session.get("nombre"),
         noticias=noticias,
         categorias=categorias,
-        productos_destacados=productos_destacados
+        productos_destacados=productos_destacados,
+        page='inicio'  # pestaña activa
     )
-
 
 # ===== Ver productos por categoría =====
 @comprador.route("/categoria/<categoria>")
@@ -77,8 +73,13 @@ def ver_categoria(categoria):
     productos = cursor.fetchall()
     conn.close()
 
-    return render_template("productos_categoria.html", productos=productos, categoria=categoria, nombre=session.get("nombre"))
-
+    return render_template(
+        "productos_categoria.html",
+        productos=productos,
+        categoria=categoria,
+        nombre=session.get("nombre"),
+        page='productos'  # pestaña activa
+    )
 
 # ===== Catálogo de productos =====
 @comprador.route("/productos")
@@ -97,12 +98,17 @@ def ver_productos():
     productos = cursor.fetchall()
     conn.close()
 
-    return render_template("productos_comprador.html", productos=productos, nombre=session.get("nombre"))
+    return render_template(
+        "productos_comprador.html",
+        productos=productos,
+        nombre=session.get("nombre"),
+        page='productos'  # pestaña activa
+    )
 
 # ===== Sobre nosotros =====
 @comprador.route("/sobre_nosotros")
 def sobre_nosotros_comprador():
-    return render_template("sobre_nosotros.html")
+    return render_template("sobre_nosotros.html", page='sobre')
 
 # ===== Agregar producto al carrito =====
 @comprador.route('/agregar_carrito/<int:producto_id>', methods=['POST'])
@@ -136,7 +142,13 @@ def agregar_carrito(producto_id):
 def ver_carrito():
     carrito = session.get("carrito", [])
     total = sum(item["precio"] * item["cantidad"] for item in carrito)
-    return render_template("carrito.html", carrito=carrito, total=total)
+    return render_template(
+        "carrito.html",
+        carrito=carrito,
+        total=total,
+        nombre=session.get("nombre"),
+        page='carrito'  # pestaña activa
+    )
 
 # ===== Finalizar compra =====
 @comprador.route('/finalizar')

@@ -18,7 +18,7 @@ def allowed_file(filename):
 def panel_vendedor():
     if session.get("rol") != "vendedor":
         return redirect(url_for("auth.login"))
-    return render_template("panel_vendedor.html", nombre=session.get("nombre"))
+    return render_template("panel_vendedor.html", nombre=session.get("nombre"), page='inicio')
 
 # ===== Agregar Producto =====
 @vendedor_bp.route("/vendedor/agregar", methods=["GET", "POST"])
@@ -32,7 +32,6 @@ def agregar_producto():
         categoria = request.form.get("categoria")
         unidad = request.form.get("unidad")
 
-        # Guardar stock
         try:
             stock = int(request.form.get("stock"))
             if stock < 0:
@@ -41,14 +40,12 @@ def agregar_producto():
             flash("Stock inválido", "danger")
             return redirect(request.url)
 
-        # Guardar precio
         try:
             precio = float(request.form.get("precio"))
         except (ValueError, TypeError):
             flash("Precio inválido", "danger")
             return redirect(request.url)
 
-        # Guardar imagen
         file = request.files.get("imagen")
         if not file or file.filename == '':
             flash("No se seleccionó ningún archivo.", "danger")
@@ -61,7 +58,6 @@ def agregar_producto():
         filename = secure_filename(file.filename)
         file.save(os.path.join(UPLOAD_FOLDER, filename))
 
-        # Guardar en la base de datos
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -78,7 +74,7 @@ def agregar_producto():
 
         return redirect(url_for("vendedor.agregar_producto"))
 
-    return render_template("agregar_producto.html", nombre=session.get("nombre"))
+    return render_template("agregar_producto.html", nombre=session.get("nombre"), page='agregar')
 
 # ===== Ver Productos =====
 @vendedor_bp.route("/vendedor/productos")
@@ -95,7 +91,7 @@ def productos():
     """, (session["usuario_id"],))
     productos = cursor.fetchall()
     conn.close()
-    return render_template("productos.html", productos=productos, nombre=session.get("nombre"))
+    return render_template("productos.html", productos=productos, nombre=session.get("nombre"), page='productos')
 
 # ===== Ventas =====
 @vendedor_bp.route("/vendedor/ventas")
@@ -115,4 +111,4 @@ def ventas():
     ventas = cursor.fetchall()
     conn.close()
 
-    return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"))
+    return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"), page='ventas')

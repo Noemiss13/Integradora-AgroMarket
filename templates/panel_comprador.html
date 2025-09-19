@@ -7,20 +7,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-    <!-- ===== Menú superior ===== -->
-    <nav>
+<nav>
+    <div class="nav-left">
         <div class="logo"><h2>AgroMarket</h2></div>
-        <div class="menu">
-            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-            <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+        <div class="saludo-usuario">
+            Hola, <strong>{{ nombre }}</strong> 
         </div>
-    </nav>
+    </div>
 
-    <!-- ===== Saludo ===== -->
-    <header class="saludo">
-        <h1>Bienvenido, {{ nombre }}</h1>
-    </header>
+    <div class="menu">
+        <a href="{{ url_for('comprador.panel_comprador') }}" class="activo">Inicio</a>
+        <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
+    </div>
+</nav>
+
 
     <!-- ===== Categorías ===== -->
     <section class="categorias">

@@ -7,16 +7,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
 </head>
 <body>
-<header>
+ <!--Menu-->
+ <header>
     <nav class="menu">
         <ul>
             <li class="logo">AgroMarket</li>
             <li><a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a></li>
-            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
+            <li><a href="{{ url_for('vendedor.agregar_producto') }}"class ="active">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}">Mis Productos</a></li>
+             <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
             <li class="user-name">Hola, {{ nombre }}</li>
-            <li><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
-
+            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
     </nav>
 </header>

@@ -2,3 +2,4 @@ Flask==2.3.2
 Flask-Bcrypt==1.0.1
 mysql-connector-python==8.1.0
 Werkzeug==2.3.6
+pip freeze > requirements.txt

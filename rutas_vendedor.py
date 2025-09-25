@@ -2,6 +2,8 @@ import os
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
 from db import get_db_connection
+from auth.decorators import login_required, role_required
+
 
 vendedor_bp = Blueprint('vendedor', __name__, template_folder='templates')
 
@@ -15,17 +17,16 @@ def allowed_file(filename):
 
 # ===== Panel Vendedor =====
 @vendedor_bp.route("/vendedor/panel")
+@login_required
+@role_required("vendedor")
 def panel_vendedor():
-    if session.get("rol") != "vendedor":
-        return redirect(url_for("auth.login"))
     return render_template("panel_vendedor.html", nombre=session.get("nombre"), page='inicio')
 
 # ===== Agregar Producto =====
 @vendedor_bp.route("/vendedor/agregar", methods=["GET", "POST"])
+@login_required
+@role_required("vendedor")
 def agregar_producto():
-    if session.get("rol") != "vendedor":
-        return redirect(url_for("auth.login"))
-
     if request.method == "POST":
         nombre = request.form.get("nombre")
         descripcion = request.form.get("descripcion")
@@ -78,10 +79,9 @@ def agregar_producto():
 
 # ===== Ver Productos =====
 @vendedor_bp.route("/vendedor/productos")
+@login_required
+@role_required("vendedor")
 def productos():
-    if session.get("rol") != "vendedor":
-        return redirect(url_for("auth.login"))
-
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
@@ -95,10 +95,9 @@ def productos():
 
 # ===== Ventas =====
 @vendedor_bp.route("/vendedor/ventas")
+@login_required
+@role_required("vendedor")
 def ventas():
-    if session.get("rol") != "vendedor":
-        return redirect(url_for("auth.login"))
-
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""

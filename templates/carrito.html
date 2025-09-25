@@ -35,72 +35,35 @@
                </tr>
            </thead>
            <tbody id="listaCarrito">
-               <tr><td colspan="5">Cargando carrito...</td></tr>
+               {% if carrito %}
+                   {% for item in carrito %}
+                   <tr>
+                       <td>{{ item.nombre }}</td>
+                       <td>${{ "%.2f"|format(item.precio) }}</td>
+                       <td>{{ item.cantidad }}</td>
+                       <td>${{ "%.2f"|format(item.precio * item.cantidad) }}</td>
+                       <td>
+                           <form action="{{ url_for('comprador.eliminar_del_carrito', producto_id=item.id) }}" method="POST">
+                               <button type="submit">❌</button>
+                           </form>
+                       </td>
+                   </tr>
+                   {% endfor %}
+               {% else %}
+                   <tr><td colspan="5">Tu carrito está vacío.</td></tr>
+               {% endif %}
            </tbody>
        </table>
 
-       <p class="total"><strong>Total:</strong> $<span id="totalCarrito">0.00</span></p>
-       <button id="btnFinalizar">Finalizar compra ✅</button>
+       <p class="total"><strong>Total:</strong> ${{ "%.2f"|format(total) }}</p>
+
+      <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST">
+    <button type="submit">Finalizar compra ✅</button>
+</form>
+
+
        <br><br>
        <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
    </div>
-
-   <!-- Script carrito -->
-   <script>
-       document.addEventListener("DOMContentLoaded", () => {
-           const listaCarrito = document.getElementById("listaCarrito");
-           const totalCarrito = document.getElementById("totalCarrito");
-           const btnFinalizar = document.getElementById("btnFinalizar");
-
-           let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-
-           function actualizarCarrito() {
-               listaCarrito.innerHTML = "";
-               if (carrito.length === 0) {
-                   listaCarrito.innerHTML = '<tr><td colspan="5">Tu carrito está vacío.</td></tr>';
-                   totalCarrito.textContent = "0.00";
-                   return;
-               }
-
-               let total = 0;
-               carrito.forEach(item => {
-                   total += item.precio * item.cantidad;
-                   const tr = document.createElement("tr");
-                   tr.innerHTML = `
-                       <td>${item.nombre}</td>
-                       <td>$${item.precio.toFixed(2)}</td>
-                       <td>${item.cantidad}</td>
-                       <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
-                       <td><button class="eliminar" data-id="${item.id}">❌</button></td>
-                   `;
-                   listaCarrito.appendChild(tr);
-               });
-
-               totalCarrito.textContent = total.toFixed(2);
-
-               document.querySelectorAll(".eliminar").forEach(boton => {
-                   boton.onclick = () => {
-                       const id = boton.dataset.id;
-                       carrito = carrito.filter(p => p.id !== id);
-                       localStorage.setItem("carrito", JSON.stringify(carrito));
-                       actualizarCarrito();
-                   };
-               });
-           }
-
-           btnFinalizar.addEventListener("click", () => {
-               if (carrito.length === 0) {
-                   alert("El carrito está vacío.");
-                   return;
-               }
-               alert("Compra realizada con éxito ✅");
-               carrito = [];
-               localStorage.setItem("carrito", JSON.stringify(carrito));
-               actualizarCarrito();
-           });
-
-           actualizarCarrito();
-       });
-   </script>
 </body>
 </html>

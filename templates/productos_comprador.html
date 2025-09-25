@@ -3,13 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos - AgroMarket</title>
+    <title>Productos - {{ categoria if categoria else "AgroMarket" }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <style>
+        /* Estilos para cantidad y botón */
+        .cantidad-container {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+        .cantidad-container input[type="number"] {
+            width: 60px;
+            padding: 4px;
+            margin-right: 8px;
+        }
+        .producto-card button {
+            background-color: #2e8b57;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+        .producto-card button:hover {
+            background-color: #246b45;
+        }
+        .mensaje-stock {
+            color: red;
+            margin-left: 10px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-   
- <!-- Menú superior -->
+
+<!-- ===== Menú superior ===== -->
 <nav>
     <div class="nav-left">
         <div class="logo"><h2>AgroMarket</h2></div>
@@ -18,61 +48,114 @@
     <div class="menu">
         <a href="{{ url_for('comprador.panel_comprador') }}" class="{% if page=='inicio' %}activo{% endif %}">Inicio</a>
         <a href="{{ url_for('comprador.ver_productos') }}" class="{% if page=='productos' %}activo{% endif %}">Productos</a>
-        <a href="{{ url_for('comprador.ver_carrito') }}" class="{% if page=='carrito' %}activo{% endif %}">🛒 Carrito (<span id="contadorCarrito">0</span>)</a>
+        <a href="{{ url_for('comprador.ver_carrito') }}" class="{% if page=='carrito' %}activo{% endif %}">Carrito 🛒</a>
         <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
     </div>
 </nav>
 
-    <!-- Filtros y búsqueda -->
-    <section class="filtros">
-        <input type="text" id="busqueda" placeholder="Buscar producto...">
-        <select id="categoria">
-            <option value="">Todas las categorías</option>
-            <option value="semillas">Semillas</option>
-            <option value="frutas">Frutas</option>
-            <option value="verduras">Verduras</option>
-            <option value="herramientas">Herramientas</option>
-        </select>
-        <button id="btnBuscar">Buscar</button>
-    </section>
+<!-- ===== Saludo / Categoría ===== -->
+<header class="saludo">
+    {% if categoria %}
+        <h1>Productos de la categoría: {{ categoria }}</h1>
+    {% else %}
+        <h1>Todos los productos disponibles</h1>
+    {% endif %}
+</header>
 
-    <!-- Listado de productos -->
-<section class="productos" id="productos">
-    {% for producto in productos %}
-<div class="producto-card" 
-     data-id="{{ producto.id }}" 
-     data-nombre="{{ producto.nombre }}" 
-     data-precio="{{ producto.precio }}"
-     data-categoria="{{ producto.categoria|lower }}">
-     
-    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) if producto.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ producto.nombre }}">
-    <h3>{{ producto.nombre }}</h3>
-    <p>{{ producto.descripcion }}</p>
-    <p class="precio">Precio: ${{ producto.precio }}</p>
-    <p class="stock">Stock: {{ producto.stock }} kg</p>
-    <p class="vendedor">Vendedor: {{ producto.vendedor }}</p>
-</div>
-
-    {% endfor %}
+<!-- ===== Filtros y búsqueda ===== -->
+<section class="filtros">
+    <input type="text" id="busqueda" placeholder="Buscar producto...">
+    <select id="categoria">
+        <option value="">Todas las categorías</option>
+        <option value="semillas">Semillas</option>
+        <option value="frutas">Frutas</option>
+        <option value="verduras">Verduras</option>
+        <option value="herramientas">Herramientas</option>
+    </select>
+    <button id="btnBuscar">Buscar</button>
 </section>
 
+<!-- ===== Listado de productos ===== -->
+<section class="productos" id="productos">
+    {% if productos %}
+        <div class="productos-grid">
+            {% for p in productos %}
+            <article class="producto-card" 
+                     data-id="{{ p.id }}" 
+                     data-nombre="{{ p.nombre }}" 
+                     data-precio="{{ p.precio }}"
+                     data-categoria="{{ p.categoria|lower }}"
+                     data-stock="{{ p.stock }}">
+                
+                <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ p.nombre }}">
+                <div class="producto-body">
+                    <h3>{{ p.nombre }}</h3>
+                    <p>{{ p.descripcion }}</p>
+                    <p><strong>Precio:</strong> ${{ p.precio|float|round(2) }} por kg</p>
+                    <p><strong>Stock:</strong> {{ p.stock }} kg disponibles</p>
+                    <p><strong>Vendedor:</strong> {{ p.vendedor }}</p>
+                    <form action="{{ url_for('comprador.agregar_carrito', producto_id=p.id) }}" method="POST" class="form-carrito">
+                        <div class="cantidad-container">
+                            <input type="number" name="cantidad" min="1" max="{{ p.stock }}" value="1" class="cantidad-input">
+                            <span class="mensaje-stock">⚠ Stock bajo</span>
+                            <button type="submit">Agregar al carrito</button>
+                        </div>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay productos disponibles en esta categoría.</p>
+    {% endif %}
+</section>
 
-    <!-- Carrito lateral -->
-    <section class="carrito" id="carrito">
-        <h2>Mi carrito</h2>
-        <ul id="listaCarrito"></ul>
-        <p>Total: $<span id="totalCarrito">0</span></p>
-        <button id="btnComprar">Comprar</button>
-    </section>
+<!-- ===== Scripts ===== -->
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
+    .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
+}
 
-    <!-- Scripts -->
-    <script>
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
-            .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
-            .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
+// ===== Manejo de búsqueda y categorías =====
+document.getElementById("btnBuscar").addEventListener("click", function() {
+    let busqueda = document.getElementById("busqueda").value.trim();
+    let categoria = document.getElementById("categoria").value.trim().toLowerCase();
+
+    if (categoria) {
+        let url = "/comprador/categoria/" + encodeURIComponent(categoria);
+        if (busqueda) url += "?busqueda=" + encodeURIComponent(busqueda);
+        window.location.href = url;
+    } else {
+        let url = "/comprador/productos";
+        if (busqueda) url += "?busqueda=" + encodeURIComponent(busqueda);
+        window.location.href = url;
+    }
+});
+
+// ===== Manejo de stock y cantidad =====
+document.querySelectorAll(".form-carrito").forEach(form => {
+    const input = form.querySelector(".cantidad-input");
+    const mensaje = form.querySelector(".mensaje-stock");
+    const stock = parseInt(form.closest(".producto-card").dataset.stock);
+
+    // Mostrar advertencia si el stock es bajo
+    if (stock <= 1) {
+        mensaje.style.display = "inline";
+        input.value = 1;
+        input.max = 1;
+    }
+
+    form.addEventListener("submit", (e) => {
+        const cantidad = parseInt(input.value);
+        if (cantidad > stock) {
+            e.preventDefault();
+            alert(`No puedes agregar más de ${stock} unidad(es) porque el stock es limitado.`);
         }
-    </script>
-    <script src="{{ url_for('static', filename='js/comprador.js') }}"></script>
+    });
+});
+</script>
+<script src="{{ url_for('static', filename='js/comprador.js') }}"></script>
 </body>
 </html>

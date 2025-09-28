@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+   
 </head>
 <body>
     <div class="login-wrapper">
-        <!-- Bloque completo -->
         <div class="login-box">
             <!-- Lado izquierdo -->
             <div class="info-box">
@@ -19,6 +21,7 @@
 
             <!-- Lado derecho -->
             <div class="form-container">
+                 <img src="{{ url_for('static', filename='images/logo_leaf.png') }}" alt="Logo AgroMarket" class="logo-login">
                 <h1>Iniciar Sesión</h1>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -30,8 +33,19 @@
                 {% endwith %}
 
                 <form method="POST">
-                    <input type="email" name="email" placeholder="Correo electrónico" required>
-                    <input type="password" name="password" placeholder="Contraseña" required>
+                    <!-- Campo correo -->
+                    <div class="input-group">
+                        <i class="fa-solid fa-envelope icon-left"></i>
+                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                    </div>
+
+                    <!-- Campo contraseña -->
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock icon-left"></i>
+                        <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
+
                     <button type="submit">Iniciar Sesión</button>
                 </form>
 
@@ -40,5 +54,20 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Mostrar/ocultar contraseña
+        const togglePassword = document.querySelector("#togglePassword");
+        const password = document.querySelector("#password");
+
+        togglePassword.addEventListener("click", () => {
+            const type = password.getAttribute("type") === "password" ? "text" : "password";
+            password.setAttribute("type", type);
+
+            // Cambiar el ícono
+            togglePassword.classList.toggle("fa-eye");
+            togglePassword.classList.toggle("fa-eye-slash");
+        });
+    </script>
 </body>
 </html>

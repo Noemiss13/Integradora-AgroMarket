@@ -2,68 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Carrito - AgroMarket</title>
+    <title>Carrito - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-   <!-- Menú superior -->
-   <nav>
-       <div class="nav-left">
-           <div class="logo"><h2>AgroMarket</h2></div>
-           <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
-       </div>
-       <div class="menu">
-           <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-           <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-           <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito 🛒</a>
-           <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
-       </div>
-   </nav>
 
-   <!-- Contenedor del carrito -->
-   <div class="carrito-container">
-       <h1>🛒 Mi carrito</h1>
-       <table id="tablaCarrito">
-           <thead>
-               <tr>
-                   <th>Producto</th>
-                   <th>Precio</th>
-                   <th>Cantidad</th>
-                   <th>Subtotal</th>
-                   <th>Acción</th>
-               </tr>
-           </thead>
-           <tbody id="listaCarrito">
-               {% if carrito %}
-                   {% for item in carrito %}
-                   <tr>
-                       <td>{{ item.nombre }}</td>
-                       <td>${{ "%.2f"|format(item.precio) }}</td>
-                       <td>{{ item.cantidad }}</td>
-                       <td>${{ "%.2f"|format(item.precio * item.cantidad) }}</td>
-                       <td>
-                           <form action="{{ url_for('comprador.eliminar_del_carrito', producto_id=item.id) }}" method="POST">
-                               <button type="submit">❌</button>
-                           </form>
-                       </td>
-                   </tr>
-                   {% endfor %}
-               {% else %}
-                   <tr><td colspan="5">Tu carrito está vacío.</td></tr>
-               {% endif %}
-           </tbody>
-       </table>
+    <!-- ====== MENÚ SUPERIOR ====== -->
+    <nav>
+        <div class="nav-left">
+            <a href="{{ url_for('comprador.panel_comprador') }}" class="logo">🌱 AgroMarket</a>
+            <span class="saludo-usuario">Hola, {{ session['usuario_nombre'] }}</span>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+            <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito</a>
+            <a href="{{ url_for('auth.logout') }}">Salir</a>
+        </div>
+    </nav>
 
-       <p class="total"><strong>Total:</strong> ${{ "%.2f"|format(total) }}</p>
+    <!-- ====== CONTENEDOR DEL CARRITO ====== -->
+    <div class="carrito-container">
+        <h1>🛒 Tu carrito</h1>
 
-      <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST">
-    <button type="submit">Finalizar compra ✅</button>
-</form>
+        {% if carrito %}
+            <table id="tablaCarrito">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in carrito %}
+                        <tr>
+                            <td><strong>{{ item.nombre }}</strong></td>
+                            <td>${{ item.precio }}</td>
+                            <td>
+                                <div class="cantidad-container">
+                                    <form action="{{ url_for('comprador.disminuir_cantidad', producto_id=item.id) }}" method="POST">
+                                        <button type="submit" class="btn-cantidad">-</button>
+                                    </form>
+                                    <span class="cantidad">{{ item.cantidad }}</span>
+                                    <form action="{{ url_for('comprador.aumentar_cantidad', producto_id=item.id) }}" method="POST">
+                                        <button type="submit" class="btn-cantidad">+</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('comprador.eliminar_del_carrito', producto_id=item.id) }}" method="POST">
+                                    <button type="submit" class="eliminar">❌ Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
+            <div class="total">
+                <strong>Total:</strong> ${{ total }}
+            </div>
 
-       <br><br>
-       <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
-   </div>
+            <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST">
+                <button type="submit" id="btnFinalizar">✅ Finalizar compra</button>
+            </form>
+
+        {% else %}
+            <p>Tu carrito está vacío.</p>
+        {% endif %}
+    </div>
+
 </body>
 </html>

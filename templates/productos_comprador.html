@@ -5,40 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos - {{ categoria if categoria else "AgroMarket" }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <style>
-        /* Estilos para cantidad y botón */
-        .cantidad-container {
-            display: flex;
-            align-items: center;
-            margin-top: 5px;
-        }
-        .cantidad-container input[type="number"] {
-            width: 60px;
-            padding: 4px;
-            margin-right: 8px;
-        }
-        .producto-card button {
-            background-color: #2e8b57;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.2s;
-        }
-        .producto-card button:hover {
-            background-color: #246b45;
-        }
-        .mensaje-stock {
-            color: red;
-            margin-left: 10px;
-            display: none;
-        }
-    </style>
+ 
 </head>
 <body>
-
 <!-- ===== Menú superior ===== -->
 <nav>
     <div class="nav-left">
@@ -91,14 +60,16 @@
                 <div class="producto-body">
                     <h3>{{ p.nombre }}</h3>
                     <p>{{ p.descripcion }}</p>
-                    <p><strong>Precio:</strong> ${{ p.precio|float|round(2) }} por kg</p>
-                    <p><strong>Stock:</strong> {{ p.stock }} kg disponibles</p>
+                    <p><strong>Precio:</strong> ${{ p.precio|float|round(2) }} por {{ p.unidad }}</p>
+                    <p><strong>Stock:</strong> {{ p.stock }} disponibles</p>
                     <p><strong>Vendedor:</strong> {{ p.vendedor }}</p>
+
                     <form action="{{ url_for('comprador.agregar_carrito', producto_id=p.id) }}" method="POST" class="form-carrito">
                         <div class="cantidad-container">
-                            <input type="number" name="cantidad" min="1" max="{{ p.stock }}" value="1" class="cantidad-input">
-                            <span class="mensaje-stock">⚠ Stock bajo</span>
-                            <button type="submit">Agregar al carrito</button>
+                            <button type="button" class="btn-cantidad disminuir">-</button>
+                            <input type="number" name="cantidad" min="1" max="{{ p.stock }}" value="1" class="cantidad-input" readonly>
+                            <button type="button" class="btn-cantidad aumentar">+</button>
+                            <button type="submit" class="btn-agregar">Agregar</button>
                         </div>
                     </form>
                 </div>
@@ -112,13 +83,6 @@
 
 <!-- ===== Scripts ===== -->
 <script>
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
-    .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
-    .catch(err => console.error("❌ Error al registrar el Service Worker:", err));
-}
-
-// ===== Manejo de búsqueda y categorías =====
 document.getElementById("btnBuscar").addEventListener("click", function() {
     let busqueda = document.getElementById("busqueda").value.trim();
     let categoria = document.getElementById("categoria").value.trim().toLowerCase();
@@ -134,28 +98,23 @@ document.getElementById("btnBuscar").addEventListener("click", function() {
     }
 });
 
-// ===== Manejo de stock y cantidad =====
+// ===== Control de flechas cantidad =====
 document.querySelectorAll(".form-carrito").forEach(form => {
     const input = form.querySelector(".cantidad-input");
-    const mensaje = form.querySelector(".mensaje-stock");
+    const btnMenos = form.querySelector(".disminuir");
+    const btnMas = form.querySelector(".aumentar");
     const stock = parseInt(form.closest(".producto-card").dataset.stock);
 
-    // Mostrar advertencia si el stock es bajo
-    if (stock <= 1) {
-        mensaje.style.display = "inline";
-        input.value = 1;
-        input.max = 1;
-    }
+    btnMas.addEventListener("click", () => {
+        let val = parseInt(input.value);
+        if (val < stock) input.value = val + 1;
+    });
 
-    form.addEventListener("submit", (e) => {
-        const cantidad = parseInt(input.value);
-        if (cantidad > stock) {
-            e.preventDefault();
-            alert(`No puedes agregar más de ${stock} unidad(es) porque el stock es limitado.`);
-        }
+    btnMenos.addEventListener("click", () => {
+        let val = parseInt(input.value);
+        if (val > 1) input.value = val - 1;
     });
 });
 </script>
-<script src="{{ url_for('static', filename='js/comprador.js') }}"></script>
 </body>
 </html>

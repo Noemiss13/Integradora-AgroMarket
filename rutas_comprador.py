@@ -147,7 +147,8 @@ def agregar_carrito(producto_id):
         return redirect(url_for('comprador.ver_productos'))
 
     if cantidad_solicitada > producto["stock"]:
-        return f"<h1>No puedes agregar {cantidad_solicitada} unidades. Solo hay {producto['stock']} en stock.</h1><a href='{url_for('comprador.ver_productos')}'>Volver</a>"
+        flash(f"No puedes agregar {cantidad_solicitada} unidades. Solo hay {producto['stock']} en stock.", "danger")
+        return redirect(url_for('comprador.ver_productos'))
 
     if "carrito" not in session:
         session["carrito"] = []
@@ -156,40 +157,78 @@ def agregar_carrito(producto_id):
     for item in carrito:
         if item["id"] == producto["id"]:
             if item["cantidad"] + cantidad_solicitada > producto["stock"]:
-                return f"<h1>No puedes agregar más. Solo hay {producto['stock']} en stock.</h1><a href='{url_for('comprador.ver_productos')}'>Volver</a>"
+                flash(f"No puedes agregar más. Stock disponible: {producto['stock']}", "warning")
+                return redirect(url_for('comprador.ver_productos'))
             item["cantidad"] += cantidad_solicitada
             break
     else:
         producto["cantidad"] = cantidad_solicitada
-        carrito.append(producto)
+        session["carrito"].append(producto)
 
-    session["carrito"] = carrito
+    flash("Producto agregado al carrito ✅", "success")
     return redirect(url_for("comprador.ver_carrito"))
 
-# ===== Aumentar cantidad en carrito =====
-@comprador.route('/carrito/aumentar/<int:producto_id>', methods=['POST'])
+# ===== Finalizar compra ===== #
+@comprador.route("/finalizar_compra", methods=["POST"])
+def finalizar_compra():
+    carrito = session.get("carrito", [])
+    if not carrito:
+        flash("Tu carrito está vacío", "warning")
+        return redirect(url_for("comprador.ver_carrito"))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        for item in carrito:
+            producto_id = item["id"]
+            cantidad = item["cantidad"]
+
+            # Descontar stock si hay suficiente
+            cursor.execute(
+                "UPDATE productos SET stock = stock - %s WHERE id = %s AND stock >= %s",
+                (cantidad, producto_id, cantidad)
+            )
+
+            # Registrar venta
+            cursor.execute("""
+                INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
+                VALUES (%s, %s, %s, NOW())
+            """, (producto_id, cantidad, item["precio"] * cantidad))
+
+        conn.commit()
+        flash("✅ Compra realizada y stock actualizado.")
+        session["carrito"] = []  # Vaciar carrito
+    except Exception as e:
+        conn.rollback()
+        flash(f"❌ Error en la compra: {e}", "danger")
+    finally:
+        conn.close()
+
+    return redirect(url_for("comprador.ver_carrito"))
+
+
+# ===== Disminuir cantidad en carrito =====
+@comprador.route("/carrito/aumentar/<int:producto_id>", methods=["POST"])
 def aumentar_cantidad(producto_id):
     carrito = session.get("carrito", [])
     for item in carrito:
         if item["id"] == producto_id:
-            if item["cantidad"] < item["stock"]:
-                item["cantidad"] += 1
+            item["cantidad"] += 1
             break
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
 
-# ===== Disminuir cantidad en carrito =====
-@comprador.route('/carrito/disminuir/<int:producto_id>', methods=['POST'])
+@comprador.route("/carrito/disminuir/<int:producto_id>", methods=["POST"])
 def disminuir_cantidad(producto_id):
     carrito = session.get("carrito", [])
     for item in carrito:
-        if item["id"] == producto_id:
+        if item["id"] == producto_id and item["cantidad"] > 1:
             item["cantidad"] -= 1
-            if item["cantidad"] <= 0:
-                carrito.remove(item)
             break
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
+
 
 # ===== Ver carrito =====
 @comprador.route('/carrito')
@@ -208,25 +247,6 @@ def ver_carrito():
         nombre=session.get("nombre"),
         page='carrito'
     )
-# ===== Finalizar compra ===== #
-@comprador.route("/finalizar_compra", methods=["POST"])
-def finalizar_compra():
-    carrito = request.form.getlist("carrito")  # o tu lógica para obtener el carrito
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    for item in carrito:
-        producto_id = item["id"]
-        cantidad = item["cantidad"]
-        # Descontar del stock
-        cursor.execute("UPDATE productos SET stock = stock - %s WHERE id = %s", (cantidad, producto_id))
-    
-    conn.commit()
-    conn.close()
-
-    flash("Compra realizada y stock actualizado ✅")
-    return redirect(url_for("comprador.ver_carrito"))
-
 
 
 # ===== Eliminar producto del carrito =====

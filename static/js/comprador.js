@@ -17,12 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const nombre = producto.dataset.nombre;
         const precio = parseFloat(producto.dataset.precio);
 
-        const btn = document.createElement("button");
-        btn.textContent = "Agregar al carrito 🛒";
-        btn.className = "comprar";
-        btn.dataset.id = id;
-        btn.dataset.nombre = nombre;
-        btn.dataset.precio = precio;
+        
 
         producto.appendChild(btn);
 

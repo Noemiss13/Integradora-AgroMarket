@@ -128,3 +128,56 @@ body::before {
 .form-container a:hover {
     text-decoration: underline;
 }
+
+        /* Contenedor del input con icono */
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 40px 10px 35px; /* espacio para el icono */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Icono a la izquierda */
+        .input-group .icon-left {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        /* Botón de mostrar/ocultar */
+        .input-group .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+        }
+    /* Logo en login */
+.logo-login {
+    display: block;
+    margin: 0 auto 15px auto; /* Centrado y espacio inferior */
+    width: 100px;   /* ajusta el ancho fijo */
+    height: auto;  /* mantiene proporciones */
+    object-fit: contain; /* evita que se deforme */
+}
+/* Ajuste del formulario de registro/login */
+.form-container {
+    max-width: 400px;      /* ancho máximo para que no se estire */
+    width: 100%;           /* ocupará todo hasta 400px */
+    margin: 0 auto;        /* centrar horizontalmente */
+    box-sizing: border-box;
+    padding: 40px 30px;    /* mantienes el padding */
+    border-radius: 10px;   /* opcional, si quieres esquinas redondeadas */
+}
+.form-container {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    background: white;
+}

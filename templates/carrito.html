@@ -2,105 +2,77 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Carrito - AgroMarket</title>
+    <title>Carrito - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-   <!-- Menú superior -->
-   <nav>
-       <div class="nav-left">
-           <div class="logo"><h2>AgroMarket</h2></div>
-           <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
-       </div>
-       <div class="menu">
-           <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-           <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-           <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito 🛒</a>
-           <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
-       </div>
-   </nav>
 
-   <!-- Contenedor del carrito -->
-   <div class="carrito-container">
-       <h1>🛒 Mi carrito</h1>
-       <table id="tablaCarrito">
-           <thead>
-               <tr>
-                   <th>Producto</th>
-                   <th>Precio</th>
-                   <th>Cantidad</th>
-                   <th>Subtotal</th>
-                   <th>Acción</th>
-               </tr>
-           </thead>
-           <tbody id="listaCarrito">
-               <tr><td colspan="5">Cargando carrito...</td></tr>
-           </tbody>
-       </table>
+    <!-- ====== MENÚ SUPERIOR ====== -->
+    <nav>
+        <div class="nav-left">
+            <a href="{{ url_for('comprador.panel_comprador') }}" class="logo">🌱 AgroMarket</a>
+            <span class="saludo-usuario">Hola, {{ session['usuario_nombre'] }}</span>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+            <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito</a>
+            <a href="{{ url_for('auth.logout') }}">Salir</a>
+        </div>
+    </nav>
 
-       <p class="total"><strong>Total:</strong> $<span id="totalCarrito">0.00</span></p>
-       <button id="btnFinalizar">Finalizar compra ✅</button>
-       <br><br>
-       <a href="{{ url_for('comprador.ver_productos') }}">⬅ Ver productos</a>
-   </div>
+    <!-- ====== CONTENEDOR DEL CARRITO ====== -->
+    <div class="carrito-container">
+        <h1>🛒 Tu carrito</h1>
 
-   <!-- Script carrito -->
-   <script>
-       document.addEventListener("DOMContentLoaded", () => {
-           const listaCarrito = document.getElementById("listaCarrito");
-           const totalCarrito = document.getElementById("totalCarrito");
-           const btnFinalizar = document.getElementById("btnFinalizar");
+        {% if carrito %}
+            <table id="tablaCarrito">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in carrito %}
+                        <tr>
+                            <td><strong>{{ item.nombre }}</strong></td>
+                            <td>${{ item.precio }}</td>
+                            <td>
+                                <div class="cantidad-container">
+                                    <form action="{{ url_for('comprador.disminuir_cantidad', producto_id=item.id) }}" method="POST">
+                                        <button type="submit" class="btn-cantidad">-</button>
+                                    </form>
+                                    <span class="cantidad">{{ item.cantidad }}</span>
+                                    <form action="{{ url_for('comprador.aumentar_cantidad', producto_id=item.id) }}" method="POST">
+                                        <button type="submit" class="btn-cantidad">+</button>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('comprador.eliminar_del_carrito', producto_id=item.id) }}" method="POST">
+                                    <button type="submit" class="eliminar">❌ Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-           let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+            <div class="total">
+                <strong>Total:</strong> ${{ total }}
+            </div>
 
-           function actualizarCarrito() {
-               listaCarrito.innerHTML = "";
-               if (carrito.length === 0) {
-                   listaCarrito.innerHTML = '<tr><td colspan="5">Tu carrito está vacío.</td></tr>';
-                   totalCarrito.textContent = "0.00";
-                   return;
-               }
+            <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST">
+                <button type="submit" id="btnFinalizar">✅ Finalizar compra</button>
+            </form>
 
-               let total = 0;
-               carrito.forEach(item => {
-                   total += item.precio * item.cantidad;
-                   const tr = document.createElement("tr");
-                   tr.innerHTML = `
-                       <td>${item.nombre}</td>
-                       <td>$${item.precio.toFixed(2)}</td>
-                       <td>${item.cantidad}</td>
-                       <td>$${(item.precio * item.cantidad).toFixed(2)}</td>
-                       <td><button class="eliminar" data-id="${item.id}">❌</button></td>
-                   `;
-                   listaCarrito.appendChild(tr);
-               });
+        {% else %}
+            <p>Tu carrito está vacío.</p>
+        {% endif %}
+    </div>
 
-               totalCarrito.textContent = total.toFixed(2);
-
-               document.querySelectorAll(".eliminar").forEach(boton => {
-                   boton.onclick = () => {
-                       const id = boton.dataset.id;
-                       carrito = carrito.filter(p => p.id !== id);
-                       localStorage.setItem("carrito", JSON.stringify(carrito));
-                       actualizarCarrito();
-                   };
-               });
-           }
-
-           btnFinalizar.addEventListener("click", () => {
-               if (carrito.length === 0) {
-                   alert("El carrito está vacío.");
-                   return;
-               }
-               alert("Compra realizada con éxito ✅");
-               carrito = [];
-               localStorage.setItem("carrito", JSON.stringify(carrito));
-               actualizarCarrito();
-           });
-
-           actualizarCarrito();
-       });
-   </script>
 </body>
 </html>

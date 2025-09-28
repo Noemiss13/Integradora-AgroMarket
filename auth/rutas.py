@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from flask_bcrypt import Bcrypt
-from db import get_db_connection
 
 auth_bp = Blueprint("auth", __name__, template_folder="templates")
-bcrypt = Bcrypt()  # se instancia aquí, no necesitas importar desde app.py
+bcrypt = None  # Se sobrescribe desde app.py para evitar circular import
 
 # Registro
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+    from db import get_db_connection
+    from app import bcrypt  # Importamos bcrypt desde app.py
     if request.method == "POST":
         nombre = request.form.get("nombre")
         email = request.form.get("email")
@@ -34,6 +34,8 @@ def register():
 # Login
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    from db import get_db_connection
+    from app import bcrypt
     if request.method == "POST":
         email_input = request.form.get("email")
         password_input = request.form.get("password")

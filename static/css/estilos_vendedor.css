@@ -318,3 +318,11 @@ form button[type="submit"]:hover {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+.logo-login {
+    display: block;
+    margin: 0 auto 15px auto;
+    width: auto;
+    max-width: 10px;   /* controla ancho */
+    max-height: 10px;  /* controla alto */
+}
+

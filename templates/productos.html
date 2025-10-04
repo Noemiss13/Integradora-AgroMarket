@@ -14,7 +14,7 @@
             <li><a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a></li>
             <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}" class="active">Mis Productos</a></li>
-             <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
+            <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
             <li class="user-name">Hola, {{ nombre }}</li>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
@@ -38,7 +38,16 @@
                         <h3>{{ p.nombre }}</h3>
                         <p class="categoria">{{ p.categoria }}</p>
                         <p class="precio">$ {{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
-                        <p class="stock">Disponibles: {{ p.stock }}</p> <!-- Stock agregado -->
+                        <p class="stock">Disponibles: {{ p.stock }}</p>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="acciones">
+                        <a href="{{ url_for('vendedor.editar_producto', id=p.id) }}" class="btn-editar">Editar</a>
+                        
+                        <form action="{{ url_for('vendedor.eliminar_producto', id=p.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Seguro que quieres eliminar este producto?');">Eliminar</button>
+                        </form>
                     </div>
                 </div>
             {% endfor %}

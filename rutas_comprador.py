@@ -182,19 +182,22 @@ def finalizar_compra():
     try:
         for item in carrito:
             producto_id = item["id"]
-            cantidad = item["cantidad"]
+            cantidad = int(item["cantidad"])
+            precio = float(item["precio"])
+            total = round(precio * cantidad, 2)
 
-            # Descontar stock si hay suficiente
+    # Descontar stock
             cursor.execute(
                 "UPDATE productos SET stock = stock - %s WHERE id = %s AND stock >= %s",
                 (cantidad, producto_id, cantidad)
-            )
+    )
 
-            # Registrar venta
+    # Registrar venta
             cursor.execute("""
-                INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
-                VALUES (%s, %s, %s, NOW())
-            """, (producto_id, cantidad, item["precio"] * cantidad))
+        INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
+        VALUES (%s, %s, %s, NOW())
+    """, (producto_id, cantidad, total))
+
 
         conn.commit()
         flash("✅ Compra realizada y stock actualizado.")

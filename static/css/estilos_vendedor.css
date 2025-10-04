@@ -326,3 +326,72 @@ form button[type="submit"]:hover {
     max-height: 10px;  /* controla alto */
 }
 
+/* Contenedor de productos más compacto */
+.productos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px; /* menos espacio entre tarjetas */
+    padding: 0 0.5rem;
+}
+
+/* Tarjeta más pareja */
+.producto-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;  /* todas iguales */
+    padding-bottom: 8px;
+}
+
+/* Imagen más chica */
+.producto-img {
+    height: 130px;
+}
+
+/* Info más compacta */
+.producto-info {
+    padding: 10px;
+    flex-grow: 1;
+}
+
+/* Contenedor de botones */
+.acciones {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: auto;
+    padding: 8px;
+}
+
+/* Botones iguales */
+.btn-editar, .btn-eliminar {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;  /* evita que se estiren */
+    text-decoration: none;
+}
+
+/* Estilo editar */
+.btn-editar {
+    background-color: #3498db;
+    color: #fff;
+}
+.btn-editar:hover {
+    background-color: #2980b9;
+}
+
+/* Estilo eliminar */
+.btn-eliminar {
+    background-color: #e74c3c;
+    color: #fff;
+}
+.btn-eliminar:hover {
+    background-color: #c0392b;
+}

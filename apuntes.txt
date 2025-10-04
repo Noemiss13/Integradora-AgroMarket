@@ -1,0 +1,3 @@
+HTTP: http://agromarket.test
+
+HTTPS: https://agromarket.test (puede pedir añadir excepción la primera vez por el certificado autofirmado)

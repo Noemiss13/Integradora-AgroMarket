@@ -111,3 +111,53 @@ def ventas():
     conn.close()
 
     return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"), page='ventas')
+
+# ===== Editar producto =====
+@vendedor_bp.route("/producto/editar/<int:id>", methods=["GET", "POST"])
+@login_required
+@role_required("vendedor")
+def editar_producto(id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM productos WHERE id = %s AND vendedor_id = %s", (id, session["usuario_id"]))
+    producto = cursor.fetchone()
+
+    if not producto:
+        flash("Producto no encontrado", "danger")
+        conn.close()
+        return redirect(url_for("vendedor.productos"))
+
+    if request.method == "POST":
+        nombre = request.form["nombre"]
+        precio = float(request.form["precio"])
+        stock = int(request.form["stock"])
+        categoria = request.form["categoria"]
+        descripcion = request.form["descripcion"]
+
+        cursor.execute("""
+            UPDATE productos
+            SET nombre=%s, precio=%s, stock=%s, categoria=%s, descripcion=%s
+            WHERE id=%s
+        """, (nombre, precio, stock, categoria, descripcion, id))
+
+        conn.commit()
+        conn.close()
+        flash("Producto actualizado correctamente", "success")
+        return redirect(url_for("vendedor.productos"))
+
+    conn.close()
+    return render_template("editar_producto.html", producto=producto, nombre=session.get("nombre"))
+
+# ===== Eliminar producto =====
+@vendedor_bp.route("/producto/eliminar/<int:id>", methods=["POST"])
+@login_required
+@role_required("vendedor")
+def eliminar_producto(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM productos WHERE id = %s AND vendedor_id = %s", (id, session["usuario_id"]))
+    conn.commit()
+    conn.close()
+
+    flash("Producto eliminado correctamente", "success")
+    return redirect(url_for("vendedor.productos"))

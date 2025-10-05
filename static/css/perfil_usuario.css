@@ -1,0 +1,198 @@
+/* ===================== */
+/* Reset y tipografía */
+/* ===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===================== */
+/* Header y menú */
+/* ===================== */
+header {
+    background: linear-gradient(90deg, #2e8b57, #1e5f3f);
+    color: white;
+    padding: 15px 0;
+}
+
+header .menu ul {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    max-width: 1200px;
+    margin: auto;
+    padding: 0 20px;
+}
+
+header .menu ul li {
+    margin-right: 20px;
+}
+
+header .menu ul li.logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    flex-grow: 1;
+}
+
+header .menu ul li a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+}
+
+header .menu ul li a.active {
+    border-bottom: 2px solid white;
+}
+
+header .menu ul li.logout a:hover {
+    text-decoration: underline;
+}
+
+/* ===================== */
+/* Contenedores principales */
+/* ===================== */
+.perfil-container,
+.seleccionar-rol-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+/* Títulos */
+.perfil-container h1,
+.seleccionar-rol-container h1 {
+    color: #2e8b57;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.seleccionar-rol-container h3 {
+    color: #2e8b57;
+    margin-bottom: 15px;
+}
+
+/* ===================== */
+/* Formulario común */
+/* ===================== */
+.perfil-form .form-group,
+.seleccionar-rol-form .form-group {
+    margin-bottom: 15px;
+}
+
+.perfil-form label,
+.seleccionar-rol-form label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.perfil-form input,
+.perfil-form select,
+.seleccionar-rol-form select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+
+.perfil-form button.btn,
+.seleccionar-rol-form button.btn,
+.roles-container button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #2e8b57;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.perfil-form button.btn:hover,
+.seleccionar-rol-form button.btn:hover,
+.roles-container button:hover {
+    background-color: #1e5f3f;
+}
+
+/* ===================== */
+/* Mensajes flash */
+/* ===================== */
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+.flash-messages .alert {
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.flash-messages .alert.success { background-color: #d4edda; color: #155724; }
+.flash-messages .alert.danger { background-color: #f8d7da; color: #721c24; }
+.flash-messages .alert.info { background-color: #cce5ff; color: #004085; }
+
+/* ===================== */
+/* Roles adicionales */
+/* ===================== */
+.roles-container {
+    margin-top: 25px;
+    text-align: center;
+}
+
+.roles-container form {
+    display: inline-block;
+    margin: 5px;
+}
+
+.roles-container button {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    background-color: #2e8b57;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.roles-container button:hover {
+    background-color: #1e5f3f;
+}
+
+/* ===================== */
+/* Seleccionar rol específico */
+/* ===================== */
+.seleccionar-rol-container form {
+    margin-bottom: 15px;
+}
+
+.seleccionar-rol-container select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+
+.seleccionar-rol-container button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #2e8b57;
+    color: white;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.seleccionar-rol-container button:hover {
+    background-color: #1e5f3f;
+}

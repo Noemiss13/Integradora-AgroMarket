@@ -10,7 +10,7 @@
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#2e8b57">
 
-    <!-- Iconos para que se muestre al instalar -->
+    <!-- Iconos -->
     <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icon-192.png') }}">
     <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/icon-512.png') }}">
 </head>
@@ -20,10 +20,11 @@
     <nav class="menu">
         <ul>
             <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('vendedor.panel_vendedor') }}"class="active">Home</a></li>
+            <li><a href="{{ url_for('vendedor.panel_vendedor') }}" class="active">Home</a></li>
             <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
             <li><a href="{{ url_for('vendedor.productos') }}">Mis Productos</a></li>
             <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
+            <li><a href="{{ url_for('auth.perfil') }}">Mi Perfil</a></li>
             <li class="user-name">Hola, {{ nombre }}</li>
             <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
         </ul>
@@ -31,6 +32,17 @@
 </header>
 
 <main>
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <h1>Bienvenido, {{ nombre }}</h1>
     <p>Este es tu panel principal donde podrás administrar tus productos y ventas.</p>
 </main>

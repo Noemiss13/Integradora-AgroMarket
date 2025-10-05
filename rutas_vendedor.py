@@ -4,7 +4,6 @@ from werkzeug.utils import secure_filename
 from db import get_db_connection
 from auth.decorators import login_required, role_required
 
-
 vendedor_bp = Blueprint('vendedor', __name__, template_folder='templates')
 
 # Carpeta para subir imágenes
@@ -109,7 +108,6 @@ def ventas():
     """, (session["usuario_id"],))
     ventas = cursor.fetchall()
     conn.close()
-
     return render_template("ventas.html", ventas=ventas, nombre=session.get("nombre"), page='ventas')
 
 # ===== Editar producto =====
@@ -158,6 +156,5 @@ def eliminar_producto(id):
     cursor.execute("DELETE FROM productos WHERE id = %s AND vendedor_id = %s", (id, session["usuario_id"]))
     conn.commit()
     conn.close()
-
     flash("Producto eliminado correctamente", "success")
     return redirect(url_for("vendedor.productos"))

@@ -1,8 +1,7 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from db import get_db_connection
-from models import Producto, db 
-from flask import request, redirect, url_for, flash
-from db import get_db_connection
+from auth.decorators import login_required, role_required
+
 
 # Blueprint del comprador
 comprador = Blueprint('comprador', __name__, template_folder="templates")
@@ -23,10 +22,9 @@ def obtener_noticias():
 
 # ===== Ver productos por categoría (URL bonita) =====
 @comprador.route("/categoria/<string:categoria>")
+@login_required
+@role_required("comprador")
 def ver_categoria(categoria):
-    if session.get("rol") != "comprador":
-        return redirect(url_for("auth.login"))
-
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("""
@@ -47,13 +45,11 @@ def ver_categoria(categoria):
         categoria=categoria
     )
 
-
 # ===== Panel del comprador =====
 @comprador.route("/panel")
+@login_required
+@role_required("comprador")
 def panel_comprador():
-    if session.get("rol") != "comprador":
-        return redirect(url_for("auth.login"))
-
     noticias = obtener_noticias()
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -82,15 +78,14 @@ def panel_comprador():
         noticias=noticias,
         categorias=categorias,
         productos_destacados=productos_destacados,
-        page='inicio'  # pestaña activa
+        page='inicio'
     )
 
 # ===== Ver productos (con filtros por categoría y búsqueda) =====
 @comprador.route("/productos")
+@login_required
+@role_required("comprador")
 def ver_productos():
-    if session.get("rol") != "comprador":
-        return redirect(url_for("auth.login"))
-
     categoria = request.args.get("categoria")  # filtro por categoría
     busqueda = request.args.get("busqueda")    # filtro por texto
 
@@ -127,13 +122,17 @@ def ver_productos():
         busqueda=busqueda
     )
 
-# ===== Sobre nosotros ===== #
+# ===== Sobre nosotros =====
 @comprador.route("/sobre_nosotros")
+@login_required
+@role_required("comprador")
 def sobre_nosotros_comprador():
     return render_template("sobre_nosotros.html", page='sobre')
 
-# ==== agregar carrito === #
+# ===== Agregar al carrito =====
 @comprador.route('/agregar_carrito/<int:producto_id>', methods=['POST'])
+@login_required
+@role_required("comprador")
 def agregar_carrito(producto_id):
     cantidad_solicitada = int(request.form.get("cantidad", 1))
 
@@ -168,8 +167,10 @@ def agregar_carrito(producto_id):
     flash("Producto agregado al carrito ✅", "success")
     return redirect(url_for("comprador.ver_carrito"))
 
-# ===== Finalizar compra ===== #
+# ===== Finalizar compra =====
 @comprador.route("/finalizar_compra", methods=["POST"])
+@login_required
+@role_required("comprador")
 def finalizar_compra():
     carrito = session.get("carrito", [])
     if not carrito:
@@ -186,18 +187,17 @@ def finalizar_compra():
             precio = float(item["precio"])
             total = round(precio * cantidad, 2)
 
-    # Descontar stock
+            # Descontar stock
             cursor.execute(
                 "UPDATE productos SET stock = stock - %s WHERE id = %s AND stock >= %s",
                 (cantidad, producto_id, cantidad)
-    )
+            )
 
-    # Registrar venta
+            # Registrar venta
             cursor.execute("""
-        INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
-        VALUES (%s, %s, %s, NOW())
-    """, (producto_id, cantidad, total))
-
+                INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
+                VALUES (%s, %s, %s, NOW())
+            """, (producto_id, cantidad, total))
 
         conn.commit()
         flash("✅ Compra realizada y stock actualizado.")
@@ -210,9 +210,10 @@ def finalizar_compra():
 
     return redirect(url_for("comprador.ver_carrito"))
 
-
-# ===== Disminuir cantidad en carrito =====
+# ===== Ajustar cantidad en carrito =====
 @comprador.route("/carrito/aumentar/<int:producto_id>", methods=["POST"])
+@login_required
+@role_required("comprador")
 def aumentar_cantidad(producto_id):
     carrito = session.get("carrito", [])
     for item in carrito:
@@ -223,6 +224,8 @@ def aumentar_cantidad(producto_id):
     return redirect(url_for("comprador.ver_carrito"))
 
 @comprador.route("/carrito/disminuir/<int:producto_id>", methods=["POST"])
+@login_required
+@role_required("comprador")
 def disminuir_cantidad(producto_id):
     carrito = session.get("carrito", [])
     for item in carrito:
@@ -232,15 +235,15 @@ def disminuir_cantidad(producto_id):
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
 
-
 # ===== Ver carrito =====
 @comprador.route('/carrito')
+@login_required
+@role_required("comprador")
 def ver_carrito():
     carrito = session.get("carrito", [])
-    # Convertimos precios a float por si acaso
     for item in carrito:
         item["precio"] = float(item["precio"])
-        item["cantidad"] = int(item["cantidad"])  # seguridad
+        item["cantidad"] = int(item["cantidad"])
 
     total = sum(item["precio"] * item["cantidad"] for item in carrito)
     return render_template(
@@ -251,9 +254,10 @@ def ver_carrito():
         page='carrito'
     )
 
-
 # ===== Eliminar producto del carrito =====
 @comprador.route('/eliminar_carrito/<int:producto_id>', methods=['POST'])
+@login_required
+@role_required("comprador")
 def eliminar_del_carrito(producto_id):
     carrito = session.get("carrito", [])
     carrito = [item for item in carrito if item["id"] != producto_id]

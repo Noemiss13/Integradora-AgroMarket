@@ -1,0 +1,14 @@
+<h1>Activar rol adicional</h1>
+
+<form method="POST">
+    <label for="rol">Selecciona rol:</label>
+    <select name="rol" id="rol" required>
+        {% if 'comprador' not in roles %}
+        <option value="comprador">Comprador</option>
+        {% endif %}
+        {% if 'vendedor' not in roles %}
+        <option value="vendedor">Vendedor</option>
+        {% endif %}
+    </select>
+    <button type="submit">Activar rol</button>
+</form>

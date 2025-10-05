@@ -395,3 +395,51 @@ form button[type="submit"]:hover {
 .btn-eliminar:hover {
     background-color: #c0392b;
 }
+.perfil-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #f7f7f7;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.perfil-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.perfil-form .form-group {
+    margin-bottom: 15px;
+}
+
+.perfil-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.perfil-form input,
+.perfil-form select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.perfil-form .btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: #2e8b57;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.perfil-form .btn:hover {
+    background: #24664b;
+}

@@ -3,28 +3,33 @@ from flask_bcrypt import Bcrypt
 from rutas_vendedor import vendedor_bp
 from rutas_comprador import comprador  # Blueprint del comprador
 from models import db
-from auth.rutas import auth_bp
 
 app = Flask(__name__)
 app.secret_key = "clave_secreta_agromarket"
+
+# Inicializamos bcrypt y SQLAlchemy
 bcrypt = Bcrypt(app)
 
-
-# Configuración de SQLAlchemy para Laragon (MySQL)
+# Configuración de SQLAlchemy para MySQL (Laragon)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost/agromarket'
-# Registrar blueprints
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)   # Esto es obligatorio
+db.init_app(app)
+
+# Importamos después de inicializar bcrypt para evitar circular import
+from auth.rutas import auth_bp
+
+# Registrar blueprints
 app.register_blueprint(auth_bp)
 app.register_blueprint(vendedor_bp)
 app.register_blueprint(comprador, url_prefix="/comprador")
 
-# Home
+# ---------------------
+# Rutas generales
+# ---------------------
 @app.route("/")
 def home():
     return render_template("informacion.html")
 
-# Catálogo offline
 @app.route("/catalogo_offline")
 def catalogo_offline():
     from db import get_db_connection
@@ -35,7 +40,6 @@ def catalogo_offline():
     conn.close()
     return render_template("catalogo_offline.html", productos=productos)
 
-# Catálogo JSON
 @app.route("/catalogo.json")
 def catalogo_json():
     from db import get_db_connection
@@ -46,10 +50,13 @@ def catalogo_json():
     conn.close()
     return jsonify(productos)
 
-# Sobre nosotros
 @app.route("/sobre_nosotros")
 def sobre_nosotros():
     return render_template("sobre_nosotros.html")
 
+# ---------------------
+# Ejecutar la app
+# ---------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="127.0.0.1", port=5000)
+

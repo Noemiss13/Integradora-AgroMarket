@@ -1,4 +1,15 @@
 /* ===================== */
+/* Paleta personalizada */
+/* ===================== */
+/* 
+.color1 { #7ff29c }
+.color2 { #6adf8b }
+.color3 { #55cc79 }
+.color4 { #40b968 }
+.color5 { #2ba656 }
+*/
+
+/* ===================== */
 /* Reset y tipografía */
 /* ===================== */
 * {
@@ -12,7 +23,7 @@
 /* Header y menú */
 /* ===================== */
 header {
-    background: linear-gradient(90deg, #2e8b57, #1e5f3f);
+    background: linear-gradient(90deg, #40b968, #2ba656);
     color: white;
     padding: 15px 0;
 }
@@ -34,16 +45,23 @@ header .menu ul li.logo {
     font-weight: bold;
     font-size: 1.5rem;
     flex-grow: 1;
+    color: #fff;
 }
 
 header .menu ul li a {
     color: white;
     text-decoration: none;
     padding: 5px 10px;
+    transition: 0.3s;
+}
+
+header .menu ul li a:hover {
+    background-color: rgba(255,255,255,0.15);
+    border-radius: 5px;
 }
 
 header .menu ul li a.active {
-    border-bottom: 2px solid white;
+    border-bottom: 2px solid #7ff29c;
 }
 
 header .menu ul li.logout a:hover {
@@ -66,13 +84,13 @@ header .menu ul li.logout a:hover {
 /* Títulos */
 .perfil-container h1,
 .seleccionar-rol-container h1 {
-    color: #2e8b57;
+    color: #2ba656;
     text-align: center;
     margin-bottom: 25px;
 }
 
 .seleccionar-rol-container h3 {
-    color: #2e8b57;
+    color: #40b968;
     margin-bottom: 15px;
 }
 
@@ -89,6 +107,7 @@ header .menu ul li.logout a:hover {
     display: block;
     font-weight: bold;
     margin-bottom: 5px;
+    color: #2ba656;
 }
 
 .perfil-form input,
@@ -97,18 +116,30 @@ header .menu ul li.logout a:hover {
     width: 100%;
     padding: 10px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid #bfeac6;
     font-size: 1rem;
+    transition: border 0.3s;
 }
 
+.perfil-form input:focus,
+.perfil-form select:focus,
+.seleccionar-rol-form select:focus {
+    border: 1px solid #55cc79;
+    outline: none;
+}
+
+/* ===================== */
+/* Botones */
+/* ===================== */
 .perfil-form button.btn,
 .seleccionar-rol-form button.btn,
-.roles-container button {
+.roles-container button,
+.seleccionar-rol-container button {
     width: 100%;
     padding: 12px;
     border: none;
     border-radius: 8px;
-    background-color: #2e8b57;
+    background-color: #2ba656;
     color: white;
     font-size: 1rem;
     cursor: pointer;
@@ -117,8 +148,16 @@ header .menu ul li.logout a:hover {
 
 .perfil-form button.btn:hover,
 .seleccionar-rol-form button.btn:hover,
-.roles-container button:hover {
-    background-color: #1e5f3f;
+.roles-container button:hover,
+.seleccionar-rol-container button:hover {
+    background-color: #40b968;
+}
+
+/* Deshabilitado */
+.roles-container button:disabled {
+    background-color: #bfeac6;
+    color: #555;
+    cursor: not-allowed;
 }
 
 /* ===================== */
@@ -135,9 +174,23 @@ header .menu ul li.logout a:hover {
     font-weight: bold;
 }
 
-.flash-messages .alert.success { background-color: #d4edda; color: #155724; }
-.flash-messages .alert.danger { background-color: #f8d7da; color: #721c24; }
-.flash-messages .alert.info { background-color: #cce5ff; color: #004085; }
+.flash-messages .alert.success { 
+    background-color: #d4edda; 
+    color: #155724; 
+    border-left: 5px solid #55cc79;
+}
+
+.flash-messages .alert.danger { 
+    background-color: #f8d7da; 
+    color: #721c24;
+    border-left: 5px solid #e96a6a;
+}
+
+.flash-messages .alert.info { 
+    background-color: #cce5ff; 
+    color: #004085;
+    border-left: 5px solid #40b968;
+}
 
 /* ===================== */
 /* Roles adicionales */
@@ -156,14 +209,14 @@ header .menu ul li.logout a:hover {
     padding: 8px 15px;
     border-radius: 6px;
     border: none;
-    background-color: #2e8b57;
+    background-color: #2ba656;
     color: white;
     cursor: pointer;
     transition: 0.3s;
 }
 
 .roles-container button:hover {
-    background-color: #1e5f3f;
+    background-color: #40b968;
 }
 
 /* ===================== */
@@ -177,22 +230,19 @@ header .menu ul li.logout a:hover {
     width: 100%;
     padding: 10px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid #bfeac6;
     font-size: 1rem;
+}
+
+.seleccionar-rol-container select:focus {
+    border-color: #55cc79;
+    outline: none;
 }
 
 .seleccionar-rol-container button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    background-color: #2e8b57;
-    color: white;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: 0.3s;
+    background-color: #2ba656;
 }
 
 .seleccionar-rol-container button:hover {
-    background-color: #1e5f3f;
+    background-color: #40b968;
 }

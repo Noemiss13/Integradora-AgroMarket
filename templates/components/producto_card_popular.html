@@ -1,0 +1,18 @@
+<!-- Componente reutilizable para tarjeta de producto popular -->
+<div class="producto-card-popular">
+    <div class="producto-image">
+        <img src="{{ url_for('static', filename='uploads/' + producto.imagen) if producto.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ producto.nombre }}">
+    </div>
+    <div class="producto-info">
+        <h3>{{ producto.nombre }}</h3>
+        <p class="precio">$ {{ "%.1f"|format(producto.precio|float) }}/kg</p>
+        <p class="disponibilidad">Disp. {{ producto.stock }} kg</p>
+        
+        <form action="{{ url_for('comprador.agregar_carrito', producto_id=producto.id) }}" method="POST" class="form-carrito-popular">
+            <input type="hidden" name="cantidad" value="1">
+            <button type="submit" class="btn-agregar-carrito">
+                Agregar al carrito
+            </button>
+        </form>
+    </div>
+</div>

@@ -4,22 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<header>
-    <nav class="menu">
-        <ul>
-            <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a></li>
-            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
-            <li><a href="{{ url_for('vendedor.productos') }}" class="active">Mis Productos</a></li>
-            <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
-            <li class="user-name">Hola, {{ nombre }}</li>
-            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
-        </ul>
-    </nav>
-</header>
+<nav>
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+    </div>
+    <div class="menu">
+        <a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a>
+        <a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a>
+        <a href="{{ url_for('vendedor.productos') }}" class="activo">Mis Productos</a>
+        <a href="{{ url_for('vendedor.ventas') }}">Ventas</a>
+        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+    </div>
+</nav>
 
 <main>
     <h1>Mis Productos</h1>

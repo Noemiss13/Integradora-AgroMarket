@@ -38,7 +38,6 @@ body{
 .site-header{position:absolute;inset:0 0 auto 0;height:80px;z-index:10;background:transparent}
 .site-header .nav{height:80px;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:.6rem;color:#fff;font-weight:700;letter-spacing:.5px}
-.brand .logo{width:34px;height:34px}
 .menu a{color:#fff;text-decoration:none;margin:0 1rem;font-weight:500}
 .menu a:hover{opacity:.85}
 

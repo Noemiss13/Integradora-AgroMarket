@@ -3,76 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <title>Carrito - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
 <body>
-
     <!-- ====== MENÚ SUPERIOR ====== -->
     <nav>
         <div class="nav-left">
-            <a href="{{ url_for('comprador.panel_comprador') }}" class="logo">🌱 AgroMarket</a>
-            <span class="saludo-usuario">Hola, {{ session['usuario_nombre'] }}</span>
+            <div class="logo">
+                <h2>AgroMarket</h2>
+            </div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
         </div>
         <div class="menu">
             <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
             <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
             <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito</a>
-            <a href="{{ url_for('auth.logout') }}">Salir</a>
+            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
         </div>
     </nav>
 
-    <!-- ====== CONTENEDOR DEL CARRITO ====== -->
-    <div class="carrito-container">
-        <h1>🛒 Tu carrito</h1>
-
+    <!-- ====== CONTENIDO PRINCIPAL ====== -->
+    <main class="carrito-main">
         {% if carrito %}
-            <table id="tablaCarrito">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Precio</th>
-                        <th>Cantidad</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <!-- ===== COLUMNA IZQUIERDA: LISTA DE PRODUCTOS ===== -->
+            <section class="carrito-productos">
+                <header class="carrito-header">
+                    <h1>Carrito</h1>
+                    <p>Revisa tus artículos antes de pagar</p>
+                </header>
+
+                <div class="productos-lista">
                     {% for item in carrito %}
-                        <tr>
-                            <td><strong>{{ item.nombre }}</strong></td>
-                            <td>${{ item.precio }}</td>
-                            <td>
-                                <div class="cantidad-container">
-                                    <form action="{{ url_for('comprador.disminuir_cantidad', producto_id=item.id) }}" method="POST">
-                                        <button type="submit" class="btn-cantidad">-</button>
+                    <div class="producto-carrito-item">
+                        <div class="producto-imagen">
+                            <img src="{{ url_for('static', filename='uploads/' + item.imagen) if item.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ item.nombre }}" loading="lazy">
+                        </div>
+                        <div class="producto-info">
+                            <h3>{{ item.nombre }}</h3>
+                            <div class="producto-details">
+                                <span class="producto-origin">{{ item.origen if item.origen else 'Local' }} • {{ item.unidad if item.unidad else 'kg' }}</span>
+                            </div>
+                            <div class="producto-cantidad">
+                                <div class="cantidad-controls">
+                                    <form action="{{ url_for('comprador.disminuir_cantidad', producto_id=item.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn-cantidad-carrito disminuir" title="Disminuir cantidad">-</button>
                                     </form>
-                                    <span class="cantidad">{{ item.cantidad }}</span>
-                                    <form action="{{ url_for('comprador.aumentar_cantidad', producto_id=item.id) }}" method="POST">
-                                        <button type="submit" class="btn-cantidad">+</button>
+                                    <span class="cantidad-display">{{ item.cantidad }} {{ item.unidad if item.unidad else 'kg' }}</span>
+                                    <form action="{{ url_for('comprador.aumentar_cantidad', producto_id=item.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn-cantidad-carrito aumentar" title="Aumentar cantidad">+</button>
                                     </form>
                                 </div>
-                            </td>
-                            <td>
+                            </div>
+                        </div>
+                        <div class="producto-precio">
+                            <span>${{ "%.2f"|format((item.precio|float * item.cantidad)) }}</span>
+                        </div>
+                        <div class="producto-acciones">
                                 <form action="{{ url_for('comprador.eliminar_del_carrito', producto_id=item.id) }}" method="POST">
-                                    <button type="submit" class="eliminar">❌ Eliminar</button>
+                                <button type="submit" class="btn-eliminar" title="Eliminar del carrito">🗑️</button>
                                 </form>
-                            </td>
-                        </tr>
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
+                </div>
 
-            <div class="total">
-                <strong>Total:</strong> ${{ total }}
+                <div class="carrito-nota">
+                    <p>Nota: Las cantidades y precios son referenciales.</p>
+                </div>
+
+                <!-- Sección de dirección de envío -->
+                <div class="direccion-envio-section accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('direccion-content')">
+                        <div class="accordion-title">
+                            <h3>Dirección de envío</h3>
+                            <p class="direccion-subtitle">¿Dónde quieres recibir tu pedido?</p>
+                        </div>
+                        <span class="accordion-icon" id="direccion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content" id="direccion-content" style="display: none;">
+                        <div class="form-group">
+                            <label for="direccion">Dirección completa</label>
+                            <input type="text" id="direccion" name="direccion" placeholder="Ingresa tu dirección completa" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de método de pago -->
+                <div class="metodo-pago-section accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('pago-content')">
+                        <div class="accordion-title">
+                            <h3>Método de pago</h3>
+                            <p class="metodo-pago-subtitle">Selecciona tu método de pago</p>
+                        </div>
+                        <span class="accordion-icon" id="pago-icon">▼</span>
+                    </div>
+                    <div class="accordion-content" id="pago-content" style="display: none;">
+                        <div class="metodo-pago-options">
+                        <div class="metodo-option" data-value="efectivo">
+                            <input type="radio" id="metodo_efectivo" name="metodo_pago" value="efectivo">
+                            <label for="metodo_efectivo">
+                                <span class="metodo-icon">💵</span>
+                                <div class="metodo-info">
+                                    <span class="metodo-title">Efectivo contra entrega</span>
+                                    <span class="metodo-desc">Paga cuando recibas tu pedido</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="metodo-option" data-value="transferencia">
+                            <input type="radio" id="metodo_transferencia" name="metodo_pago" value="transferencia">
+                            <label for="metodo_transferencia">
+                                <span class="metodo-icon">🏦</span>
+                                <div class="metodo-info">
+                                    <span class="metodo-title">Transferencia bancaria</span>
+                                    <span class="metodo-desc">Transferencia directa a nuestra cuenta</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="metodo-option" data-value="tarjeta">
+                            <input type="radio" id="metodo_tarjeta" name="metodo_pago" value="tarjeta">
+                            <label for="metodo_tarjeta">
+                                <span class="metodo-icon">💳</span>
+                                <div class="metodo-info">
+                                    <span class="metodo-title">Tarjeta de débito/crédito</span>
+                                    <span class="metodo-desc">Pago seguro con tarjeta</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje para efectivo -->
+                    <div id="efectivo-mensaje" class="metodo-mensaje" style="display: none;">
+                        <div class="mensaje-info">
+                            <span class="mensaje-icon">💡</span>
+                            <div class="mensaje-content">
+                                <h4>Información importante</h4>
+                                <p>Al seleccionar pago en efectivo, deberás pagar el monto total cuando recibas tu pedido. El repartidor llevará el cambio exacto.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos adicionales para tarjeta -->
+                    <div id="tarjeta-campos" class="tarjeta-campos" style="display: none;">
+                        <div class="form-group">
+                            <label for="nombre_titular">Nombre del titular</label>
+                            <input type="text" id="nombre_titular" name="nombre_titular" placeholder="Nombre completo del titular" maxlength="100">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="numero_tarjeta">Número de tarjeta</label>
+                            <input type="text" id="numero_tarjeta" name="numero_tarjeta" placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fecha_vencimiento">Fecha de vencimiento</label>
+                                <input type="text" id="fecha_vencimiento" name="fecha_vencimiento" placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enviar_comprobante" name="enviar_comprobante" value="1">
+                                Enviar comprobante al correo electrónico
+                            </label>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== COLUMNA DERECHA: RESUMEN Y CHECKOUT ===== -->
+            <aside class="carrito-checkout">
+                <div class="checkout-summary">
+                    <h3>Resumen del pedido</h3>
+                    <div class="summary-line">
+                        <span>Subtotal</span>
+                        <span>${{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Envío estimado</span>
+                        <span>$4.50</span>
+                    </div>
+                    <div class="summary-line">
+                        <span>Impuestos</span>
+                        <span>${{ "%.2f"|format(total * 0.1) }}</span>
+                    </div>
+                    <div class="summary-line total">
+                        <span>Total</span>
+                        <span>${{ "%.2f"|format(total * 1.1 + 4.50) }}</span>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST" class="checkout-form">
+                    <div class="form-group">
+                        <label for="nota">Nota para el vendedor</label>
+                        <textarea id="nota" name="nota" placeholder="Agrega una nota para el vendedor..." rows="3"></textarea>
             </div>
 
-            <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST">
-                <button type="submit" id="btnFinalizar">✅ Finalizar compra</button>
+                    <button type="submit" class="btn-proceder-pago">Proceder al pago</button>
             </form>
-
+            </aside>
         {% else %}
-            <p>Tu carrito está vacío.</p>
+            <!-- ===== CARRITO VACÍO ===== -->
+            <div class="carrito-vacio">
+                <div class="carrito-vacio-content">
+                    <h1>Tu carrito está vacío</h1>
+                    <p>Agrega algunos productos deliciosos para comenzar tu compra</p>
+                    <a href="{{ url_for('comprador.ver_productos') }}" class="btn-comenzar-compras">Comenzar a comprar</a>
+                </div>
+            </div>
         {% endif %}
-    </div>
+    </main>
+
+    <!-- ===== JavaScript ===== -->
+    <script>
+        // Función para toggle del acordeón
+        function toggleAccordion(contentId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(contentId.replace('-content', '-icon'));
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Manejo de formulario de pago
+        document.addEventListener('DOMContentLoaded', function() {
+            const metodoOptions = document.querySelectorAll('input[name="metodo_pago"]');
+            const tarjetaCampos = document.getElementById('tarjeta-campos');
+            const efectivoMensaje = document.getElementById('efectivo-mensaje');
+
+            metodoOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    tarjetaCampos.style.display = 'none';
+                    efectivoMensaje.style.display = 'none';
+                    
+                    // Limpiar campos requeridos
+                    document.getElementById('nombre_titular').required = false;
+
+                    if (this.value === 'tarjeta') {
+                        tarjetaCampos.style.display = 'block';
+                        document.getElementById('nombre_titular').required = true;
+                    } else if (this.value === 'efectivo') {
+                        efectivoMensaje.style.display = 'block';
+                    }
+                });
+            });
+
+            // Formatear número de tarjeta
+            const numeroTarjeta = document.getElementById('numero_tarjeta');
+            if (numeroTarjeta) {
+                numeroTarjeta.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+                    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                    e.target.value = formattedValue;
+                });
+            }
+
+            // Formatear fecha de vencimiento
+            const fechaVencimiento = document.getElementById('fecha_vencimiento');
+            if (fechaVencimiento) {
+                fechaVencimiento.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                    e.target.value = value;
+                });
+            }
+
+            // Solo números para CVV
+            const cvv = document.getElementById('cvv');
+            if (cvv) {
+                cvv.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                });
+            }
+        });
+    </script>
 
 </body>
 </html>
+

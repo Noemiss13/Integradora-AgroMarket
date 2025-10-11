@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Vendedor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
 
     <!-- PWA: Manifest y theme color -->
@@ -16,20 +17,20 @@
 </head>
 <body>
  <!--Menu-->
- <header>
-    <nav class="menu">
-        <ul>
-            <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('vendedor.panel_vendedor') }}" class="active">Home</a></li>
-            <li><a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a></li>
-            <li><a href="{{ url_for('vendedor.productos') }}">Mis Productos</a></li>
-            <li><a href="{{ url_for('vendedor.ventas') }}">Ventas</a></li>
-            <li><a href="{{ url_for('auth.perfil') }}">Mi Perfil</a></li>
-            <li class="user-name">Hola, {{ nombre }}</li>
-            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
-        </ul>
-    </nav>
-</header>
+ <nav>
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+    </div>
+    <div class="menu">
+        <a href="{{ url_for('vendedor.panel_vendedor') }}" class="activo">Home</a>
+        <a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a>
+        <a href="{{ url_for('vendedor.productos') }}">Mis Productos</a>
+        <a href="{{ url_for('vendedor.ventas') }}">Ventas</a>
+        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+    </div>
+</nav>
 
 <main>
     <!-- Mensajes flash -->

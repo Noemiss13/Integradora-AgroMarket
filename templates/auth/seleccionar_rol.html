@@ -5,44 +5,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seleccionar Rol | AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_usuario.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<header>
-    <nav class="menu">
-        <ul>
-            <li class="logo">AgroMarket</li>
-            <li><a href="{{ url_for('auth.perfil') }}">Mi Perfil</a></li>
-            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
-        </ul>
+    <!-- ===== Menú superior ===== -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+        </div>
     </nav>
-</header>
 
-<main class="perfil-container">
-    <h1>Seleccionar Rol</h1>
+    <main class="perfil-main">
+        <div class="seleccion-rol-container">
+            <!-- Mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert {{ category }}">
+                                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
 
-    <!-- Mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for category, message in messages %}
-            <div class="alert {{ category }}">{{ message }}</div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+            <div class="seleccion-rol-header">
+                <div class="seleccion-rol-icon">
+                    <i class="fas fa-user-tag"></i>
+                </div>
+                <h1>Selecciona tu Rol</h1>
+                <p class="seleccion-rol-subtitle">
+                    Tienes acceso a múltiples roles. Elige cuál quieres usar en esta sesión.
+                </p>
+            </div>
 
-    <form method="POST" class="perfil-form">
-        <div class="form-group">
-            <label>Elige tu rol activo:</label>
-            <select name="rol" title="Selecciona el rol que deseas activar" required>
-                {% for r in roles %}
-                    <option value="{{ r }}">{{ r.capitalize() }}</option>
+            <div class="roles-grid">
+                {% for rol in roles %}
+                    <form method="POST" class="rol-card-form">
+                        <input type="hidden" name="rol" value="{{ rol }}">
+                        <button type="submit" class="rol-card {% if rol == 'vendedor' %}rol-vendedor{% else %}rol-comprador{% endif %}">
+                            <div class="rol-card-icon">
+                                <i class="fas fa-{% if rol == 'vendedor' %}store{% else %}shopping-cart{% endif %}"></i>
+                            </div>
+                            <div class="rol-card-content">
+                                <h3>{{ rol.capitalize() }}</h3>
+                                <p class="rol-description">
+                                    {% if rol == 'vendedor' %}
+                                        Gestiona tus productos, ventas e inventario
+                                    {% else %}
+                                        Explora productos, compra y gestiona tu carrito
+                                    {% endif %}
+                                </p>
+                                <div class="rol-features">
+                                    {% if rol == 'vendedor' %}
+                                        <span class="feature">
+                                            <i class="fas fa-boxes"></i> Inventario
+                                        </span>
+                                        <span class="feature">
+                                            <i class="fas fa-chart-line"></i> Ventas
+                                        </span>
+                                        <span class="feature">
+                                            <i class="fas fa-plus-circle"></i> Productos
+                                        </span>
+                                    {% else %}
+                                        <span class="feature">
+                                            <i class="fas fa-shopping-bag"></i> Compras
+                                        </span>
+                                        <span class="feature">
+                                            <i class="fas fa-search"></i> Explorar
+                                        </span>
+                                        <span class="feature">
+                                            <i class="fas fa-heart"></i> Favoritos
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="rol-card-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </button>
+                    </form>
                 {% endfor %}
-            </select>
-        </div>
+            </div>
 
-        <button type="submit" class="btn">Activar Rol</button>
-    </form>
-</main>
+            <div class="seleccion-rol-info">
+                <div class="info-card">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="info-content">
+                        <h4>¿Necesitas cambiar de rol?</h4>
+                        <p>Puedes cambiar tu rol activo en cualquier momento desde tu perfil.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

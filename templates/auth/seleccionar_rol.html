@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Rol | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_usuario.css') }}">
+</head>
+<body>
+<header>
+    <nav class="menu">
+        <ul>
+            <li class="logo">AgroMarket</li>
+            <li><a href="{{ url_for('auth.perfil') }}">Mi Perfil</a></li>
+            <li class="logout"><a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="perfil-container">
+    <h1>Seleccionar Rol</h1>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="perfil-form">
+        <div class="form-group">
+            <label>Elige tu rol activo:</label>
+            <select name="rol" title="Selecciona el rol que deseas activar" required>
+                {% for r in roles %}
+                    <option value="{{ r }}">{{ r.capitalize() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn">Activar Rol</button>
+    </form>
+</main>
+</body>
+</html>

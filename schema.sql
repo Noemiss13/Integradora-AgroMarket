@@ -228,11 +228,6 @@ ALTER TABLE `mensajes`
   ADD KEY `id_emisor` (`id_emisor`),
   ADD KEY `id_receptor` (`id_receptor`);
 
---
--- Indices de la tabla `noticias`
---
-ALTER TABLE `noticias`
-  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `productos`

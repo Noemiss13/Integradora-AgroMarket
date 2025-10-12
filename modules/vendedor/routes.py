@@ -15,14 +15,14 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ===== Panel Vendedor =====
-@vendedor_bp.route("/vendedor/panel")
+@vendedor_bp.route("/panel")
 @login_required
 @role_required("vendedor")
 def panel_vendedor():
     return render_template("vendedor/panel_vendedor.html", nombre=session.get("nombre"), page='inicio')
 
 # ===== Agregar Producto =====
-@vendedor_bp.route("/vendedor/agregar", methods=["GET", "POST"])
+@vendedor_bp.route("/agregar", methods=["GET", "POST"])
 @login_required
 @role_required("vendedor")
 def agregar_producto():
@@ -77,7 +77,7 @@ def agregar_producto():
     return render_template("vendedor/agregar_producto.html", nombre=session.get("nombre"), page='agregar')
 
 # ===== Ver Productos =====
-@vendedor_bp.route("/vendedor/productos")
+@vendedor_bp.route("/productos")
 @login_required
 @role_required("vendedor")
 def productos():
@@ -93,7 +93,7 @@ def productos():
     return render_template("vendedor/productos.html", productos=productos, nombre=session.get("nombre"), page='productos')
 
 # ===== Ventas =====
-@vendedor_bp.route("/vendedor/ventas")
+@vendedor_bp.route("/ventas")
 @login_required
 @role_required("vendedor")
 def ventas():

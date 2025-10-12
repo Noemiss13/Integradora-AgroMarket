@@ -186,14 +186,6 @@ body::before {
     color: #55cc79;
 }
 
-/* Logo */
-.logo-login {
-    display: block;
-    margin: 0 auto 15px auto;
-    width: 100px;
-    height: auto;
-    object-fit: contain;
-}
 /* ===================== */
 /* Recuperar contraseña */
 /* ===================== */

@@ -1,0 +1,11 @@
+<!-- Componente reutilizable para tarjeta de categoría -->
+<a href="{{ url_for('comprador.ver_categoria', categoria=categoria.nombre) }}" class="categoria-card">
+    <div class="categoria-header">
+        <h3>{{ categoria.nombre }}</h3>
+        <span class="product-count">{{ categoria.productos_count or 0 }}</span>
+    </div>
+    <div class="categoria-image">
+        <img src="{{ url_for('static', filename='uploads/' + categoria.imagen) if categoria.imagen else url_for('static', filename='images/default-category.png') }}" alt="{{ categoria.nombre }}">
+        <div class="categoria-tag">{{ categoria.tag or 'Disponible' }}</div>
+    </div>
+</a>

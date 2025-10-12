@@ -1,0 +1,160 @@
+/* ===== ESTILOS DEL NAVBAR UNIFICADO ===== */
+/* Archivo compartido para todas las vistas: comprador, vendedor, auth, etc. */
+
+/* Variables del navbar */
+:root {
+    --navbar-bg: #4CAF50;
+    --navbar-text: white;
+    --navbar-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    --navbar-hover: rgba(255, 255, 255, 0.1);
+    --navbar-active: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== NAVBAR PRINCIPAL ===== */
+nav {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 1rem 2rem !important;
+    background-color: var(--navbar-bg) !important;
+    color: var(--navbar-text) !important;
+    box-shadow: var(--navbar-shadow) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+}
+
+/* ===== LADO IZQUIERDO DEL NAVBAR ===== */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; /* separación entre logo y saludo */
+}
+
+.logo h2 {
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--navbar-text) !important;
+    letter-spacing: 0.5px !important;
+}
+
+.saludo-usuario {
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    color: var(--navbar-text) !important;
+    padding: 0.3rem 0.8rem !important;
+    background-color: rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.saludo-usuario:hover {
+    background-color: var(--navbar-hover);
+}
+
+/* ===== MENÚ DE NAVEGACIÓN ===== */
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.menu a {
+    color: var(--navbar-text) !important;
+    text-decoration: none !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.menu a:hover {
+    background-color: var(--navbar-hover);
+    transform: translateY(-2px);
+}
+
+.menu a.activo {
+    background-color: var(--navbar-active);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    nav {
+        padding: 1.2rem 2rem !important;
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+
+    .nav-left {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .menu {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .menu a {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    nav {
+        padding: 1rem 1.5rem !important;
+    }
+
+    .menu {
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .menu a {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem 1rem;
+    }
+
+    .logo h2 {
+        font-size: 1.3rem;
+    }
+
+    .saludo-usuario {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA ICONOS ===== */
+.menu a i {
+    font-size: 0.9rem;
+}
+
+/* ===== ESTILOS PARA BOTONES ESPECIALES ===== */
+.menu a.btn-logout {
+    background-color: rgba(220, 53, 69, 0.2);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.menu a.btn-logout:hover {
+    background-color: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.5);
+}
+
+.menu a.btn-profile {
+    background-color: rgba(52, 144, 220, 0.2);
+    border: 1px solid rgba(52, 144, 220, 0.3);
+}
+
+.menu a.btn-profile:hover {
+    background-color: rgba(52, 144, 220, 0.3);
+    border-color: rgba(52, 144, 220, 0.5);
+}

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request, flash
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify, current_app
 from models.database import get_db_connection
 from modules.auth.decorators import login_required, role_required
 
@@ -56,22 +56,41 @@ def panel_comprador():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Categorías
+    # Categorías con contadores y etiquetas
     cursor.execute("""
-        SELECT categoria AS nombre, MIN(imagen) AS imagen
+        SELECT 
+            categoria AS nombre, 
+            MIN(imagen) AS imagen,
+            COUNT(*) AS productos_count,
+            CASE 
+                WHEN categoria = 'frutas' THEN 'Temporada'
+                WHEN categoria = 'verduras' THEN 'Orgánico'
+                WHEN categoria = 'semillas' THEN 'A granel'
+                WHEN categoria = 'cereales' THEN 'Mayorista'
+                WHEN categoria = 'tubérculos' THEN 'Populares'
+                WHEN categoria = 'hierbas' THEN 'Aromáticas'
+                ELSE 'Disponible'
+            END AS tag
         FROM productos
         GROUP BY categoria
+        ORDER BY productos_count DESC
     """)
     categorias = cursor.fetchall()
 
-    # Productos destacados
+    # Productos populares (más vendidos o con mayor stock)
     cursor.execute("""
         SELECT id, nombre, descripcion, precio, imagen, stock
         FROM productos
-        WHERE temporada=1
-        LIMIT 6
+        WHERE stock > 0
+        ORDER BY stock DESC, nombre ASC
+        LIMIT 2
     """)
-    productos_destacados = cursor.fetchall()
+    productos_populares = cursor.fetchall()
+
+    # Contar total de productos
+    cursor.execute("SELECT COUNT(*) as total FROM productos WHERE stock > 0")
+    total_productos = cursor.fetchone()['total']
+    
     conn.close()
 
     return render_template(
@@ -79,7 +98,8 @@ def panel_comprador():
         nombre=session.get("nombre"),
         noticias=noticias,
         categorias=categorias,
-        productos_destacados=productos_destacados,
+        productos_populares=productos_populares,
+        total_productos=total_productos,
         page='inicio'
     )
 
@@ -274,6 +294,15 @@ def eliminar_del_carrito(producto_id):
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))
 
+
+# ===== Vaciar carrito completo =====
+@comprador.route('/vaciar_carrito', methods=['POST'])
+@login_required
+@role_required("comprador")
+def vaciar_carrito():
+    session["carrito"] = []
+    return redirect(url_for("comprador.ver_carrito"))
+
 # =======================================================
 # 🟢 NUEVAS RUTAS: activar rol de vendedor desde comprador
 # =======================================================
@@ -310,3 +339,122 @@ def activar_rol_vendedor():
 
     conn.close()
     return render_template("auth/activar_rol.html")
+
+
+# ===== Búsqueda de productos (AJAX) =====
+@comprador.route("/buscar")
+@login_required
+@role_required("comprador")
+def buscar_productos():
+    query = request.args.get("q", "").strip()
+    
+    if len(query) < 2:
+        return jsonify({"productos": []})
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute("""
+        SELECT p.id, p.nombre, p.descripcion, p.precio, p.imagen, p.stock
+        FROM productos p
+        WHERE (p.nombre LIKE %s OR p.descripcion LIKE %s)
+        AND p.stock > 0
+        ORDER BY p.nombre ASC
+        LIMIT 10
+    """, [f"%{query}%", f"%{query}%"])
+    
+    productos = cursor.fetchall()
+    conn.close()
+    
+    return jsonify({"productos": productos})
+
+
+# ===== Agregar al carrito (AJAX) =====
+@comprador.route('/agregar_carrito_ajax', methods=['POST'])
+@login_required
+@role_required("comprador")
+def agregar_carrito_ajax():
+    data = request.get_json()
+    producto_id = data.get('producto_id')
+    cantidad = int(data.get('cantidad', 1))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT id, nombre, precio, stock FROM productos WHERE id = %s", (producto_id,))
+    producto = cursor.fetchone()
+    conn.close()
+    
+    if not producto:
+        return jsonify({"success": False, "message": "Producto no encontrado"})
+    
+    if cantidad > producto["stock"]:
+        return jsonify({"success": False, "message": f"Solo hay {producto['stock']} unidades disponibles"})
+    
+    if "carrito" not in session:
+        session["carrito"] = []
+    
+    carrito = session["carrito"]
+    for item in carrito:
+        if item["id"] == producto["id"]:
+            if item["cantidad"] + cantidad > producto["stock"]:
+                return jsonify({"success": False, "message": f"No puedes agregar más. Stock disponible: {producto['stock']}"})
+            item["cantidad"] += cantidad
+            break
+    else:
+        producto["cantidad"] = cantidad
+        session["carrito"].append(producto)
+    
+    return jsonify({"success": True, "message": "Producto agregado al carrito"})
+
+
+# ===== RUTAS DE PAGO =====
+
+@comprador.route('/payment-success', methods=['GET', 'POST'])
+@login_required
+@role_required("comprador")
+def payment_success():
+    """Manejar pago exitoso"""
+    try:
+        # Obtener datos del carrito
+        carrito = session.get("carrito", [])
+        if not carrito:
+            flash("No hay productos en el carrito", "error")
+            return redirect(url_for("comprador.panel_comprador"))
+        
+        # Calcular total
+        total = sum(float(item["precio"]) * int(item["cantidad"]) for item in carrito)
+        
+        # Guardar las ventas en la base de datos usando la tabla 'ventas' existente
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Insertar cada producto como una venta individual
+        for item in carrito:
+            item_total = float(item["precio"]) * int(item["cantidad"])
+            cursor.execute("""
+                INSERT INTO ventas (producto_id, cantidad, total, fecha_venta)
+                VALUES (%s, %s, %s, NOW())
+            """, (item['id'], item['cantidad'], item_total))
+        
+        conn.commit()
+        conn.close()
+        
+        # Limpiar el carrito
+        session["carrito"] = []
+        
+        flash(f"¡Pago exitoso! Tu compra ha sido procesada correctamente.", "success")
+        return redirect(url_for("comprador.panel_comprador"))
+        
+    except Exception as e:
+        print(f"Error in payment success: {str(e)}")
+        flash("Error al procesar el pago", "error")
+        return redirect(url_for("comprador.ver_carrito"))
+
+
+@comprador.route('/payment-cancel')
+@login_required
+@role_required("comprador")
+def payment_cancel():
+    """Manejar cancelación de pago"""
+    flash("El pago fue cancelado", "warning")
+    return redirect(url_for("comprador.ver_carrito"))

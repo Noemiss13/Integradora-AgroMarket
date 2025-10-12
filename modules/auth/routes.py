@@ -192,8 +192,53 @@ def perfil():
     session["roles"] = roles
     rol_activo = session.get("rol_activo")
 
+    # Obtener estadísticas del usuario
+    estadisticas = {}
+    
+    # Estadísticas como comprador
+    if 'comprador' in roles:
+        # Productos en carrito
+        carrito = session.get("carrito", [])
+        estadisticas['carrito'] = {
+            'total_productos': len(carrito),
+            'total_cantidad': sum(item.get('cantidad', 0) for item in carrito)
+        }
+        
+        # Compras realizadas (simulado con datos del carrito por ahora)
+        # En un sistema real, esto vendría de una tabla de órdenes/pedidos
+        estadisticas['comprador'] = {
+            'total_compras': 0,  # Por ahora 0, hasta implementar sistema de órdenes
+            'gasto_total': 0.0   # Por ahora 0, hasta implementar sistema de órdenes
+        }
+    
+    # Estadísticas como vendedor
+    if 'vendedor' in roles:
+        cursor.execute("""
+            SELECT COUNT(*) as total_productos, COALESCE(SUM(precio * stock), 0) as valor_inventario
+            FROM productos WHERE vendedor_id = %s
+        """, (usuario_id,))
+        stats_vendedor = cursor.fetchone()
+        estadisticas['vendedor'] = {
+            'total_productos': stats_vendedor['total_productos'] or 0,
+            'valor_inventario': float(stats_vendedor['valor_inventario']) or 0
+        }
+        
+        # Ventas realizadas usando la tabla 'ventas' existente
+        cursor.execute("""
+            SELECT COUNT(*) as total_ventas, COALESCE(SUM(total), 0) as ingresos_total
+            FROM ventas v
+            JOIN productos p ON v.producto_id = p.id
+            WHERE p.vendedor_id = %s
+        """, (usuario_id,))
+        stats_ventas = cursor.fetchone()
+        estadisticas['ventas'] = {
+            'total_ventas': stats_ventas['total_ventas'] or 0,
+            'ingresos_total': float(stats_ventas['ingresos_total']) or 0
+        }
+
     if request.method == "POST":
 
+        # Activar nuevo rol
         nuevo_rol = request.form.get("nuevo_rol")
         if nuevo_rol and nuevo_rol not in roles:
             cursor.execute(
@@ -205,10 +250,31 @@ def perfil():
             session["rol_activo"] = nuevo_rol
             flash(f"Rol {nuevo_rol} activado y seleccionado como activo", "success")
             conn.close()
-            if nuevo_rol.lower() == "vendedor":
-                return redirect(url_for("vendedor.panel_vendedor"))
-            elif nuevo_rol.lower() == "comprador":
-                return redirect(url_for("comprador.panel_comprador"))
+            return redirect(url_for("auth.perfil"))
+
+        # Desactivar rol
+        desactivar_rol = request.form.get("desactivar_rol")
+        if desactivar_rol and desactivar_rol in roles:
+            # Verificar que el usuario tenga al menos un rol
+            if len(roles) <= 1:
+                flash("No puedes desactivar tu único rol. Debes tener al menos un rol activo.", "danger")
+                conn.close()
+                return redirect(url_for("auth.perfil"))
+            
+            cursor.execute(
+                "DELETE FROM roles_usuarios WHERE usuario_id=%s AND rol=%s",
+                (usuario_id, desactivar_rol)
+            )
+            conn.commit()
+            session["roles"].remove(desactivar_rol)
+            
+            # Si el rol desactivado era el activo, cambiar a otro rol disponible
+            if session.get("rol_activo") == desactivar_rol:
+                session["rol_activo"] = session["roles"][0]
+            
+            flash(f"Rol {desactivar_rol} desactivado correctamente", "success")
+            conn.close()
+            return redirect(url_for("auth.perfil"))
 
         nombre_nuevo = request.form.get("nombre")
         email_nuevo = request.form.get("email")
@@ -253,7 +319,7 @@ def perfil():
         return redirect(url_for("auth.perfil"))
 
     conn.close()
-    return render_template("auth/perfil.html", usuario=usuario, roles=roles, rol_activo=rol_activo)
+    return render_template("auth/perfil.html", usuario=usuario, roles=roles, rol_activo=rol_activo, estadisticas=estadisticas)
 
 # ---------------------
 # Activar rol de vendedor

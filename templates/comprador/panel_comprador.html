@@ -3,41 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel AgroMarket</title>
+    <title>AgroMarket - Panel Principal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-<nav>
-    <div class="nav-left">
-        <div class="logo"><h2>AgroMarket</h2></div>
-        <div class="saludo-usuario">
-            Hola, <strong>{{ nombre }}</strong> 
+    <!-- ===== Menú superior ===== -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
         </div>
-    </div>
-
-    <div class="menu">
-        <a href="{{ url_for('comprador.panel_comprador') }}" class="activo">Inicio</a>
-        <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-        <a href="{{ url_for('auth.logout') }}">Cerrar sesión</a>
-    </div>
-</nav>
-
-
-    <!-- ===== Categorías ===== -->
-    <section class="categorias">
-        <h2>Categorías</h2>
-        <div class="categorias-grid">
-            {% for cat in categorias %}
-            <a href="{{ url_for('comprador.ver_categoria', categoria=cat.nombre) }}" class="categoria-card">
-                <div class="categoria-img">
-                    <img src="{{ url_for('static', filename='uploads/' + cat.imagen) if cat.imagen else url_for('static', filename='images/default-category.png') }}" alt="{{ cat.nombre }}">
-                </div>
-                <div class="categoria-nombre">{{ cat.nombre }}</div>
-            </a>
-            {% endfor %}
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}" class="activo">Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
         </div>
-    </section>
+    </nav>
 
+    <main class="main-content">
+        <!-- ===== Sección Explora Categorías ===== -->
+        <section class="categorias-section">
+            {% set titulo = 'Explora categorías' %}
+            {% set subtitulo = 'Elige una categoría para descubrir productos frescos de productores locales.' %}
+            {% set controles = '<input type="text" placeholder="Buscar productos..." class="search-input"><button class="sort-btn">Ordenar por</button>' %}
+            {% include 'components/section_header.html' %}
+            
+            <div class="categorias-grid">
+                <!-- Tarjeta "Todos los productos" -->
+                <a href="{{ url_for('comprador.ver_productos') }}" class="categoria-card todos-productos-card">
+                    <div class="categoria-header">
+                        <h3>Todos los productos</h3>
+                        <span class="product-count">{{ total_productos or 0 }}</span>
+                    </div>
+                    <div class="categoria-image">
+                        <img src="{{ url_for('static', filename='images/default-category.png') }}" alt="Todos los productos">
+                        <div class="categoria-tag">COMPLETO</div>
+                    </div>
+                </a>
+                
+                <!-- Tarjetas de categorías existentes -->
+                {% for cat in categorias %}
+                    {% set categoria = cat %}
+                    {% include 'components/categoria_card.html' %}
+                {% endfor %}
+            </div>
+        </section>
 
+        <!-- ===== Sección Productos Populares ===== -->
+        <section class="productos-populares-section">
+            {% set titulo = 'Populares esta semana' %}
+            {% set subtitulo = 'Selección rápida para comenzar tu compra.' %}
+            {% set controles = '<button class="filter-btn">Filtrar</button>' %}
+            {% include 'components/section_header.html' %}
+            
+            <div class="productos-populares-grid">
+                {% for producto in productos_populares[:2] %}
+                    {% include 'components/producto_card_popular.html' %}
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <!-- ===== Scripts ===== -->
+    <script src="{{ url_for('static', filename='js/panel_comprador.js') }}"></script>
+    
+    <script>
+        // Mejorar experiencia del usuario al agregar al carrito
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('.form-carrito-popular');
+            
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const button = form.querySelector('.btn-agregar-carrito');
+                    const originalText = button.textContent;
+                    
+                    // Deshabilitar botón y cambiar texto
+                    button.disabled = true;
+                    button.textContent = 'Agregando...';
+                    
+                    // Rehabilitar después de 2 segundos (en caso de error de red)
+                    setTimeout(() => {
+                        button.disabled = false;
+                        button.textContent = originalText;
+                    }, 2000);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

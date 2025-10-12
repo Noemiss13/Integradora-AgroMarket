@@ -1,13 +1,23 @@
 /* ===================== */
-/* Paleta personalizada */
+/* Variables CSS */
 /* ===================== */
-/* 
-.color1 { #7ff29c }
-.color2 { #6adf8b }
-.color3 { #55cc79 }
-.color4 { #40b968 }
-.color5 { #2ba656 }
-*/
+:root {
+    --primary-color: #2ba656;
+    --primary-light: #40b968;
+    --primary-dark: #1e8a47;
+    --secondary-color: #55cc79;
+    --accent-color: #7ff29c;
+    --text-dark: #2c3e50;
+    --text-muted: #6c757d;
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    --border-color: #e9ecef;
+    --border-light: #f1f3f4;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
+    --shadow-hover: 0 4px 20px rgba(0,0,0,0.15);
+    --border-radius: 12px;
+    --transition: all 0.3s ease;
+}
 
 /* ===================== */
 /* Reset y tipografía */
@@ -16,233 +26,864 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #ffffff !important;
+    color: var(--text-dark);
+    line-height: 1.6;
+    min-height: 100vh;
 }
 
 /* ===================== */
-/* Header y menú */
+/* Header - Estilo estándar */
 /* ===================== */
-header {
-    background: linear-gradient(90deg, #40b968, #2ba656);
-    color: white;
-    padding: 15px 0;
+/* Los estilos del navbar se han movido a navbar.css para consistencia */
+
+/* Los estilos del logo se han movido a navbar.css */
+
+/* Los estilos del saludo-usuario se han movido a navbar.css */
+
+/* Los estilos del menú se han movido a navbar.css */
+
+/* Los estilos del menú activo se han movido a navbar.css */
+
+/* ===================== */
+/* Main Container */
+/* ===================== */
+.perfil-main {
+    padding: 2rem 0;
+    min-height: calc(100vh - 80px);
 }
 
-header .menu ul {
+.perfil-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* ===================== */
+/* Flash Messages */
+/* ===================== */
+.flash-messages {
+    margin-bottom: 2rem;
+}
+
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    list-style: none;
-    max-width: 1200px;
-    margin: auto;
-    padding: 0 20px;
+    gap: 0.75rem;
+    font-weight: 500;
+    box-shadow: var(--shadow);
 }
 
-header .menu ul li {
-    margin-right: 20px;
+.alert.success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    color: #155724;
+    border-left: 4px solid var(--primary-color);
 }
 
-header .menu ul li.logo {
-    font-weight: bold;
-    font-size: 1.5rem;
-    flex-grow: 1;
-    color: #fff;
+.alert.danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    color: #721c24;
+    border-left: 4px solid #dc3545;
 }
 
-header .menu ul li a {
-    color: white;
-    text-decoration: none;
-    padding: 5px 10px;
-    transition: 0.3s;
+.alert.info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb);
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
 }
 
-header .menu ul li a:hover {
-    background-color: rgba(255,255,255,0.15);
-    border-radius: 5px;
-}
-
-header .menu ul li a.active {
-    border-bottom: 2px solid #7ff29c;
-}
-
-header .menu ul li.logout a:hover {
-    text-decoration: underline;
+.alert i {
+    font-size: 1.1rem;
 }
 
 /* ===================== */
-/* Contenedores principales */
+/* Layout Principal */
 /* ===================== */
-.perfil-container,
-.seleccionar-rol-container {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 30px 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+.perfil-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
 }
 
-/* Títulos */
-.perfil-container h1,
-.seleccionar-rol-container h1 {
-    color: #2ba656;
+/* ===================== */
+/* Información del Usuario */
+/* ===================== */
+.perfil-info {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 100px;
+}
+
+.perfil-header {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-light);
 }
 
-.seleccionar-rol-container h3 {
-    color: #40b968;
-    margin-bottom: 15px;
+.perfil-avatar {
+    margin-bottom: 1.5rem;
 }
 
-/* ===================== */
-/* Formulario común */
-/* ===================== */
-.perfil-form .form-group,
-.seleccionar-rol-form .form-group {
-    margin-bottom: 15px;
+.perfil-avatar i {
+    font-size: 5rem;
+    color: var(--primary-color);
 }
 
-.perfil-form label,
-.seleccionar-rol-form label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #2ba656;
+.perfil-details h1 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
-.perfil-form input,
-.perfil-form select,
-.seleccionar-rol-form select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #bfeac6;
+.perfil-email {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
     font-size: 1rem;
-    transition: border 0.3s;
 }
 
-.perfil-form input:focus,
-.perfil-form select:focus,
-.seleccionar-rol-form select:focus {
-    border: 1px solid #55cc79;
+.perfil-roles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.rol-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    font-weight: 500;
+    transition: var(--transition);
+    position: relative;
+}
+
+.rol-badge.rol-activo {
+    background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.rol-activo-indicator {
+    position: absolute;
+    right: 0.75rem;
+    color: #ffd700;
+    font-size: 0.8rem;
+}
+
+.rol-badge i {
+    font-size: 1.1rem;
+}
+
+/* ===================== */
+/* Estadísticas */
+/* ===================== */
+.stats-section {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+
+.stats-section h3 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-white);
+    border-radius: 8px;
+    border: 2px solid var(--border-light);
+    transition: var(--transition);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-icon.comprador {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.stat-icon.gasto {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.stat-icon.vendedor {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.stat-icon.inventario {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+
+.stat-icon.ventas {
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+}
+
+.stat-icon.ingresos {
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.stat-icon.carrito {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* ===================== */
+/* Navegación Rápida */
+/* ===================== */
+.quick-nav {
+    margin-top: 2rem;
+}
+
+.quick-nav h3 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.quick-nav-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.quick-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.quick-nav-item:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.quick-nav-item i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* ===================== */
+/* Formularios */
+/* ===================== */
+.perfil-forms {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.form-section h2 {
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.form-section h3 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.form-group label i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: var(--bg-white);
+}
+
+.form-group input:focus,
+.form-group select:focus {
     outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(43, 166, 86, 0.1);
 }
 
 /* ===================== */
 /* Botones */
 /* ===================== */
-.perfil-form button.btn,
-.seleccionar-rol-form button.btn,
-.roles-container button,
-.seleccionar-rol-container button {
-    width: 100%;
-    padding: 12px;
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
     border: none;
     border-radius: 8px;
-    background-color: #2ba656;
-    color: white;
     font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: 0.3s;
+    transition: var(--transition);
+    text-decoration: none;
+    justify-content: center;
 }
 
-.perfil-form button.btn:hover,
-.seleccionar-rol-form button.btn:hover,
-.roles-container button:hover,
-.seleccionar-rol-container button:hover {
-    background-color: #40b968;
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    box-shadow: var(--shadow);
 }
 
-/* Deshabilitado */
-.roles-container button:disabled {
-    background-color: #bfeac6;
-    color: #555;
-    cursor: not-allowed;
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
 }
 
-/* ===================== */
-/* Mensajes flash */
-/* ===================== */
-.flash-messages {
-    margin-bottom: 20px;
+.btn-secondary {
+    background: linear-gradient(135deg, var(--text-muted), #495057);
+    color: white;
 }
 
-.flash-messages .alert {
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.flash-messages .alert.success { 
-    background-color: #d4edda; 
-    color: #155724; 
-    border-left: 5px solid #55cc79;
-}
-
-.flash-messages .alert.danger { 
-    background-color: #f8d7da; 
-    color: #721c24;
-    border-left: 5px solid #e96a6a;
-}
-
-.flash-messages .alert.info { 
-    background-color: #cce5ff; 
-    color: #004085;
-    border-left: 5px solid #40b968;
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #495057, var(--text-muted));
+    transform: translateY(-2px);
 }
 
 /* ===================== */
-/* Roles adicionales */
+/* Gestión de Roles */
 /* ===================== */
-.roles-container {
-    margin-top: 25px;
-    text-align: center;
+.rol-activo-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: 8px;
 }
 
-.roles-container form {
-    display: inline-block;
-    margin: 5px;
+.rol-activo-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: end;
 }
 
-.roles-container button {
-    padding: 8px 15px;
+.rol-activo-form select {
+    margin-bottom: 0;
+}
+
+.roles-adicionales {
+    padding: 1.5rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.rol-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-white);
+    transition: var(--transition);
+}
+
+.rol-item:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+}
+
+.rol-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.rol-info i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.rol-nombre {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.rol-estado {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.rol-estado.activo {
+    background: var(--primary-color);
+    color: white;
+}
+
+.rol-estado.inactivo {
+    background: var(--border-color);
+    color: var(--text-muted);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
     border-radius: 6px;
     border: none;
-    background-color: #2ba656;
-    color: white;
     cursor: pointer;
-    transition: 0.3s;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
 }
 
-.roles-container button:hover {
-    background-color: #40b968;
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.rol-btn span {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.rol-btn small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    font-weight: 400;
 }
 
 /* ===================== */
-/* Seleccionar rol específico */
+/* Selección de Rol */
 /* ===================== */
-.seleccionar-rol-container form {
-    margin-bottom: 15px;
+.seleccion-rol-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
 }
 
-.seleccionar-rol-container select {
+.seleccion-rol-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.seleccion-rol-icon {
+    margin-bottom: 1.5rem;
+}
+
+.seleccion-rol-icon i {
+    font-size: 4rem;
+    color: var(--primary-color);
+}
+
+.seleccion-rol-header h1 {
+    font-size: 2.5rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.seleccion-rol-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.rol-card-form {
+    margin: 0;
+}
+
+.rol-card {
     width: 100%;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #bfeac6;
+    padding: 0;
+    border: none;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: var(--transition);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: left;
+    position: relative;
+}
+
+.rol-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+}
+
+.rol-card.rol-vendedor:hover {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+}
+
+.rol-card.rol-comprador:hover {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+}
+
+.rol-card-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    flex-shrink: 0;
+    margin: 1.5rem;
+}
+
+.rol-vendedor .rol-card-icon {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.rol-comprador .rol-card-icon {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.rol-card-content {
+    flex: 1;
+    padding: 1.5rem 1.5rem 1.5rem 0;
+}
+
+.rol-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-dark);
+}
+
+.rol-card:hover .rol-card h3 {
+    color: white;
+}
+
+.rol-description {
     font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    line-height: 1.5;
 }
 
-.seleccionar-rol-container select:focus {
-    border-color: #55cc79;
-    outline: none;
+.rol-card:hover .rol-description {
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.seleccionar-rol-container button {
-    background-color: #2ba656;
+.rol-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
-.seleccionar-rol-container button:hover {
-    background-color: #40b968;
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-light);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    transition: var(--transition);
+}
+
+.rol-card:hover .feature {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.feature i {
+    font-size: 0.8rem;
+}
+
+.rol-card-arrow {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.rol-card:hover .rol-card-arrow {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-50%) translateX(5px);
+}
+
+.seleccion-rol-info {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border-light);
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #e8f5e8, #f0fdf4);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.info-card i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.info-content h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.info-content p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ===================== */
+/* Responsive */
+/* ===================== */
+@media (max-width: 768px) {
+    /* Los estilos responsive del navbar se han movido a navbar.css */
+
+    .perfil-container {
+        padding: 0 1rem;
+    }
+
+    .perfil-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .perfil-info {
+        position: static;
+    }
+
+    .rol-activo-form {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-nav-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seleccion-rol-container {
+        padding: 1.5rem;
+    }
+
+    .roles-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .rol-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .rol-card-icon {
+        margin: 1rem;
+    }
+
+    .rol-card-content {
+        padding: 0 1rem 1rem 1rem;
+    }
+
+    .rol-card-arrow {
+        position: static;
+        transform: none;
+        margin: 0 auto 1rem auto;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Los estilos responsive del navbar se han movido a navbar.css */
+
+    .perfil-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .perfil-avatar i {
+        font-size: 4rem;
+    }
+
+    .perfil-details h1 {
+        font-size: 1.5rem;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .seleccion-rol-header h1 {
+        font-size: 2rem;
+    }
+
+    .seleccion-rol-icon i {
+        font-size: 3rem;
+    }
+
+    .rol-card-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
 }

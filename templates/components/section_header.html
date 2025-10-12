@@ -1,0 +1,12 @@
+<!-- Componente reutilizable para encabezado de sección -->
+<div class="section-header">
+    <div class="header-content">
+        <h1>{{ titulo }}</h1>
+        <p>{{ subtitulo }}</p>
+    </div>
+    {% if controles %}
+    <div class="header-controls">
+        {{ controles|safe }}
+    </div>
+    {% endif %}
+</div>

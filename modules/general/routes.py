@@ -11,6 +11,11 @@ def home():
     """Página principal"""
     return render_template("general/informacion.html")
 
+@general_bp.route("/informacion")
+def informacion():
+    """Página de información"""
+    return render_template("general/informacion.html")
+
 @general_bp.route("/catalogo_offline")
 def catalogo_offline():
     """Catálogo offline de productos"""

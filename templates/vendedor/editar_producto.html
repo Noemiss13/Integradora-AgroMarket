@@ -1,73 +1,98 @@
-{% extends "base.html" %}
-
-{% block title %}Editar Producto - AgroMarket{% endblock %}
-
-{% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="mb-0">Editar Producto</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="nombre" class="form-label">Nombre del Producto</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" 
-                                   value="{{ producto.nombre }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" 
-                                      rows="3" required>{{ producto.descripcion }}</textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="precio" class="form-label">Precio</label>
-                                    <input type="number" step="0.01" class="form-control" id="precio" 
-                                           name="precio" value="{{ producto.precio }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="stock" class="form-label">Stock</label>
-                                    <input type="number" class="form-control" id="stock" 
-                                           name="stock" value="{{ producto.stock }}" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="categoria" class="form-label">Categoría</label>
-                            <select class="form-select" id="categoria" name="categoria" title="Selecciona la categoría del producto" required>
-                                <option value="">Seleccionar categoría</option>
-                                <option value="frutas" {% if producto.categoria == 'frutas' %}selected{% endif %}>Frutas</option>
-                                <option value="verduras" {% if producto.categoria == 'verduras' %}selected{% endif %}>Verduras</option>
-                                <option value="granos" {% if producto.categoria == 'granos' %}selected{% endif %}>Granos</option>
-                                <option value="hortalizas" {% if producto.categoria == 'hortalizas' %}selected{% endif %}>Hortalizas</option>
-                                <option value="otros" {% if producto.categoria == 'otros' %}selected{% endif %}>Otros</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="imagen" class="form-label">Imagen del Producto</label>
-                            <input type="file" class="form-control" id="imagen" name="imagen" 
-                                   accept="image/*">
-                            <small class="form-text text-muted">Deja vacío para mantener la imagen actual</small>
-                        </div>
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a href="{{ url_for('vendedor.mis_productos') }}" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Actualizar Producto</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Producto - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<nav>
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
-</div>
-{% endblock %}
+    <div class="menu">
+        <a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a>
+        <a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a>
+        <a href="{{ url_for('vendedor.productos') }}" class="activo">Mis Productos</a>
+        <a href="{{ url_for('vendedor.ventas') }}">Ventas</a>
+        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+    </div>
+</nav>
+
+<main>
+    <h1>Editar Producto</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('vendedor.editar_producto', id=producto.id) }}" method="POST" enctype="multipart/form-data">
+        <section>
+            <label for="nombre">Nombre del producto:</label>
+            <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" placeholder="Ej: Manzanas rojas" required>
+        </section>
+
+        <section>
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" placeholder="Descripción breve del producto" required>{{ producto.descripcion }}</textarea>
+        </section>
+
+        <div class="form-row">
+            <section>
+                <label for="precio">Precio ($):</label>
+                <input type="number" id="precio" name="precio" value="{{ producto.precio }}" step="0.01" min="0" placeholder="0.00" required>
+            </section>
+
+            <section>
+                <label for="stock">Stock:</label>
+                <input type="number" id="stock" name="stock" value="{{ producto.stock }}" min="0" placeholder="0" required>
+            </section>
+        </div>
+
+        <section>
+            <label for="categoria">Categoría:</label>
+            <select id="categoria" name="categoria" required>
+                <option value="">Selecciona una categoría</option>
+                <option value="frutas" {% if producto.categoria == 'frutas' %}selected{% endif %}>Frutas</option>
+                <option value="verduras" {% if producto.categoria == 'verduras' %}selected{% endif %}>Verduras</option>
+                <option value="granos" {% if producto.categoria == 'granos' %}selected{% endif %}>Granos</option>
+                <option value="lacteos" {% if producto.categoria == 'lacteos' %}selected{% endif %}>Lácteos</option>
+                <option value="carnes" {% if producto.categoria == 'carnes' %}selected{% endif %}>Carnes</option>
+                <option value="otros" {% if producto.categoria == 'otros' %}selected{% endif %}>Otros</option>
+            </select>
+        </section>
+
+        <section>
+            <label for="imagen">Imagen del producto:</label>
+            <input type="file" id="imagen" name="imagen" accept="image/*">
+            <small>Deja vacío para mantener la imagen actual</small>
+            
+            {% if producto.imagen %}
+            <div class="current-image">
+                <p>Imagen actual:</p>
+                <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" 
+                     alt="Imagen actual del producto" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 10px;">
+            </div>
+            {% endif %}
+        </section>
+
+        <div class="form-actions">
+            <a href="{{ url_for('vendedor.productos') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Actualizar Producto</button>
+        </div>
+    </form>
+</main>
+
+</body>
+</html>

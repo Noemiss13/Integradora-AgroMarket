@@ -24,39 +24,115 @@
     </div>
 </nav>
 
-<main>
-    <h1>Mis Productos</h1>
-    {% if productos %}
-        <div class="productos-container">
-            {% for p in productos %}
-                <div class="producto-card">
-                    <div class="producto-img">
-                        {% if p.imagen %}
-                            <img src="{{ url_for('static', filename='uploads/' ~ p.imagen) }}" alt="{{ p.nombre }}">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='images/no-image.png') }}" alt="Sin imagen">
-                        {% endif %}
-                    </div>
-                    <div class="producto-info">
-                        <h3>{{ p.nombre }}</h3>
-                        <p class="categoria">{{ p.categoria }}</p>
-                        <p class="precio">$ {{ "%.2f"|format(p.precio) }} / {{ p.unidad }}</p>
-                        <p class="stock">Disponibles: {{ p.stock }}</p>
-                    </div>
-
-                    <!-- Botones de acción -->
-                    <div class="acciones">
-                        <a href="{{ url_for('vendedor.editar_producto', id=p.id) }}" class="btn-editar">Editar</a>
-                        
-                        <form action="{{ url_for('vendedor.eliminar_producto', id=p.id) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn-eliminar" onclick="return confirm('¿Seguro que quieres eliminar este producto?');">Eliminar</button>
-                        </form>
-                    </div>
-                </div>
-            {% endfor %}
+<main class="productos-main">
+    <!-- Header Section -->
+    <div class="productos-header">
+        <div class="header-content">
+            <h1>Mis productos</h1>
+            <p class="header-subtitle">Administre su inventario: edite, pause o elimine productos.</p>
         </div>
-    {% else %}
-        <p>No tienes productos publicados aún.</p>
+        
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <div class="search-section">
+                <input type="text" placeholder="Buscar por nombre..." class="search-input">
+            </div>
+            <div class="filter-section">
+                <button class="filter-btn">Categoría</button>
+                <button class="filter-btn">Estado</button>
+            </div>
+            <a href="{{ url_for('vendedor.agregar_producto') }}" class="add-btn">
+                <i class="fas fa-plus"></i>
+                Agregar
+            </a>
+        </div>
+    </div>
+
+    <!-- Product Table Card -->
+    <div class="productos-table-card">
+        {% if productos %}
+            <div class="table-container">
+                <table class="productos-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Unidad</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in productos %}
+                        <tr class="product-row">
+                            <td class="product-cell">
+                                <div class="product-info">
+                                    <div class="product-image">
+                                        {% if p.imagen %}
+                                            <img src="{{ url_for('static', filename='uploads/' ~ p.imagen) }}" alt="{{ p.nombre }}">
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='images/no-image.png') }}" alt="Sin imagen">
+                                        {% endif %}
+                                    </div>
+                                    <div class="product-details">
+                                        <div class="product-name">{{ p.nombre }}</div>
+                                        <div class="product-description">{{ p.descripcion or 'Sin descripción' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="category-cell">{{ p.categoria }}</td>
+                            <td class="price-cell">$ {{ "%.2f"|format(p.precio) }}</td>
+                            <td class="stock-cell">{{ p.stock }}</td>
+                            <td class="unit-cell">{{ p.unidad }}</td>
+                            <td class="status-cell">
+                                <span class="status-badge status-active">Activo</span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('vendedor.editar_producto', id=p.id) }}" class="action-btn edit-btn">
+                                        Editar
+                                    </a>
+                                    <button class="action-btn pause-btn">
+                                        Pausar
+                                    </button>
+                                    <form action="{{ url_for('vendedor.eliminar_producto', id=p.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="action-btn delete-btn" onclick="return confirm('¿Seguro que quieres eliminar este producto?');">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <h3>No tienes productos publicados aún</h3>
+                <p>Comienza agregando tu primer producto al inventario.</p>
+                <a href="{{ url_for('vendedor.agregar_producto') }}" class="add-first-btn">
+                    <i class="fas fa-plus"></i>
+                    Agregar Primer Producto
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if productos %}
+    <div class="pagination-section">
+        <div class="pagination-info">
+            <span>Mostrando 1-{{ productos|length }} de {{ productos|length }} productos</span>
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" disabled>Anterior</button>
+            <button class="pagination-btn">Siguiente</button>
+        </div>
+    </div>
     {% endif %}
 </main>
 </body>

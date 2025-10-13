@@ -146,6 +146,37 @@ def ver_productos():
     )
 
 
+# ===== Ver detalle de producto =====
+@comprador.route("/producto/<int:id>")
+@login_required
+@role_required("comprador")
+def ver_detalle_producto(id):
+    # Obtener la categoría desde los query params (si viene de un filtro)
+    categoria_filtro = request.args.get("categoria")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    # Obtener información del producto
+    cursor.execute("""
+        SELECT p.*, u.nombre as vendedor_nombre, u.email as vendedor_email
+        FROM productos p 
+        JOIN usuarios u ON p.vendedor_id = u.id 
+        WHERE p.id = %s
+    """, (id,))
+    producto = cursor.fetchone()
+    
+    if not producto:
+        flash("Producto no encontrado", "danger")
+        conn.close()
+        return redirect(url_for("comprador.ver_productos"))
+    
+    conn.close()
+    return render_template("comprador/detalle_producto.html", 
+                         producto=producto, 
+                         nombre=session.get("nombre"),
+                         categoria_filtro=categoria_filtro)
+
 # ===== Sobre nosotros =====
 @comprador.route("/sobre_nosotros")
 @login_required
@@ -160,37 +191,56 @@ def sobre_nosotros_comprador():
 @role_required("comprador")
 def agregar_carrito(producto_id):
     cantidad_solicitada = int(request.form.get("cantidad", 1))
+    buy_now = request.form.get("buy_now", False)
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT id, nombre, precio, stock FROM productos WHERE id = %s", (producto_id,))
+    cursor.execute("SELECT id, nombre, precio, stock, imagen, categoria, descripcion FROM productos WHERE id = %s", (producto_id,))
     producto = cursor.fetchone()
     conn.close()
 
     if not producto:
+        flash("Producto no encontrado", "danger")
         return redirect(url_for('comprador.ver_productos'))
 
+    # Validaciones básicas
+    if cantidad_solicitada < 1:
+        flash("La cantidad debe ser mayor a 0", "warning")
+        return redirect(url_for('comprador.ver_detalle_producto', id=producto_id))
+    
     if cantidad_solicitada > producto["stock"]:
         flash(f"No puedes agregar {cantidad_solicitada} unidades. Solo hay {producto['stock']} en stock.", "danger")
-        return redirect(url_for('comprador.ver_productos'))
+        return redirect(url_for('comprador.ver_detalle_producto', id=producto_id))
 
     if "carrito" not in session:
         session["carrito"] = []
 
     carrito = session["carrito"]
+    
+    # Verificar si el producto ya está en el carrito
     for item in carrito:
         if item["id"] == producto["id"]:
-            if item["cantidad"] + cantidad_solicitada > producto["stock"]:
-                flash(f"No puedes agregar más. Stock disponible: {producto['stock']}", "warning")
-                return redirect(url_for('comprador.ver_productos'))
+            # Calcular la cantidad total que tendría en el carrito
+            cantidad_total_carrito = item["cantidad"] + cantidad_solicitada
+            
+            if cantidad_total_carrito > producto["stock"]:
+                flash(f"No puedes agregar más. Ya tienes {item['cantidad']} en el carrito y solo hay {producto['stock']} disponibles.", "warning")
+                return redirect(url_for('comprador.ver_detalle_producto', id=producto_id))
+            
             item["cantidad"] += cantidad_solicitada
+            flash("Producto agregado al carrito ✅", "success")
             break
     else:
+        # Producto nuevo en el carrito
         producto["cantidad"] = cantidad_solicitada
         session["carrito"].append(producto)
-
-    flash("Producto agregado al carrito ✅", "success")
-    return redirect(url_for("comprador.ver_carrito"))
+        flash("Producto agregado al carrito ✅", "success")
+    
+    # Si es "comprar ahora", redirigir al carrito, sino mantener en la página del producto
+    if buy_now:
+        return redirect(url_for("comprador.ver_carrito"))
+    else:
+        return redirect(url_for('comprador.ver_detalle_producto', id=producto_id))
 
 
 # ===== Finalizar compra =====
@@ -242,10 +292,24 @@ def finalizar_compra():
 @login_required
 @role_required("comprador")
 def aumentar_cantidad(producto_id):
+    # Obtener el stock actual del producto
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT stock FROM productos WHERE id = %s", (producto_id,))
+    producto = cursor.fetchone()
+    conn.close()
+    
+    if not producto:
+        flash("Producto no encontrado", "danger")
+        return redirect(url_for("comprador.ver_carrito"))
+    
     carrito = session.get("carrito", [])
     for item in carrito:
         if item["id"] == producto_id:
-            item["cantidad"] += 1
+            if item["cantidad"] + 1 > producto["stock"]:
+                flash(f"No puedes agregar más. Stock disponible: {producto['stock']}", "warning")
+            else:
+                item["cantidad"] += 1
             break
     session["carrito"] = carrito
     return redirect(url_for("comprador.ver_carrito"))

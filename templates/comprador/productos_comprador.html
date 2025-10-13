@@ -83,42 +83,32 @@
                                  data-categoria="{{ p.categoria|lower }}"
                                  data-stock="{{ p.stock }}">
                             
-                            <div class="producto-image">
-                                <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ p.nombre }}">
-                            </div>
-                            
-                            <div class="producto-info">
-                                <h3>{{ p.nombre }}</h3>
-                                
-                                <div class="producto-tags">
-                                    <span class="producto-tag">{{ p.tag if p.tag else 'Disponible' }}</span>
+                            <a href="{{ url_for('comprador.ver_detalle_producto', id=p.id, categoria=categoria if categoria else '') }}" class="producto-link">
+                                <div class="producto-image">
+                                    <img src="{{ url_for('static', filename='uploads/' + p.imagen) if p.imagen else url_for('static', filename='images/default-product.png') }}" alt="{{ p.nombre }}">
                                 </div>
                                 
-                                <div class="producto-origin">
-                                    <span>Origen: {{ p.origen if p.origen else 'Local' }}</span>
-                                </div>
-                                
-                                <div class="producto-price">
-                                    ${{ "%.2f"|format(p.precio|float) }} / {{ p.unidad if p.unidad else 'kg' }}
-                                </div>
-                                
-                                <div class="producto-stock">
-                                    <span class="stock-icon">📦</span>
-                                    <span>{{ p.stock }} {{ p.unidad if p.unidad else 'kg' }}</span>
-                                </div>
-                                
-                                <!-- Botón agregar al carrito -->
-                                <form action="{{ url_for('comprador.agregar_carrito', producto_id=p.id) }}" method="POST" class="form-agregar-carrito">
-                                    <div class="cantidad-controls">
-                                        <button type="button" class="btn-cantidad disminuir" title="Disminuir cantidad">-</button>
-                                        <input type="number" name="cantidad" min="1" max="{{ p.stock }}" value="1" class="cantidad-input" title="Cantidad a agregar al carrito" readonly>
-                                        <button type="button" class="btn-cantidad aumentar" title="Aumentar cantidad">+</button>
+                                <div class="producto-info">
+                                    <h3>{{ p.nombre }}</h3>
+                                    
+                                    <div class="producto-tags">
+                                        <span class="producto-tag">{{ p.tag if p.tag else 'Disponible' }}</span>
                                     </div>
-                                    <button type="submit" class="btn-agregar-carrito">
-                                        Agregar al carrito
-                                    </button>
-                                </form>
-                            </div>
+                                    
+                                    <div class="producto-origin">
+                                        <span>Origen: {{ p.origen if p.origen else 'Local' }}</span>
+                                    </div>
+                                    
+                                    <div class="producto-price">
+                                        ${{ "%.2f"|format(p.precio|float) }} / {{ p.unidad if p.unidad else 'kg' }}
+                                    </div>
+                                    
+                                    <div class="producto-stock">
+                                        <span class="stock-icon">📦</span>
+                                        <span>{{ p.stock }} {{ p.unidad if p.unidad else 'kg' }}</span>
+                                    </div>
+                                </div>
+                            </a>
                         </article>
                         {% endfor %}
                     </div>
@@ -185,41 +175,6 @@
             // Aquí se puede implementar paginación
         });
 
-        // Control de cantidad en formularios
-        document.querySelectorAll('.form-agregar-carrito').forEach(form => {
-            const input = form.querySelector('.cantidad-input');
-            const btnMenos = form.querySelector('.disminuir');
-            const btnMas = form.querySelector('.aumentar');
-            const stock = parseInt(form.closest('.producto-card-new').dataset.stock);
-
-            btnMas.addEventListener('click', () => {
-                let val = parseInt(input.value);
-                if (val < stock) input.value = val + 1;
-            });
-
-            btnMenos.addEventListener('click', () => {
-                let val = parseInt(input.value);
-                if (val > 1) input.value = val - 1;
-            });
-        });
-
-        // Mejorar experiencia del usuario al agregar al carrito
-        document.querySelectorAll('.form-agregar-carrito').forEach(form => {
-            form.addEventListener('submit', function(e) {
-                const button = form.querySelector('.btn-agregar-carrito');
-                const originalText = button.textContent;
-                
-                // Deshabilitar botón y cambiar texto
-                button.disabled = true;
-                button.textContent = 'Agregando...';
-                
-                // Rehabilitar después de 3 segundos (en caso de error de red)
-                setTimeout(() => {
-                    button.disabled = false;
-                    button.textContent = originalText;
-                }, 3000);
-            });
-        });
     </script>
 </body>
 </html>

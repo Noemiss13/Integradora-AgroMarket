@@ -3,70 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AgroMarket</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-    <!-- Iconos de Font Awesome -->
+    <title>Iniciar Sesión - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-   
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="login-box">
-            <!-- Lado izquierdo -->
-            <div class="info-box">
-                <h2>¡Bienvenido!</h2>
-                <p>Ingresa tus datos personales para utilizar todas las funciones del sitio</p>
-                <a href="{{ url_for('auth.register') }}" class="btn-register">Regístrate</a>
+    <div class="auth-wrapper" id="authWrapper">
+        <!-- Lado Izquierdo (Info) -->
+        <div class="info-side" id="infoSide">
+            <div class="info-content">
+                <div class="logo-auth">
+                    <i class="fas fa-leaf"></i>AgroMarket
+                </div>
+                <h2 id="infoTitle">¡Bienvenido de nuevo!</h2>
+                <p id="infoText">Conecta con productores locales y encuentra los mejores productos frescos del campo</p>
+                <a href="#" class="btn-switch" id="switchBtn">Crear Cuenta</a>
+            </div>
             </div>
 
-            <!-- Lado derecho -->
-            <div class="form-container">
+        <!-- Lado Derecho (Formularios) -->
+        <div class="form-side">
+            <!-- Formulario de Login -->
+            <div class="form-container" id="loginForm">
                 <h1>Iniciar Sesión</h1>
+                <p class="form-subtitle">Ingresa tus credenciales para acceder a tu cuenta</p>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
-                            <div class="flash {{ category }}">{{ message }}</div>
+                            <div class="flash {{ category }}">
+                                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
 
-                <form method="POST">
-                    <!-- Campo correo -->
+                <form method="POST" id="loginFormElement">
+                    <!-- Correo Electrónico -->
                     <div class="input-group">
-                        <i class="fa-solid fa-envelope icon-left"></i>
-                        <input type="email" name="email" placeholder="Correo electrónico" required>
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" name="email" id="email" placeholder="ejemplo@correo.com" required autocomplete="email">
                     </div>
 
-                    <!-- Campo contraseña -->
+                    <!-- Contraseña -->
                     <div class="input-group">
-                        <i class="fa-solid fa-lock icon-left"></i>
-                        <input type="password" name="password" id="password" placeholder="Contraseña" required>
-                        <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
+                        <label for="password">Contraseña</label>
+                        <input type="password" name="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
                     </div>
 
-                    <button type="submit">Iniciar Sesión</button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
                 </form>
 
-                <a href="{{ url_for('auth.forgot_password') }}">¿Olvidaste tu contraseña?</a>
-                <a href="{{ url_for('general.home') }}">Sobre AgroMarket</a>
+                <div class="links">
+                    <a href="{{ url_for('auth.forgot_password') }}">
+                        <i class="fas fa-key"></i> ¿Olvidaste tu contraseña?
+                    </a>
+                    <div class="divider">
+                        <span>o</span>
+                    </div>
+                    <a href="{{ url_for('general.home') }}">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
+                </div>
+            </div>
+
+            <!-- Formulario de Registro -->
+            <div class="form-container" id="registerForm" style="display: none;">
+                <h1>Crear Cuenta</h1>
+                <p class="form-subtitle">Únete a nuestra comunidad de compradores y vendedores</p>
+
+                <form method="POST" action="{{ url_for('auth.register') }}" id="registerFormElement">
+                    <!-- Nombre Completo -->
+                    <div class="input-group">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" name="nombre" id="nombre" placeholder="Juan Pérez" required minlength="4" autocomplete="name">
+                    </div>
+
+                    <!-- Correo Electrónico -->
+                    <div class="input-group">
+                        <label for="email_register">Correo Electrónico</label>
+                        <input type="email" name="email" id="email_register" placeholder="ejemplo@correo.com" required autocomplete="email">
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="input-group">
+                        <label for="password_register">Contraseña</label>
+                        <input type="password" name="password" id="password_register" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+                        <i class="fas fa-eye toggle-password" id="togglePasswordRegister"></i>
+                    </div>
+
+                    <!-- Indicador de fuerza de contraseña -->
+                    <div class="password-strength" id="passwordStrength" style="display: none;">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <ul id="passwordRequirements">
+                            <li id="req-length">Al menos 6 caracteres</li>
+                            <li id="req-letter">Contiene letras</li>
+                            <li id="req-number">Contiene números</li>
+                        </ul>
+                    </div>
+
+                    <!-- Rol Inicial -->
+                    <div class="input-group">
+                        <label for="rol">¿Cómo quieres empezar?</label>
+                        <select name="rol" id="rol" required>
+                            <option value="">Selecciona tu rol inicial</option>
+                            <option value="comprador">
+                                🛒 Comprador - Busco productos frescos
+                            </option>
+                            <option value="vendedor">
+                                🌱 Vendedor - Ofrezco mis productos
+                            </option>
+                        </select>
+                        <small>
+                            <i class="fas fa-info-circle"></i> 
+                            Podrás agregar el otro rol más tarde desde tu perfil
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> Crear mi Cuenta
+                    </button>
+                </form>
+
+                <div class="links">
+                    <a href="{{ url_for('general.home') }}">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Mostrar/ocultar contraseña
-        const togglePassword = document.querySelector("#togglePassword");
-        const password = document.querySelector("#password");
+        // Elementos del DOM
+        const authWrapper = document.getElementById('authWrapper');
+        const infoSide = document.getElementById('infoSide');
+        const infoTitle = document.getElementById('infoTitle');
+        const infoText = document.getElementById('infoText');
+        const switchBtn = document.getElementById('switchBtn');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        
+        // Variables de estado
+        let isLoginMode = true;
 
-        togglePassword.addEventListener("click", () => {
-            const type = password.getAttribute("type") === "password" ? "text" : "password";
-            password.setAttribute("type", type);
+        // Función para cambiar entre formularios
+        function toggleForm() {
+            if (isLoginMode) {
+                // Cambiar a registro - Panel verde se mueve a la derecha, formulario a la izquierda
+                authWrapper.classList.add('register-mode');
+                
+                // Cambiar contenido después de un breve delay para que se vea la transición
+                setTimeout(() => {
+                    infoTitle.textContent = '¡Ya tienes cuenta?';
+                    infoText.textContent = 'Inicia sesión para acceder a tu panel y gestionar tus productos o compras';
+                    switchBtn.textContent = 'Iniciar Sesión';
+                    loginForm.style.display = 'none';
+                    registerForm.style.display = 'block';
+                }, 100);
+                
+                isLoginMode = false;
+            } else {
+                // Cambiar a login - Panel verde regresa a la izquierda, formulario a la derecha
+                authWrapper.classList.remove('register-mode');
+                
+                // Cambiar contenido después de un breve delay
+                setTimeout(() => {
+                    infoTitle.textContent = '¡Bienvenido de nuevo!';
+                    infoText.textContent = 'Conecta con productores locales y encuentra los mejores productos frescos del campo';
+                    switchBtn.textContent = 'Crear Cuenta';
+                    loginForm.style.display = 'block';
+                    registerForm.style.display = 'none';
+                }, 100);
+                
+                isLoginMode = true;
+            }
+        }
 
-            // Cambiar el ícono
-            togglePassword.classList.toggle("fa-eye");
-            togglePassword.classList.toggle("fa-eye-slash");
+        // Event listener para el botón de cambio
+        switchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleForm();
+        });
+
+        // Mostrar/ocultar contraseña - Login
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Mostrar/ocultar contraseña - Registro
+        const togglePasswordRegister = document.getElementById('togglePasswordRegister');
+        const passwordInputRegister = document.getElementById('password_register');
+
+        togglePasswordRegister.addEventListener('click', function() {
+            const type = passwordInputRegister.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInputRegister.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Validador de fuerza de contraseña
+        const passwordStrength = document.getElementById('passwordStrength');
+        const strengthFill = document.getElementById('strengthFill');
+
+        passwordInputRegister.addEventListener('input', function() {
+            const password = this.value;
+            
+            if (password.length > 0) {
+                passwordStrength.style.display = 'block';
+            } else {
+                passwordStrength.style.display = 'none';
+                return;
+            }
+
+            // Verificar requisitos
+            const hasLength = password.length >= 6;
+            const hasLetter = /[a-zA-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            // Actualizar indicadores visuales
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-letter', hasLetter);
+            updateRequirement('req-number', hasNumber);
+
+            // Calcular fuerza
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasLetter) strength++;
+            if (hasNumber) strength++;
+
+            // Actualizar barra
+            strengthFill.className = 'strength-fill';
+            if (strength === 1) {
+                strengthFill.classList.add('weak');
+            } else if (strength === 2) {
+                strengthFill.classList.add('medium');
+            } else if (strength === 3) {
+                strengthFill.classList.add('strong');
+            }
+        });
+
+        function updateRequirement(id, isValid) {
+            const element = document.getElementById(id);
+            if (isValid) {
+                element.classList.add('valid');
+            } else {
+                element.classList.remove('valid');
+            }
+        }
+
+        // Validación del formulario de registro
+        const registerFormElement = document.getElementById('registerFormElement');
+        const loginFormElement = document.getElementById('loginFormElement');
+
+        registerFormElement.addEventListener('submit', function(e) {
+            const nombre = document.getElementById('nombre').value.trim();
+            const email = document.getElementById('email_register').value.trim();
+            const password = document.getElementById('password_register').value.trim();
+            const rol = document.getElementById('rol').value;
+
+            let errores = [];
+
+            // Validar nombre
+            if (nombre.length < 4) {
+                errores.push('El nombre debe tener al menos 4 caracteres');
+            }
+
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errores.push('Ingresa un correo electrónico válido');
+            }
+
+            // Validar contraseña
+            if (password.length < 6) {
+                errores.push('La contraseña debe tener al menos 6 caracteres');
+            }
+
+            // Validar rol
+            if (!rol) {
+                errores.push('Selecciona un rol inicial');
+            }
+
+            if (errores.length > 0) {
+                e.preventDefault();
+                alert('❌ Errores en el formulario:\n\n' + errores.join('\n'));
+            }
+        });
+
+        // Animación del botón al enviar login
+        loginFormElement.addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Por favor, completa todos los campos');
+                return;
+            }
         });
     </script>
 </body>

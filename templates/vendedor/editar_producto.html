@@ -6,6 +6,7 @@
     <title>Editar Producto - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario_productos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -37,62 +38,153 @@
       {% endif %}
     {% endwith %}
 
-    <form action="{{ url_for('vendedor.editar_producto', id=producto.id) }}" method="POST" enctype="multipart/form-data">
-        <section>
-            <label for="nombre">Nombre del producto:</label>
-            <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" placeholder="Ej: Manzanas rojas" required>
-        </section>
+    <div class="product-form-container">
+        <div class="form-column">
+            <form action="{{ url_for('vendedor.editar_producto', id=producto.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="nombre">Nombre del producto:</label>
+                    <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" placeholder="Ej: Manzanas rojas" required>
+                </div>
 
-        <section>
-            <label for="descripcion">Descripción:</label>
-            <textarea id="descripcion" name="descripcion" placeholder="Descripción breve del producto" required>{{ producto.descripcion }}</textarea>
-        </section>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" placeholder="Describe tu producto, origen, características especiales, etc." required>{{ producto.descripcion }}</textarea>
+                </div>
 
-        <div class="form-row">
-            <section>
-                <label for="precio">Precio ($):</label>
-                <input type="number" id="precio" name="precio" value="{{ producto.precio }}" step="0.01" min="0" placeholder="0.00" required>
-            </section>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria">Categoría:</label>
+                        <select id="categoria" name="categoria" required>
+                            <option value="">--Selecciona una--</option>
+                            <option value="frutas" {% if producto.categoria == 'frutas' %}selected{% endif %}>Frutas</option>
+                            <option value="verduras" {% if producto.categoria == 'verduras' %}selected{% endif %}>Verduras</option>
+                            <option value="granos" {% if producto.categoria == 'granos' %}selected{% endif %}>Granos</option>
+                            <option value="lacteos" {% if producto.categoria == 'lacteos' %}selected{% endif %}>Lácteos</option>
+                            <option value="carnes" {% if producto.categoria == 'carnes' %}selected{% endif %}>Carnes</option>
+                            <option value="otros" {% if producto.categoria == 'otros' %}selected{% endif %}>Otros</option>
+                        </select>
+                    </div>
 
-            <section>
-                <label for="stock">Stock:</label>
-                <input type="number" id="stock" name="stock" value="{{ producto.stock }}" min="0" placeholder="0" required>
-            </section>
+                    <div class="form-group">
+                        <label for="unidad_minima">Unidad mínima:</label>
+                        <input type="text" id="unidad_minima" name="unidad_minima" value="{{ producto.unidad_minima if producto.unidad_minima else '5 kg' }}" placeholder="Ej: 5 kg" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precio">Precio ($):</label>
+                        <input type="number" id="precio" name="precio" value="{{ producto.precio }}" step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stock">Cantidad disponible:</label>
+                        <input type="number" id="stock" name="stock" value="{{ producto.stock }}" min="0" placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagen">Imagen del producto:</label>
+                    <div class="file-upload-area" onclick="document.getElementById('imagen').click()">
+                        <input type="file" id="imagen" name="imagen" accept="image/*" style="display: none;" onchange="handleFileSelect(event)" aria-label="Seleccionar imagen del producto">
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                            <p class="file-upload-text">Haz clic para seleccionar una imagen o arrastra una aquí</p>
+                            <p class="file-upload-subtext">JPG, PNG, GIF hasta 10MB</p>
+                        </div>
+                    </div>
+                    <small class="file-upload-help">Deja vacío para mantener la imagen actual</small>
+                    
+                    {% if producto.imagen %}
+                    <div class="current-image">
+                        <p>Imagen actual:</p>
+                        <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" 
+                             alt="Imagen actual del producto" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 10px;">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Actualizar Producto</button>
+                    <a href="{{ url_for('vendedor.productos') }}" class="btn-secondary">Cancelar</a>
+                </div>
+            </form>
         </div>
-
-        <section>
-            <label for="categoria">Categoría:</label>
-            <select id="categoria" name="categoria" required>
-                <option value="">Selecciona una categoría</option>
-                <option value="frutas" {% if producto.categoria == 'frutas' %}selected{% endif %}>Frutas</option>
-                <option value="verduras" {% if producto.categoria == 'verduras' %}selected{% endif %}>Verduras</option>
-                <option value="granos" {% if producto.categoria == 'granos' %}selected{% endif %}>Granos</option>
-                <option value="lacteos" {% if producto.categoria == 'lacteos' %}selected{% endif %}>Lácteos</option>
-                <option value="carnes" {% if producto.categoria == 'carnes' %}selected{% endif %}>Carnes</option>
-                <option value="otros" {% if producto.categoria == 'otros' %}selected{% endif %}>Otros</option>
-            </select>
-        </section>
-
-        <section>
-            <label for="imagen">Imagen del producto:</label>
-            <input type="file" id="imagen" name="imagen" accept="image/*">
-            <small>Deja vacío para mantener la imagen actual</small>
-            
-            {% if producto.imagen %}
-            <div class="current-image">
-                <p>Imagen actual:</p>
-                <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" 
-                     alt="Imagen actual del producto" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 10px;">
-            </div>
-            {% endif %}
-        </section>
-
-        <div class="form-actions">
-            <a href="{{ url_for('vendedor.productos') }}" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Actualizar Producto</button>
-        </div>
-    </form>
+    </div>
 </main>
 
+    <script>
+        // Función para manejar la selección de archivo
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Actualizar el área de carga con la imagen seleccionada
+                    const uploadArea = document.querySelector('.file-upload-area');
+                    uploadArea.innerHTML = `
+                        <img src="${e.target.result}" alt="Imagen seleccionada" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                        <p style="margin-top: 10px; color: #2ba656; font-weight: bold;">✓ Imagen seleccionada: ${file.name}</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Drag & Drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.querySelector('.file-upload-area');
+            
+            if (uploadArea) {
+                // Prevenir comportamiento por defecto
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, preventDefaults, false);
+                    document.body.addEventListener(eventName, preventDefaults, false);
+                });
+
+                // Highlight drop area when item is dragged over it
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                // Handle dropped files
+                uploadArea.addEventListener('drop', handleDrop, false);
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                function highlight(e) {
+                    uploadArea.style.borderColor = '#2ba656';
+                    uploadArea.style.backgroundColor = '#f0f8f0';
+                }
+
+                function unhighlight(e) {
+                    uploadArea.style.borderColor = '#ddd';
+                    uploadArea.style.backgroundColor = '#fafafa';
+                }
+
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+
+                    if (files.length > 0) {
+                        const file = files[0];
+                        const input = document.getElementById('imagen');
+                        input.files = files;
+                        
+                        // Trigger the change event
+                        const event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>

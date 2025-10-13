@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producto.nombre }} - AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_producto.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+<nav>
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+    </div>
+    <div class="menu">
+        <a href="{{ url_for('comprador.panel_comprador') }}">Home</a>
+        <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+        <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+    </div>
+</nav>
+
+<main class="product-detail-main" data-product-id="{{ producto.id }}">
+    <!-- Back Button and Breadcrumb -->
+    <div class="navigation-header">
+        {% if categoria_filtro %}
+            <a href="{{ url_for('comprador.ver_productos', categoria=categoria_filtro) }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a {{ categoria_filtro|title }}
+            </a>
+        {% else %}
+            <a href="{{ url_for('comprador.ver_productos') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a Productos
+            </a>
+        {% endif %}
+        <div class="breadcrumb">
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+            {% if categoria_filtro %}
+                <i class="fas fa-chevron-right"></i>
+                <a href="{{ url_for('comprador.ver_productos', categoria=categoria_filtro) }}">{{ categoria_filtro|title }}</a>
+            {% endif %}
+            <i class="fas fa-chevron-right"></i>
+            <span>{{ producto.nombre }}</span>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {% if category == 'success' %}
+                <i class="fas fa-check-circle"></i>
+              {% elif category == 'danger' %}
+                <i class="fas fa-exclamation-circle"></i>
+              {% elif category == 'warning' %}
+                <i class="fas fa-exclamation-triangle"></i>
+              {% elif category == 'info' %}
+                <i class="fas fa-info-circle"></i>
+              {% endif %}
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Product Detail Container -->
+    <div class="product-detail-container">
+        <!-- Product Image Section -->
+        <div class="product-image-section">
+            <div class="main-image">
+                {% if producto.imagen %}
+                    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}" id="mainImage">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/no-image.png') }}" alt="Sin imagen" id="mainImage">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Product Info Section -->
+        <div class="product-info-section">
+            <!-- Product Header -->
+            <div class="product-header">
+                <h1 class="product-title">{{ producto.nombre }}</h1>
+                <div class="product-category">
+                    <span class="category-badge">{{ producto.categoria|title }}</span>
+                </div>
+            </div>
+
+            <!-- Price and Stock -->
+            <div class="price-stock-section">
+                <div class="price-section">
+                    <span class="price-label">Precio:</span>
+                    <span class="price-value">${{ "%.2f"|format(producto.precio) }} MXN</span>
+                </div>
+                <div class="stock-section">
+                    <span class="stock-label">Disponible:</span>
+                    <span class="stock-value">{{ producto.stock }} unidades</span>
+                </div>
+                {% if producto.unidad_minima %}
+                <div class="unit-section">
+                    <span class="unit-label">Unidad mínima:</span>
+                    <span class="unit-value">{{ producto.unidad_minima }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Product Description -->
+            <div class="product-description">
+                <h3>Descripción</h3>
+                <p>{{ producto.descripcion }}</p>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="quantity-section">
+                <label for="quantity">Cantidad:</label>
+                <div class="quantity-controls">
+                    <button type="button" class="btn-quantity" id="decreaseBtn">-</button>
+                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ producto.stock }}" class="quantity-input">
+                    <button type="button" class="btn-quantity" id="increaseBtn">+</button>
+                </div>
+                <span class="stock-info">Disponible: {{ producto.stock }} unidades</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary add-to-cart-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    Agregar al Carrito
+                </button>
+                <button class="btn btn-success buy-now-btn">
+                    <i class="fas fa-bolt"></i>
+                    Comprar Ahora
+                </button>
+            </div>
+
+            <!-- Seller Information -->
+            <div class="seller-info">
+                <h3>Información del Vendedor</h3>
+                <div class="seller-details">
+                    <div class="seller-item">
+                        <i class="fas fa-store"></i>
+                        <span class="seller-label">Vendedor:</span>
+                        <span class="seller-value">{{ producto.vendedor_nombre }}</span>
+                    </div>
+                    <div class="seller-item">
+                        <i class="fas fa-envelope"></i>
+                        <span class="seller-label">Contacto:</span>
+                        <span class="seller-value">{{ producto.vendedor_email }}</span>
+                    </div>
+                    <div class="seller-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span class="seller-label">Ubicación:</span>
+                        <span class="seller-value">Ciudad de México, México</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="{{ url_for('static', filename='js/detalle_producto.js') }}"></script>
+
+</body>
+</html>

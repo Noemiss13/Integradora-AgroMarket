@@ -6,6 +6,7 @@
     <title>Agregar Producto - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario_productos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -37,56 +38,210 @@
       {% endif %}
     {% endwith %}
 
-    <form action="{{ url_for('vendedor.agregar_producto') }}" method="POST" enctype="multipart/form-data">
-        <section>
-            <label for="nombre">Nombre del producto:</label>
-            <input type="text" id="nombre" name="nombre" placeholder="Ej: Manzanas rojas" required>
-        </section>
+    <div class="product-form-container">
+        <div class="form-column">
+            <form action="{{ url_for('vendedor.agregar_producto') }}" method="POST" enctype="multipart/form-data" id="productForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre del producto:</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Manzanas rojas" required>
+                </div>
 
-        <section>
-            <label for="descripcion">Descripción:</label>
-            <textarea id="descripcion" name="descripcion" placeholder="Descripción breve del producto" required></textarea>
-        </section>
+                <div class="form-group">
+                    <label for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" placeholder="Describe tu producto, origen, características especiales, etc." required></textarea>
+                </div>
 
-        <section class="form-row">
-            <div>
-                <label for="categoria">Categoría:</label>
-                <select id="categoria" name="categoria" title="Selecciona la categoría del producto" required>
-                    <option value="">--Selecciona una--</option>
-                    <option value="frutas">Frutas</option>
-                    <option value="verduras">Verduras</option>
-                    <option value="semillas">Semillas</option>
-                    <option value="otros">Otros</option>
-                </select>
-            </div>
-            <div>
-                <label for="unidad">Unidad mínima de venta:</label>
-                <select id="unidad" name="unidad" title="Selecciona la unidad de medida" required>
-                    <option value="5kg">5 kg</option>
-                    <option value="reja">Reja</option>
-                    <option value="tonelada">Tonelada</option>
-                </select>
-            </div>
-        </section>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria">Categoría:</label>
+                        <select id="categoria" name="categoria" required>
+                            <option value="">--Selecciona una--</option>
+                            <option value="frutas">Frutas</option>
+                            <option value="verduras">Verduras</option>
+                            <option value="semillas">Semillas</option>
+                            <option value="otros">Otros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="unidad">Unidad mínima:</label>
+                        <select id="unidad" name="unidad" required>
+                            <option value="kg">kg</option>
+                            <option value="reja">Reja</option>
+                            <option value="tonelada">Tonelada</option>
+                        </select>
+                        <div id="unidad-mensaje" class="unidad-mensaje" style="display: none;">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Mínimo 5 kg por unidad</span>
+                        </div>
+                    </div>
+                </div>
 
-        <section class="form-row">
-            <div>
-                <label for="precio">Precio por unidad (MXN):</label>
-                <input type="number" id="precio" name="precio" min="0" step="0.01" placeholder="Ej: 25.50" required>
-            </div>
-            <div>
-                <label for="stock">Cantidad disponible:</label>
-                <input type="number" id="stock" name="stock" min="1" step="1" placeholder="Ej: 100" required>
-            </div>
-        </section>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precio">Precio (MXN):</label>
+                        <input type="number" id="precio" name="precio" min="0" step="0.01" placeholder="25.50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Cantidad disponible:</label>
+                        <input type="number" id="stock" name="stock" min="1" step="1" placeholder="100" required>
+                        <div id="stock-mensaje" class="stock-mensaje" style="display: none;">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Mínimo 5 unidades</span>
+                        </div>
+                    </div>
+                </div>
 
-        <section>
-            <label for="imagen">Imagen del producto:</label>
-            <input type="file" id="imagen" name="imagen" accept="image/*" required>
-        </section>
+                <div class="form-group">
+                    <label>Imagen del producto:</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <input type="file" id="imagen" name="imagen" accept="image/*" class="file-input" aria-label="Seleccionar imagen del producto" required>
+                        <div class="file-upload-content">
+                            <div class="file-upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="file-upload-text">Haz clic para subir una imagen</div>
+                            <div class="file-upload-subtext">o arrastra y suelta una imagen aquí</div>
+                        </div>
+                    </div>
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Vista previa de la imagen">
+                        <button type="button" id="removeImage" class="remove-image-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
 
-        <button type="submit"><i class="fas fa-upload"></i> Publicar Producto</button>
-    </form>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-upload"></i> Publicar Producto
+                </button>
+            </form>
+        </div>
+    </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos del DOM
+        const form = document.getElementById('productForm');
+        const fileInput = document.getElementById('imagen');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const unidadSelect = document.getElementById('unidad');
+        const unidadMensaje = document.getElementById('unidad-mensaje');
+        const stockInput = document.getElementById('stock');
+        const stockMensaje = document.getElementById('stock-mensaje');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeImageBtn = document.getElementById('removeImage');
+
+        console.log('DOM cargado, elementos encontrados:');
+        console.log('fileInput:', fileInput);
+        console.log('fileUploadArea:', fileUploadArea);
+        console.log('imagePreview:', imagePreview);
+
+        // Manejo del mensaje de unidad y validación de cantidad
+        if (unidadSelect && unidadMensaje && stockMensaje && stockInput) {
+            unidadSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'kg') {
+                    unidadMensaje.style.display = 'flex';
+                    stockMensaje.style.display = 'flex';
+                    stockInput.min = 5;
+                } else {
+                    unidadMensaje.style.display = 'none';
+                    stockMensaje.style.display = 'none';
+                    stockInput.min = 1;
+                }
+            });
+        }
+
+        // Función para mostrar vista previa de imagen
+        function handleImagePreview(file) {
+            console.log('Mostrando vista previa para:', file.name);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                console.log('Imagen cargada correctamente');
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                }
+                if (imagePreview) {
+                    imagePreview.style.display = 'block';
+                }
+                if (fileUploadArea) {
+                    fileUploadArea.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Función para remover imagen
+        function removeImage() {
+            console.log('Removiendo imagen');
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            if (imagePreview) {
+                imagePreview.style.display = 'none';
+            }
+            if (fileUploadArea) {
+                fileUploadArea.style.display = 'block';
+            }
+        }
+
+        // Manejo de subida de archivos
+        if (fileUploadArea && fileInput) {
+            // Drag & drop
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', function() {
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleImagePreview(files[0]);
+                }
+            });
+        }
+
+        // Event listener para cambio de archivo
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                console.log('Cambio en input de archivo:', e.target.files);
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    console.log('Archivo seleccionado:', file.name, file.type);
+                    if (file && file.type.startsWith('image/')) {
+                        handleImagePreview(file);
+                    } else {
+                        alert('Por favor selecciona un archivo de imagen válido');
+                    }
+                }
+            });
+        }
+
+        // Event listener para remover imagen
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', removeImage);
+        }
+
+        // Validación del formulario
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = form.querySelector('.submit-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

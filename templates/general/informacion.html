@@ -264,6 +264,7 @@
     document.querySelectorAll('.future, .cards .card, .what, .benef, .healthy .wrap').forEach(n=>obs.observe(n));
   </script>
   <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+  
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")

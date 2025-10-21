@@ -41,6 +41,28 @@
 </nav>
 
 <main class="productos-main">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+              {% if category == 'success' %}
+                <i class="fas fa-check-circle"></i>
+              {% elif category == 'danger' %}
+                <i class="fas fa-exclamation-circle"></i>
+              {% elif category == 'warning' %}
+                <i class="fas fa-exclamation-triangle"></i>
+              {% elif category == 'info' %}
+                <i class="fas fa-info-circle"></i>
+              {% endif %}
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <!-- Header Section -->
     <div class="productos-header">
         <div class="header-content">
@@ -58,7 +80,6 @@
                 <button class="filter-btn">Estado</button>
             </div>
             <a href="{{ url_for('vendedor.agregar_producto') }}" class="add-btn">
-                <i class="fas fa-plus"></i>
                 Agregar
             </a>
         </div>
@@ -93,7 +114,9 @@
                                         {% endif %}
                                     </div>
                                     <div class="product-details">
-                                        <div class="product-name">{{ p.nombre }}</div>
+                                        <div class="product-name">
+                                            <a href="{{ url_for('comprador.ver_detalle_producto', id=p.id) }}">{{ p.nombre }}</a>
+                                        </div>
                                         <div class="product-description">{{ p.descripcion or 'Sin descripción' }}</div>
                                     </div>
                                 </div>
@@ -131,7 +154,6 @@
                 <h3>No tienes productos publicados aún</h3>
                 <p>Comienza agregando tu primer producto al inventario.</p>
                 <a href="{{ url_for('vendedor.agregar_producto') }}" class="add-first-btn">
-                    <i class="fas fa-plus"></i>
                     Agregar Primer Producto
                 </a>
             </div>
@@ -153,11 +175,40 @@
 </main>
 
 <script>
+// Auto-dismiss flash messages
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.flash-message');
+    
+    flashMessages.forEach(function(message) {
+        // Auto-dismiss after 4 seconds
+        setTimeout(function() {
+            message.classList.add('slide-out');
+            
+            // Remove element after animation completes
+            setTimeout(function() {
+                message.remove();
+            }, 300); // Match animation duration
+        }, 4000);
+        
+        // Optional: Add click to dismiss
+        message.addEventListener('click', function() {
+            message.classList.add('slide-out');
+            setTimeout(function() {
+                message.remove();
+            }, 300);
+        });
+        
+        // Add cursor pointer to indicate clickable
+        message.style.cursor = 'pointer';
+    });
+});
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
     .then((reg) => console.log("✅ Service Worker registrado:", reg))
     .catch((err) => console.error("❌ Error al registrar el SW:", err));
   }
+
 </script>
 
 </body>

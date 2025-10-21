@@ -4,97 +4,214 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro - AgroMarket</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
-    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-   <!-- Registro - AgroMarket -->
-   <div class="form-container">
-    <h1>Registro</h1>
+    <div class="auth-wrapper register-mode">
+        <!-- Solo lado del formulario -->
+        <div class="form-side" style="flex: 1;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div class="logo-auth" style="font-size: 2rem; color: #2ba656;">
+                    <i class="fas fa-leaf" style="color: #7ff29c;"></i>AgroMarket
+                </div>
+            </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+            <h1>Crear Cuenta</h1>
+            <p class="form-subtitle">Únete a nuestra comunidad de compradores y vendedores</p>
 
-    <form method="POST" id="registerForm">
-        <!-- Nombre -->
-        <div class="input-group">
-            <i class="fa-solid fa-user icon-left"></i>
-            <input type="text" name="nombre" id="nombre" placeholder="Nombre completo" title="Ingresa tu nombre completo (más de 3 caracteres)" required>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" id="registerForm">
+                <!-- Nombre Completo -->
+                <div class="input-group">
+                    <label for="nombre">Nombre Completo</label>
+                    <input type="text" name="nombre" id="nombre" placeholder="Juan Pérez" required minlength="4" autocomplete="name">
+                </div>
+
+                <!-- Correo Electrónico -->
+                <div class="input-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" name="email" id="email" placeholder="ejemplo@correo.com" required autocomplete="email">
+                </div>
+
+                <!-- Contraseña -->
+                <div class="input-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" name="password" id="password" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+                    <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                </div>
+
+                <!-- Indicador de fuerza de contraseña -->
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <ul id="passwordRequirements">
+                        <li id="req-length">Al menos 6 caracteres</li>
+                        <li id="req-letter">Contiene letras</li>
+                        <li id="req-number">Contiene números</li>
+                    </ul>
+                </div>
+
+                <!-- Rol Inicial -->
+                <div class="input-group">
+                    <label for="rol">¿Cómo quieres empezar?</label>
+                    <select name="rol" id="rol" required>
+                        <option value="">Selecciona tu rol inicial</option>
+                        <option value="comprador">
+                            🛒 Comprador - Busco productos frescos
+                        </option>
+                        <option value="vendedor">
+                            🌱 Vendedor - Ofrezco mis productos
+                        </option>
+                    </select>
+                    <small>
+                        <i class="fas fa-info-circle"></i> 
+                        Podrás agregar el otro rol más tarde desde tu perfil
+                    </small>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-user-plus"></i> Crear mi Cuenta
+                </button>
+            </form>
+
+            <div class="links">
+                <a href="{{ url_for('auth.login') }}">
+                    <i class="fas fa-sign-in-alt"></i> Ya tengo una cuenta
+                </a>
+                <div class="divider">
+                    <span>o</span>
+                </div>
+                <a href="{{ url_for('general.home') }}">
+                    <i class="fas fa-home"></i> Volver al Inicio
+                </a>
+            </div>
         </div>
+    </div>
 
-        <!-- Correo -->
-        <div class="input-group">
-            <i class="fa-solid fa-envelope icon-left"></i>
-            <input type="email" name="email" id="email" placeholder="Correo electrónico" title="Ejemplo: correo@dominio.com" required>
-        </div>
+    <script>
+        // Mostrar/ocultar contraseña
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const passwordStrength = document.getElementById('passwordStrength');
+        const strengthFill = document.getElementById('strengthFill');
 
-        <!-- Contraseña -->
-        <div class="input-group">
-            <i class="fa-solid fa-lock icon-left"></i>
-            <input type="password" name="password" id="password" placeholder="Contraseña" required>
-            <i class="fa-solid fa-eye toggle-password" id="togglePassword"></i>
-        </div>
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
 
-        <!-- Rol inicial -->
-        <div class="input-group">
-            <select name="rol" id="rol" title="Selecciona tu rol inicial en la plataforma" required>
-                <option value="">Selecciona rol inicial</option>
-                <option value="comprador">Comprador</option>
-                <option value="vendedor">Vendedor</option>
-            </select>
-            <small>Si ya tienes cuenta, podrás agregar un rol adicional desde tu perfil.</small>
-        </div>
+        // Validador de fuerza de contraseña
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            
+            if (password.length > 0) {
+                passwordStrength.style.display = 'block';
+            } else {
+                passwordStrength.style.display = 'none';
+                return;
+            }
 
-        <button type="submit">Registrarse</button>
-    </form>
+            // Verificar requisitos
+            const hasLength = password.length >= 6;
+            const hasLetter = /[a-zA-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
 
-    <a href="{{ url_for('auth.login') }}">Ya tengo cuenta</a>
-    <a href="{{ url_for('general.home') }}">Regresar a Información</a>
-</div>
+            // Actualizar indicadores visuales
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-letter', hasLetter);
+            updateRequirement('req-number', hasNumber);
 
-<script>
-    // Mostrar/ocultar contraseña
-    const togglePassword = document.querySelector("#togglePassword");
-    const password = document.querySelector("#password");
+            // Calcular fuerza
+            let strength = 0;
+            if (hasLength) strength++;
+            if (hasLetter) strength++;
+            if (hasNumber) strength++;
 
-    togglePassword.addEventListener("click", () => {
-        const type = password.getAttribute("type") === "password" ? "text" : "password";
-        password.setAttribute("type", type);
-        togglePassword.classList.toggle("fa-eye");
-        togglePassword.classList.toggle("fa-eye-slash");
-    });
+            // Actualizar barra
+            strengthFill.className = 'strength-fill';
+            if (strength === 1) {
+                strengthFill.classList.add('weak');
+            } else if (strength === 2) {
+                strengthFill.classList.add('medium');
+            } else if (strength === 3) {
+                strengthFill.classList.add('strong');
+            }
+        });
 
-    // Validaciones del formulario
-    const form = document.querySelector("#registerForm");
-    form.addEventListener("submit", (e) => {
-        let errores = [];
-
-        const nombre = document.querySelector("#nombre").value.trim();
-        if(nombre.length < 4) errores.push("El nombre debe tener más de 3 caracteres.");
-
-        const email = document.querySelector("#email").value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)) errores.push("Ingresa un correo electrónico válido.");
-
-        const pass = password.value.trim();
-        if(pass.length < 6) errores.push("La contraseña debe tener al menos 6 caracteres.");
-
-        const rol = document.querySelector("#rol").value;
-        if(rol === "") errores.push("Selecciona un rol inicial.");
-
-        if(errores.length > 0){
-            e.preventDefault();
-            alert(errores.join("\n"));
+        function updateRequirement(id, isValid) {
+            const element = document.getElementById(id);
+            if (isValid) {
+                element.classList.add('valid');
+            } else {
+                element.classList.remove('valid');
+            }
         }
-    });
-</script>
 
+        // Validación del formulario
+        const registerForm = document.getElementById('registerForm');
+        const submitBtn = registerForm.querySelector('.btn-primary');
+
+        registerForm.addEventListener('submit', function(e) {
+            const nombre = document.getElementById('nombre').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const rol = document.getElementById('rol').value;
+
+            let errores = [];
+
+            // Validar nombre
+            if (nombre.length < 4) {
+                errores.push('El nombre debe tener al menos 4 caracteres');
+            }
+
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errores.push('Ingresa un correo electrónico válido');
+            }
+
+            // Validar contraseña
+            if (password.length < 6) {
+                errores.push('La contraseña debe tener al menos 6 caracteres');
+            }
+
+            // Validar rol
+            if (!rol) {
+                errores.push('Selecciona un rol inicial');
+            }
+
+            if (errores.length > 0) {
+                e.preventDefault();
+                alert('❌ Errores en el formulario:\n\n' + errores.join('\n'));
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Efecto hover en el select de rol
+        const rolSelect = document.getElementById('rol');
+        rolSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.style.color = '#2d3748';
+            }
+        });
+    </script>
 </body>
 </html>

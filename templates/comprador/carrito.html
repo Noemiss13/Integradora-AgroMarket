@@ -26,6 +26,28 @@
 
     <!-- ====== CONTENIDO PRINCIPAL ====== -->
     <main class="carrito-main">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for category, message in messages %}
+                <div class="flash-message {{ category }}">
+                  {% if category == 'success' %}
+                    <i class="fas fa-check-circle"></i>
+                  {% elif category == 'danger' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                  {% elif category == 'warning' %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                  {% elif category == 'info' %}
+                    <i class="fas fa-info-circle"></i>
+                  {% endif %}
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         {% if carrito %}
             <!-- ===== COLUMNA IZQUIERDA: LISTA DE PRODUCTOS ===== -->
             <section class="carrito-productos">
@@ -293,6 +315,30 @@
                     e.target.value = e.target.value.replace(/[^0-9]/g, '');
                 });
             }
+        });
+
+        // Auto-dismiss flash messages
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(function(message) {
+            setTimeout(function() {
+                message.classList.add('slide-out');
+                
+                // Remove element after animation completes
+                setTimeout(function() {
+                    message.remove();
+                }, 300); // Match animation duration
+            }, 4000);
+            
+            // Optional: Add click to dismiss
+            message.addEventListener('click', function() {
+                message.classList.add('slide-out');
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            });
+            
+            // Add cursor pointer to indicate clickable
+            message.style.cursor = 'pointer';
         });
     </script>
 

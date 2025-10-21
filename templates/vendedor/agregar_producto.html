@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar Producto - AgroMarket</title>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario_productos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- PWA: Manifest y theme color -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2e8b57">
+
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
 </head>
 <body>
 <nav>
@@ -118,130 +128,5 @@
         </div>
     </div>
 </main>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Elementos del DOM
-        const form = document.getElementById('productForm');
-        const fileInput = document.getElementById('imagen');
-        const fileUploadArea = document.getElementById('fileUploadArea');
-        const unidadSelect = document.getElementById('unidad');
-        const unidadMensaje = document.getElementById('unidad-mensaje');
-        const stockInput = document.getElementById('stock');
-        const stockMensaje = document.getElementById('stock-mensaje');
-        const imagePreview = document.getElementById('imagePreview');
-        const previewImg = document.getElementById('previewImg');
-        const removeImageBtn = document.getElementById('removeImage');
-
-        console.log('DOM cargado, elementos encontrados:');
-        console.log('fileInput:', fileInput);
-        console.log('fileUploadArea:', fileUploadArea);
-        console.log('imagePreview:', imagePreview);
-
-        // Manejo del mensaje de unidad y validación de cantidad
-        if (unidadSelect && unidadMensaje && stockMensaje && stockInput) {
-            unidadSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'kg') {
-                    unidadMensaje.style.display = 'flex';
-                    stockMensaje.style.display = 'flex';
-                    stockInput.min = 5;
-                } else {
-                    unidadMensaje.style.display = 'none';
-                    stockMensaje.style.display = 'none';
-                    stockInput.min = 1;
-                }
-            });
-        }
-
-        // Función para mostrar vista previa de imagen
-        function handleImagePreview(file) {
-            console.log('Mostrando vista previa para:', file.name);
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                console.log('Imagen cargada correctamente');
-                if (previewImg) {
-                    previewImg.src = e.target.result;
-                }
-                if (imagePreview) {
-                    imagePreview.style.display = 'block';
-                }
-                if (fileUploadArea) {
-                    fileUploadArea.style.display = 'none';
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Función para remover imagen
-        function removeImage() {
-            console.log('Removiendo imagen');
-            if (fileInput) {
-                fileInput.value = '';
-            }
-            if (imagePreview) {
-                imagePreview.style.display = 'none';
-            }
-            if (fileUploadArea) {
-                fileUploadArea.style.display = 'block';
-            }
-        }
-
-        // Manejo de subida de archivos
-        if (fileUploadArea && fileInput) {
-            // Drag & drop
-            fileUploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.add('dragover');
-            });
-
-            fileUploadArea.addEventListener('dragleave', function() {
-                fileUploadArea.classList.remove('dragover');
-            });
-
-            fileUploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    handleImagePreview(files[0]);
-                }
-            });
-        }
-
-        // Event listener para cambio de archivo
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                console.log('Cambio en input de archivo:', e.target.files);
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    console.log('Archivo seleccionado:', file.name, file.type);
-                    if (file && file.type.startsWith('image/')) {
-                        handleImagePreview(file);
-                    } else {
-                        alert('Por favor selecciona un archivo de imagen válido');
-                    }
-                }
-            });
-        }
-
-        // Event listener para remover imagen
-        if (removeImageBtn) {
-            removeImageBtn.addEventListener('click', removeImage);
-        }
-
-        // Validación del formulario
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const submitBtn = form.querySelector('.submit-btn');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
-                }
-            });
-        }
-    });
-</script>
-
 </body>
 </html>

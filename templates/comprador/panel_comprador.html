@@ -4,9 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroMarket - Panel Principal</title>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <!-- PWA: Manifest y theme color -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2e8b57">
+
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
 </head>
 <body>
     <!-- ===== Menú superior ===== -->
@@ -72,7 +82,7 @@
     <script src="{{ url_for('static', filename='js/panel_comprador.js') }}"></script>
     
     <script>
-        // Mejorar experiencia del usuario al agregar al carrito
+        // Mejorar experiencia al agregar al carrito
         document.addEventListener('DOMContentLoaded', function() {
             const forms = document.querySelectorAll('.form-carrito-popular');
             
@@ -80,12 +90,8 @@
                 form.addEventListener('submit', function(e) {
                     const button = form.querySelector('.btn-agregar-carrito');
                     const originalText = button.textContent;
-                    
-                    // Deshabilitar botón y cambiar texto
                     button.disabled = true;
                     button.textContent = 'Agregando...';
-                    
-                    // Rehabilitar después de 2 segundos (en caso de error de red)
                     setTimeout(() => {
                         button.disabled = false;
                         button.textContent = originalText;
@@ -93,6 +99,15 @@
                 });
             });
         });
+    </script>
+
+    <!-- PWA Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+        .then(reg => console.log("✅ Service Worker registrado:", reg))
+        .catch(err => console.error("❌ Error al registrar SW:", err));
+      }
     </script>
 </body>
 </html>

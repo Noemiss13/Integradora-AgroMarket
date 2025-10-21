@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Producto - AgroMarket</title>
@@ -8,7 +9,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario_productos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Editar Producto - AgroMarket</title>
+
+  <!-- PWA: Manifest y theme color -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Iconos -->
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
 </head>
+
 <body>
 <nav>
     <div class="nav-left">
@@ -112,6 +136,13 @@
         </div>
     </div>
 </main>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then((reg) => console.log("✅ Service Worker registrado:", reg))
+    .catch((err) => console.error("❌ Error al registrar el SW:", err));
+  }
+</script>
 
     <script>
         // Función para manejar la selección de archivo

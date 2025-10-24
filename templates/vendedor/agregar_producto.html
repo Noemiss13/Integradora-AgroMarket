@@ -128,5 +128,68 @@
         </div>
     </div>
 </main>
+
+<!-- PWA Service Worker -->
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then(reg => console.log("✅ Service Worker registrado:", reg))
+    .catch(err => console.error("❌ Error al registrar SW:", err));
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Detectar si estamos offline
+    if (!navigator.onLine) {
+      console.log("⚠️ Modo offline activo");
+
+      // Deshabilitar enlaces de registro y login
+      const restrictedLinks = [
+        "a[href*='/auth/register']",
+        "a[href*='/auth/login']",
+        "a[href*='/vendedor/agregar_producto']",
+        "a[href*='/vendedor/editar_producto']",
+        "a[href*='/vendedor/editar_perfil']"
+      ];
+
+      restrictedLinks.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+          el.classList.add("offline-disabled"); // clase para estilo opcional
+          el.addEventListener("click", function(e) {
+            e.preventDefault(); // bloquea navegación
+            alert("🚫 Esta acción no está disponible en modo offline.");
+          });
+        });
+      });
+
+      // Deshabilitar formularios sensibles
+      const restrictedForms = [
+        "form[action*='/auth/register']",
+        "form[action*='/auth/login']",
+        "form[action*='/vendedor/agregar_producto']",
+        "form[action*='/vendedor/editar_producto']"
+      ];
+
+      restrictedForms.forEach(selector => {
+        document.querySelectorAll(selector).forEach(form => {
+          form.addEventListener("submit", function(e) {
+            e.preventDefault();
+            alert("🚫 No puedes enviar este formulario en modo offline.");
+          });
+        });
+      });
+    }
+  });
+</script>
+
+<style>
+  /* Opcional: indicar visualmente los enlaces deshabilitados */
+  .offline-disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
+
 </body>
 </html>

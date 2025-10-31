@@ -6,11 +6,24 @@ const urlsToCache = [
   "/comprador/productos",
   "/static/css/estilos_comprador.css",
   "/static/js/comprador.js",
+  "/static/images/icon-48.png",
+  "/static/images/icon-72.png",
+  "/static/images/icon-144.png",
   "/static/images/icon-192.png",
-  "/static/images/icon-512.png"
+  "/static/images/icon-512.png",
+  "/static/images/logo.png"
 ];
 
-// Instalar y guardar en caché
+// URLs que no deben permitir acciones offline
+const OFFLINE_RESTRICTED = [
+  "/auth/register",
+  "/auth/login",
+  "/vendedor/agregar_producto",
+  "/vendedor/editar_producto",
+  "/vendedor/editar_perfil"
+];
+
+// Instalar: cachea los recursos esenciales
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
@@ -18,13 +31,13 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activar el service worker
+// Activar: toma control inmediatamente
 self.addEventListener("activate", (event) => {
   console.log("Service Worker activo y listo para offline");
   event.waitUntil(self.clients.claim());
 });
 
-// Interceptar peticiones
+// Estrategia Network First con fallback cache y control offline
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
@@ -35,11 +48,19 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        // Offline: devuelve del cache
+        const url = new URL(event.request.url);
+
+        // Si la URL es restringida offline, redirige al panel
+        if (OFFLINE_RESTRICTED.includes(url.pathname)) {
+          return caches.match("/comprador/panel");
+        }
+
+        // Intenta devolver recurso cacheado
         return caches.match(event.request)
           .then((response) => {
             if (response) return response;
-            // Fallback básico si no hay en cache
+
+            // Fallback final al panel si no hay nada en cache
             return caches.match("/comprador/panel");
           });
       })

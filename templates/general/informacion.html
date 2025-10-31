@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AgroMarket - Información</title>
+  <title>Agregar Producto - AgroMarket</title>
+
+  <!-- PWA: Manifest y theme color -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Iconos -->
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
 
   <!-- PWA: Manifest y theme color -->
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Productos - AgroMarket</title>
+    <link rel="stylesheet" href="/static/css/navbar.css">
+    <link rel="stylesheet" href="/static/css/estilos_vendedor.css">
+    <link rel="stylesheet" href="/static/css/mis_productos.css?v=6">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Firebase Instant -->
+    <script src="/static/js/firebase-instant.js"></script>
+</head>
+<body>
+<nav>
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+    </div>
+    <div class="menu">
+        <a href="/vendedor/panel">Home</a>
+        <a href="/vendedor/agregar_producto">Agregar Productos</a>
+        <a href="/vendedor/mis_productos" class="activo">Mis Productos</a>
+        <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/auth/perfil">Mi Perfil</a>
+        <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </div>
+</nav>
+
+<main>
+    <div class="container">
+        <div class="header">
+            <h1>Mis productos</h1>
+        </div>
+        
+        <div class="filters-section">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Buscar productos por nombre..." class="search-input">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn" id="categoryFilter">
+                    <i class="fas fa-filter"></i> Categoría
+                </button>
+                <button class="filter-btn" id="statusFilter">
+                    <i class="fas fa-toggle-on"></i> Estado
+                </button>
+                <button class="add-btn" onclick="window.location.href='/vendedor/agregar_producto'">
+                    <i class="fas fa-plus"></i> Agregar Producto
+                </button>
+            </div>
+        </div>
+        
+        <div id="productsContainer">
+            <div id="loadingMessage" style="text-align: center; padding: 60px 40px;">
+                <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #007bff; margin-bottom: 20px;"></i>
+                    <h4 style="color: #2c3e50; margin-bottom: 10px;">Cargando tus productos</h4>
+                    <p style="color: #6c757d; margin: 0;">Conectando con la base de datos...</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</main>
+
+<script>
+    // Función para actualizar el nombre del usuario en el navbar
+    function updateUserName(user) {
+        try {
+            const saludoElement = document.querySelector('.saludo-usuario strong');
+            if (saludoElement) {
+                const userName = user.displayName || user.email.split('@')[0] || 'Usuario';
+                saludoElement.textContent = userName;
+                console.log('✅ Nombre del usuario actualizado:', userName);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error actualizando nombre del usuario:', error);
+        }
+    }
+
+    // Función para cerrar sesión
+    function cerrarSesion() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            // Usar Firebase si está disponible
+            if (window.initializeFirebaseInstant) {
+                window.initializeFirebaseInstant().then(({ auth }) => {
+                    auth.signOut().then(() => {
+                        console.log('✅ Sesión cerrada correctamente');
+                        window.location.href = '/auth/login';
+                    }).catch((error) => {
+                        console.error('❌ Error al cerrar sesión:', error);
+                        window.location.href = '/auth/login';
+                    });
+                }).catch(() => {
+                    window.location.href = '/auth/login';
+                });
+            } else {
+                window.location.href = '/auth/login';
+            }
+        }
+    }
+
+    // Función para cargar productos
+    async function loadProducts() {
+        const container = document.getElementById('productsContainer');
+        
+        try {
+            console.log('🔄 Iniciando carga de productos...');
+            
+            // Verificar si Firebase está disponible
+            if (typeof firebase === 'undefined' || !firebase.app) {
+                throw new Error('Firebase no está disponible');
+            }
+            
+            console.log('✅ Firebase disponible');
+            
+            const db = firebase.firestore();
+            const auth = firebase.auth();
+            
+            // Esperar a que el usuario esté autenticado
+            let user = auth.currentUser;
+            if (!user) {
+                console.log('⏳ Esperando autenticación...');
+                await new Promise((resolve, reject) => {
+                    const unsubscribe = auth.onAuthStateChanged((user) => {
+                        unsubscribe();
+                        if (user) {
+                            resolve(user);
+                        } else {
+                            reject(new Error('Usuario no autenticado'));
+                        }
+                    });
+                });
+                user = auth.currentUser;
+            }
+            
+            console.log('✅ Usuario autenticado:', user.email);
+            
+            // Actualizar nombre del usuario en el navbar
+            updateUserName(user);
+            
+            // Obtener productos del usuario con timeout
+            console.log('📦 Consultando productos...');
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout: La consulta tardó demasiado')), 10000)
+            );
+            
+            const queryPromise = db.collection('productos').where('vendedor_id', '==', user.uid).get();
+            const snapshot = await Promise.race([queryPromise, timeoutPromise]);
+            
+            console.log('✅ Productos obtenidos:', snapshot.size);
+            
+            if (snapshot.empty) {
+                showEmptyState();
+                return;
+            }
+            
+            // Mostrar productos
+            showProducts(snapshot);
+            
+        } catch (error) {
+            console.error('❌ Error cargando productos:', error);
+            showErrorState();
+        }
+    }
+    
+    // Mostrar productos en la tabla
+    function showProducts(snapshot) {
+        const container = document.getElementById('productsContainer');
+        
+        let html = `
+            <div class="products-table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Precio</th>
+                            <th scope="col">Stock</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const imagenUrl = data.imagen || '/static/images/product-placeholder.png';
+            const estado = data.activo !== false ? 'Activo' : 'Inactivo';
+            const estadoClass = data.activo !== false ? 'status-active' : 'status-inactive';
+            
+            html += `
+                <tr>
+                    <td>
+                        <div class="product-info">
+                            ${data.imagen ? 
+                                `<img src="${data.imagen}" alt="${data.nombre || 'Producto'}" class="product-image" 
+                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                      onload="console.log('✅ Imagen cargada:', '${data.nombre}')">
+                                 <div class="product-image-placeholder" style="display: none;">
+                                     <i class="fas fa-box"></i>
+                                 </div>` :
+                                `<div class="product-image-placeholder">
+                                     <i class="fas fa-box"></i>
+                                 </div>`
+                            }
+                            <div class="product-details">
+                                <h4>${data.nombre || 'Sin nombre'}</h4>
+                                <p>${data.descripcion || 'Sin descripción'}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="category-badge">${data.categoria || 'Sin categoría'}</span>
+                    </td>
+                    <td>
+                        <span class="price">$${data.precio || '0.00'}</span>
+                    </td>
+                    <td>
+                        <span class="stock">${data.stock || '0'}</span>
+                    </td>
+                    <td>
+                        <span class="unit">${data.unidad || 'unidades'}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${estadoClass}">${estado}</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-primary" onclick="editProduct('${doc.id}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="pauseProduct('${doc.id}')">
+                                <i class="fas fa-pause"></i> Pausar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${doc.id}', '${data.nombre || 'Producto'}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Mostrando 1-${snapshot.size} de ${snapshot.size} productos
+                </div>
+                <div class="pagination-buttons">
+                    <button class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i> Anterior
+                    </button>
+                    <button class="pagination-btn">
+                        Siguiente <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+    }
+    
+    // Mostrar estado vacío
+    function showEmptyState() {
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-box-open" style="font-size: 48px; color: #ddd; margin-bottom: 16px;"></i>
+                <h5>No tienes productos registrados</h5>
+                <p class="text-muted">Comienza agregando tu primer producto</p>
+                <button class="btn btn-primary" onclick="window.location.href='/vendedor/agregar_producto'">
+                    <i class="fas fa-plus"></i> Agregar Producto
+                </button>
+            </div>
+        `;
+    }
+    
+    // Mostrar estado de error
+    function showErrorState() {
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 40px;">
+                <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); border: 2px solid #f8d7da;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #dc3545; margin-bottom: 20px;"></i>
+                    <h4 style="color: #721c24; margin-bottom: 10px;">Error al cargar productos</h4>
+                    <p style="color: #6c757d; margin-bottom: 25px;">No se pudieron cargar los productos. Verifica tu conexión e intenta de nuevo.</p>
+                    <button class="btn btn-primary" onclick="loadProducts()" style="padding: 12px 24px; font-size: 16px;">
+                        <i class="fas fa-refresh"></i> Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Mostrar mensaje de éxito
+    function showSuccessMessage(message) {
+        // Crear elemento de mensaje
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'success-message';
+        messageDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                right: -400px;
+                background: #d4edda;
+                color: #155724;
+                padding: 15px 20px;
+                border-radius: 8px;
+                border: 1px solid #c3e6cb;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 500;
+                max-width: 400px;
+                transition: right 0.3s ease-in-out;
+            ">
+                <i class="fas fa-check-circle" style="color: #28a745; font-size: 18px;"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Agregar al body
+        document.body.appendChild(messageDiv);
+        
+        // Animar entrada desde la orilla
+        setTimeout(() => {
+            const notification = messageDiv.querySelector('div');
+            notification.style.right = '20px';
+        }, 100);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            const notification = messageDiv.querySelector('div');
+            notification.style.right = '-400px';
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+    
+    // Mostrar mensaje de error
+    function showErrorMessage(message) {
+        // Crear elemento de mensaje
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'error-message';
+        messageDiv.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                right: -400px;
+                background: #f8d7da;
+                color: #721c24;
+                padding: 15px 20px;
+                border-radius: 8px;
+                border: 1px solid #f5c6cb;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 500;
+                max-width: 400px;
+                transition: right 0.3s ease-in-out;
+            ">
+                <i class="fas fa-exclamation-circle" style="color: #dc3545; font-size: 18px;"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Agregar al body
+        document.body.appendChild(messageDiv);
+        
+        // Animar entrada desde la orilla
+        setTimeout(() => {
+            const notification = messageDiv.querySelector('div');
+            notification.style.right = '20px';
+        }, 100);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            const notification = messageDiv.querySelector('div');
+            notification.style.right = '-400px';
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+    
+    // Funciones de acciones
+    function editProduct(productId) {
+        window.location.href = `/vendedor/editar/${productId}`;
+    }
+    
+    function pauseProduct(productId) {
+        alert('Función de pausar próximamente');
+    }
+    
+    async function deleteProduct(productId, productName) {
+        if (!confirm(`¿Estás seguro de que quieres eliminar "${productName}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+        
+        try {
+            console.log('🗑️ Eliminando producto:', productId);
+            
+            // Verificar si Firebase está disponible
+            if (typeof firebase === 'undefined' || !firebase.firestore) {
+                throw new Error('Firebase no está disponible');
+            }
+            
+            const db = firebase.firestore();
+            
+            // Obtener datos del producto antes de eliminarlo
+            const productDoc = await db.collection('productos').doc(productId).get();
+            const productData = productDoc.data();
+            
+            // Eliminar el producto de Firestore
+            await db.collection('productos').doc(productId).delete();
+            
+            console.log('✅ Producto eliminado exitosamente');
+            
+            // Mostrar mensaje de éxito
+            showSuccessMessage(`Producto "${productName}" eliminado exitosamente`);
+            
+            // Recargar la lista de productos inmediatamente
+            loadProducts();
+            
+        } catch (error) {
+            console.error('❌ Error al eliminar producto:', error);
+            showErrorMessage(`Error al eliminar "${productName}": ${error.message}`);
+        }
+    }
+    
+    // Función para cerrar sesión (duplicada - mantener solo una)
+    // Esta función se mantiene para compatibilidad pero la principal está arriba
+    
+    
+    // Cargar productos cuando la página esté lista
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Página cargada, esperando Firebase...');
+        
+        // Verificar parámetros de URL para mostrar mensajes
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+        const type = urlParams.get('type');
+        
+        if (message && type) {
+            if (type === 'success') {
+                showSuccessMessage(message);
+            } else if (type === 'error') {
+                showErrorMessage(message);
+            }
+            // Limpiar la URL sin recargar la página
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (urlParams.get('updated') === 'success') {
+            showSuccessMessage('✅ ¡Producto actualizado exitosamente!');
+            // Limpiar la URL sin recargar la página
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Esperar a que Firebase esté completamente cargado
+        const waitForFirebase = () => {
+            if (typeof firebase !== 'undefined' && firebase.app) {
+                console.log('Firebase disponible, iniciando carga de productos...');
+                loadProducts();
+            } else {
+                console.log('Esperando Firebase...');
+                setTimeout(waitForFirebase, 100);
+            }
+        };
+        
+        waitForFirebase();
+    });
+</script>
+</body>
+</html>

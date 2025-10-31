@@ -1,279 +1,1807 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Perfil | AgroMarket</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_usuario.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_usuario.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+    
 </head>
+
 <body>
     <!-- ===== Menú superior ===== -->
     <nav>
         <div class="nav-left">
-            <div class="logo"><h2>AgroMarket</h2></div>
-            <div class="saludo-usuario">Hola, <strong>{{ usuario.nombre }}</strong></div>
+            <div class="logo">
+                <h2>AgroMarket</h2>
+            </div>
+            <div class="saludo-usuario">Hola, <strong id="usuario-nombre">Usuario</strong></div>
         </div>
         <div class="menu">
-            <a href="{{ url_for('auth.perfil') }}" class="activo">Mi Perfil</a>
-            {% if 'comprador' in roles %}
-                <a href="{{ url_for('comprador.panel_comprador') }}">Panel Comprador</a>
-            {% endif %}
-            {% if 'vendedor' in roles %}
-                <a href="{{ url_for('vendedor.panel_vendedor') }}">Panel Vendedor</a>
-            {% endif %}
-            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+            <a href="/auth/perfil" class="activo">Mi Perfil</a>
+            <a href="/auth/logout">Cerrar Sesión</a>
         </div>
     </nav>
 
-    <main class="perfil-main">
-        <div class="perfil-container">
-    <!-- Mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for category, message in messages %}
-                            <div class="alert {{ category }}">
-                                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                                {{ message }}
-                            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
-            <div class="perfil-layout">
-                <!-- Columna izquierda: Información del usuario -->
-                <div class="perfil-info">
-                    <div class="perfil-header">
-                        <div class="perfil-avatar">
+    <!-- ===== Contenido principal ===== -->
+    <main class="main-content">
+        <div class="container">
+            <!-- ===== Panel lateral izquierdo ===== -->
+            <aside class="sidebar">
+                <div class="user-card">
+                    <div class="user-avatar">
                             <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="perfil-details">
-                            <h1>{{ usuario.nombre }}</h1>
-                            <p class="perfil-email">{{ usuario.email }}</p>
-                            <div class="perfil-roles">
-                                {% for rol in roles %}
-                                    <span class="rol-badge {% if rol == rol_activo %}rol-activo{% endif %}">
-                                        <i class="fas fa-{% if rol == 'vendedor' %}store{% else %}shopping-cart{% endif %}"></i>
-                                        {{ rol.capitalize() }}
-                                        {% if rol == rol_activo %}<span class="rol-activo-indicator">●</span>{% endif %}
-                                    </span>
-                                {% endfor %}
-                            </div>
-                        </div>
                     </div>
-
-                    <!-- Estadísticas del usuario -->
-                    <div class="stats-section">
-                        <h3><i class="fas fa-chart-bar"></i> Mis Estadísticas</h3>
-                        <div class="stats-grid">
-                            {% if estadisticas.get('comprador') %}
-                                <div class="stat-card">
-                                    <div class="stat-icon comprador">
-                                        <i class="fas fa-shopping-bag"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">{{ estadisticas.comprador.total_compras }}</span>
-                                        <span class="stat-label">Compras Realizadas</span>
-                                    </div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon gasto">
-                                        <i class="fas fa-dollar-sign"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">${{ "%.2f"|format(estadisticas.comprador.gasto_total) }}</span>
-                                        <span class="stat-label">Total Gastado</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            
-                            {% if estadisticas.get('vendedor') %}
-                                <div class="stat-card">
-                                    <div class="stat-icon vendedor">
-                                        <i class="fas fa-boxes"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">{{ estadisticas.vendedor.total_productos }}</span>
-                                        <span class="stat-label">Productos en Venta</span>
-                                    </div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon inventario">
-                                        <i class="fas fa-warehouse"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">${{ "%.2f"|format(estadisticas.vendedor.valor_inventario) }}</span>
-                                        <span class="stat-label">Valor Inventario</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            
-                            {% if estadisticas.get('ventas') %}
-                                <div class="stat-card">
-                                    <div class="stat-icon ventas">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">{{ estadisticas.ventas.total_ventas }}</span>
-                                        <span class="stat-label">Ventas Realizadas</span>
-                                    </div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-icon ingresos">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">${{ "%.2f"|format(estadisticas.ventas.ingresos_total) }}</span>
-                                        <span class="stat-label">Ingresos Totales</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                            
-                            {% if estadisticas.get('carrito') %}
-                                <div class="stat-card">
-                                    <div class="stat-icon carrito">
-                                        <i class="fas fa-shopping-cart"></i>
-                                    </div>
-                                    <div class="stat-info">
-                                        <span class="stat-number">{{ estadisticas.carrito.total_productos }}</span>
-                                        <span class="stat-label">Productos en Carrito</span>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Navegación rápida -->
-                    <div class="quick-nav">
-                        <h3><i class="fas fa-rocket"></i> Acceso Rápido</h3>
-                        <div class="quick-nav-grid">
-                            {% if 'comprador' in roles %}
-                                <a href="{{ url_for('comprador.panel_comprador') }}" class="quick-nav-item">
-                                    <i class="fas fa-shopping-bag"></i>
-                                    <span>Panel Comprador</span>
-                                </a>
-                                <a href="{{ url_for('comprador.ver_carrito') }}" class="quick-nav-item">
-                                    <i class="fas fa-shopping-cart"></i>
-                                    <span>Mi Carrito</span>
-                                </a>
-                            {% endif %}
-                            {% if 'vendedor' in roles %}
-                                <a href="{{ url_for('vendedor.panel_vendedor') }}" class="quick-nav-item">
-                                    <i class="fas fa-store"></i>
-                                    <span>Panel Vendedor</span>
-                                </a>
-                                <a href="{{ url_for('vendedor.agregar_producto') }}" class="quick-nav-item">
-                                    <i class="fas fa-plus-circle"></i>
-                                    <span>Agregar Producto</span>
-                                </a>
-                            {% endif %}
-                        </div>
+                    <div class="user-info">
+                        <h3 id="sidebar-nombre">Usuario</h3>
+                        <p id="sidebar-email">usuario@ejemplo.com</p>
                     </div>
                 </div>
 
-                <!-- Columna derecha: Formularios -->
-                <div class="perfil-forms">
-                    <!-- Formulario de información personal -->
-                    <div class="form-section">
+                <!-- Accesos rápidos a paneles (arriba de estadísticas) -->
+                <div class="quick-access" id="quick-access" style="margin-bottom: 16px;">
+                    <!-- Botones de acceso se renderizan vía JS -->
+                </div>
+
+                <!-- Estadísticas del usuario -->
+                <div class="stats-section">
+                    <h3><i class="fas fa-chart-bar"></i> Mis Estadísticas</h3>
+                    <div class="stats-grid" id="stats-grid">
+                        <!-- Las estadísticas se cargarán dinámicamente según el rol -->
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ===== Contenido principal ===== -->
+            <div class="main-panel">
+
+                <!-- ===== Formulario de perfil ===== -->
+                <div class="form-section">
+                    <div class="form-card">
                         <h2><i class="fas fa-user-edit"></i> Información Personal</h2>
-    <form method="POST" class="perfil-form">
-        <div class="form-group">
+                        <form class="perfil-form">
+                            <div class="form-group">
                                 <label for="nombre">
                                     <i class="fas fa-user"></i> Nombre
                                 </label>
-            <input type="text" name="nombre" id="nombre" value="{{ usuario.nombre }}" required>
-        </div>
+                                <input type="text" name="nombre" id="form-nombre" value="Usuario" placeholder="Ingresa tu nombre completo" required>
+                            </div>
 
-        <div class="form-group">
+                            <div class="form-group">
                                 <label for="email">
                                     <i class="fas fa-envelope"></i> Email
                                 </label>
-            <input type="email" name="email" id="email" value="{{ usuario.email }}" required>
-        </div>
+                                <input type="email" name="email" id="form-email" value="usuario@ejemplo.com" placeholder="tu@email.com" required>
+                            </div>
 
-        <div class="form-group">
+                            <div class="form-group">
                                 <label for="password">
                                     <i class="fas fa-lock"></i> Nueva Contraseña
                                 </label>
-            <input type="password" name="password" id="password" placeholder="Dejar vacío para mantener la actual">
-        </div>
+                                <input type="password" name="password" id="password" placeholder="Dejar vacío para mantener la actual">
+                            </div>
 
-        <div class="form-group">
+                            <div class="form-group">
                                 <label for="password_confirm">
                                     <i class="fas fa-lock"></i> Confirmar Contraseña
                                 </label>
-            <input type="password" name="password_confirm" id="password_confirm" placeholder="Confirmar nueva contraseña">
-        </div>
+                                <input type="password" name="password_confirm" id="password_confirm" placeholder="Confirmar nueva contraseña">
+                            </div>
 
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Actualizar Perfil
-                            </button>
+                            <div class="form-buttons">
+                                <button type="submit" class="btn btn-primary" id="btn-actualizar">
+                                    <i class="fas fa-save"></i> Actualizar Perfil
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btn-cancelar">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
                         </form>
                     </div>
+                </div>
 
-                    <!-- Gestión de roles -->
-                    <div class="form-section">
-                        <h2><i class="fas fa-user-tag"></i> Gestión de Roles</h2>
-                        
-                        <!-- Cambiar rol activo -->
-                        <div class="rol-activo-section">
-                            <h3>Rol Activo</h3>
-                            <form method="POST" class="rol-activo-form">
-            <select name="rol_activo" id="rol_activo" title="Cambiar rol activo">
-                {% for r in roles %}
-                    <option value="{{ r }}" {% if r == rol_activo %}selected{% endif %}>{{ r.capitalize() }}</option>
-                {% endfor %}
-            </select>
-                                <button type="submit" class="btn btn-secondary">
-                                    <i class="fas fa-sync-alt"></i> Cambiar Rol
-                                </button>
-                            </form>
-        </div>
-
-                        <!-- Gestión de roles -->
-                        <div class="roles-adicionales">
-                            <h3>Gestión de Roles</h3>
-        {% set todos_los_roles = ['vendedor', 'comprador'] %}
-                            <div class="roles-grid">
-        {% for r in todos_los_roles %}
-                                    <div class="rol-item">
-                                        <div class="rol-info">
-                                            <i class="fas fa-{% if r == 'vendedor' %}store{% else %}shopping-cart{% endif %}"></i>
-                                            <span class="rol-nombre">{{ r.capitalize() }}</span>
-                                            <span class="rol-estado {% if r in roles %}activo{% else %}inactivo{% endif %}">
-                                                {% if r in roles %}Activo{% else %}Inactivo{% endif %}
-                                            </span>
-                                        </div>
-                                        
-                    {% if r in roles %}
-                                            <!-- Botón para desactivar rol -->
-                                            <form method="POST" action="{{ url_for('auth.perfil') }}" class="rol-form-desactivar">
-                                                <input type="hidden" name="desactivar_rol" value="{{ r }}">
-                                                <button type="submit" class="btn btn-danger btn-sm" 
-                                                        onclick="return confirm('¿Estás seguro de que quieres desactivar el rol de {{ r }}?')">
-                                                    <i class="fas fa-times"></i> Desactivar
-                                                </button>
-                                            </form>
-                    {% else %}
-                                            <!-- Botón para activar rol -->
-                                            <form method="POST" action="{{ url_for('auth.perfil') }}" class="rol-form-activar">
-                                                <input type="hidden" name="nuevo_rol" value="{{ r }}">
-                                                <button type="submit" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-plus"></i> Activar
-                </button>
-            </form>
-                                        {% endif %}
-                                    </div>
-        {% endfor %}
+                <!-- ===== Gestión de roles ===== -->
+                <div class="roles-section">
+                    <div class="roles-card">
+                        <h2><i class="fas fa-users"></i> Gestión de Roles</h2>
+                        <div class="roles-content">
+                            <div id="roles-info">
+                                <p>Cargando información de roles...</p>
+                            </div>
+                            <div id="roles-switches" style="display: none;">
+                                <div class="roles-list">
+                                    <!-- Los roles se cargarán dinámicamente con switches -->
+                                </div>
+                            </div>
+                            <div id="roles-actions" style="display: none;">
+                                <div class="roles-buttons">
+                                    <button class="btn btn-primary" id="btn-cambiar-rol">
+                                        <i class="fas fa-exchange-alt"></i> <span id="btn-cambiar-rol-text">Cambiar Rol</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-    </div>
-</main>
+                    </div>
+                </div>
+    </main>
+
+    <!-- Scripts de Firebase y funcionalidad del perfil -->
+    <script>
+        // Variables globales
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let userData = null;
+
+        // Inicializar Firebase
+        async function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK no está cargado');
+                }
+
+                if (firebase.apps.length > 0) {
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                } else {
+                    const app = firebase.initializeApp(window.firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                }
+
+                // Configurar Firestore
+                db.settings({
+                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                    ignoreUndefinedProperties: true
+                });
+
+                console.log('✅ Firebase inicializado correctamente');
+                return true;
+            } catch (error) {
+                console.error('❌ Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        // Cargar datos del usuario
+        async function loadUserData() {
+            try {
+                // Primero intentar obtener el usuario actual directamente
+                currentUser = auth.currentUser;
+                
+                if (!currentUser) {
+                    console.log('🔄 Usuario no disponible inmediatamente, esperando...');
+                    
+                    // Si no hay usuario, esperar a que Firebase Auth esté listo con timeout
+                    await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            reject(new Error('Timeout esperando autenticación'));
+                        }, 5000); // 5 segundos timeout
+
+                        const unsubscribe = auth.onAuthStateChanged((user) => {
+                            clearTimeout(timeout);
+                            unsubscribe();
+                            currentUser = user;
+                            resolve();
+                        });
+                    });
+                }
+
+                if (!currentUser) {
+                    console.log('❌ No hay usuario autenticado');
+                    showMessage('Debes iniciar sesión para ver tu perfil', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                    return;
+                }
+
+                console.log('✅ Usuario autenticado encontrado:', {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    displayName: currentUser.displayName,
+                    emailVerified: currentUser.emailVerified
+                });
+                
+                // Obtener datos del usuario desde Firestore
+                const userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+                
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    console.log('✅ Datos del usuario cargados:', userData);
+                    updateProfileUI();
+                    updateRolesDisplay();
+                    await updateNavbarVisibility(); // Actualizar navbar principal
+                    // Accesos rápidos iniciales
+                    try { updateQuickAccess(userData.roles || []); } catch(e) { console.warn(e); }
+                    loadUserStats();
+                } else {
+                    console.log('⚠️ Usuario sin datos en Firestore, creando documento básico');
+                    // Crear documento básico
+                    userData = {
+                        nombre: currentUser.displayName || currentUser.email.split('@')[0],
+                        email: currentUser.email,
+                        roles: ['comprador'],
+                        rol_activo: 'comprador',
+                        fecha_registro: firebase.firestore.FieldValue.serverTimestamp(),
+                        activo: true
+                    };
+                    
+                    await db.collection('usuarios').doc(currentUser.uid).set(userData);
+                    updateProfileUI();
+                    updateRolesDisplay();
+                    await updateNavbarVisibility(); // Actualizar navbar principal
+                    try { updateQuickAccess(userData.roles || []); } catch(e) { console.warn(e); }
+                }
+            } catch (error) {
+                console.error('❌ Error cargando datos del usuario:', error);
+                
+                if (error.message.includes('Timeout')) {
+                    showMessage('Tiempo de espera agotado. Recargando página...', 'warning');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showMessage('Error al cargar los datos del perfil', 'error');
+                }
+            }
+        }
+
+        // Actualizar la interfaz con los datos del usuario
+        function updateProfileUI() {
+            if (!userData) return;
+
+            // Actualizar elementos de la interfaz
+            document.getElementById('usuario-nombre').textContent = userData.nombre || 'Usuario';
+            document.getElementById('sidebar-nombre').textContent = userData.nombre || 'Usuario';
+            document.getElementById('sidebar-email').textContent = userData.email || 'usuario@ejemplo.com';
+            
+            
+            // Actualizar formulario
+            document.getElementById('form-nombre').value = userData.nombre || '';
+            document.getElementById('form-email').value = userData.email || '';
+
+            // Actualizar navbar principal (no usar await aquí porque no es async)
+            updateNavbarVisibility();
+        }
+
+        // Actualizar navbar principal según los roles activos
+        async function updateNavbarVisibility() {
+            // Siempre leer datos frescos desde Firestore para asegurar que estén actualizados
+            const navPanelComprador = document.getElementById('nav-panel-comprador');
+            const navPanelVendedor = document.getElementById('nav-panel-vendedor');
+            
+            if (!navPanelComprador || !navPanelVendedor) {
+                console.error('❌ Elementos del navbar no encontrados');
+                return;
+            }
+            
+            if (currentUser) {
+                try {
+                    let userDoc = null;
+                    try {
+                        userDoc = await db.collection('usuarios').doc(currentUser.uid).get({ source: 'server' });
+                    } catch (e) {
+                        console.warn('⚠️ No se pudo leer desde servidor, usando caché/local:', e.message);
+                        userDoc = await db.collection('usuarios').doc(currentUser.uid).get();
+                    }
+                    if (userDoc.exists) {
+                        userData = userDoc.data();
+                    }
+                } catch (error) {
+                    console.error('❌ Error leyendo datos del usuario para navbar:', error);
+                }
+            }
+            
+            if (!userData) {
+                console.log('⚠️ updateNavbarVisibility: No hay datos del usuario disponibles');
+                return;
+            }
+            
+            let roles = userData.roles || [];
+            console.log('🔄 updateNavbarVisibility - Roles del usuario (raw):', roles);
+            console.log('🔄 Tipo de roles:', Array.isArray(roles) ? 'array' : typeof roles);
+            
+            // Normalizar roles: convertir a array y a minúsculas
+            let rolesArray = [];
+            if (Array.isArray(roles)) {
+                rolesArray = roles.map(r => String(r).toLowerCase().trim()).filter(r => r);
+            } else if (roles && typeof roles === 'string') {
+                rolesArray = [roles.toLowerCase().trim()];
+            }
+            
+            console.log('🔄 Roles normalizados:', rolesArray);
+            
+            // Verificar roles (normalizados)
+            const tieneComprador = rolesArray.includes('comprador');
+            const tieneVendedor = rolesArray.includes('vendedor');
+            
+            console.log('🔄 Tiene comprador:', tieneComprador);
+            console.log('🔄 Tiene vendedor:', tieneVendedor);
+            
+            // Panel Comprador: permitir/denegar acceso según rol
+            if (tieneComprador) {
+                navPanelComprador.style.display = 'inline-block';
+                navPanelComprador.href = '/comprador/panel';
+                navPanelComprador.classList.remove('disabled-link');
+                navPanelComprador.removeAttribute('title');
+                navPanelComprador.onclick = null;
+            } else {
+                // Mostrar pero bloquear acceso
+                navPanelComprador.style.display = 'inline-block';
+                navPanelComprador.href = '#';
+                navPanelComprador.classList.add('disabled-link');
+                navPanelComprador.title = 'Activa el rol de comprador para acceder';
+                navPanelComprador.onclick = (e) => {
+                    e.preventDefault();
+                    try { showMessage('No tienes el rol de comprador activo', 'warning'); } catch(_) {}
+                    return false;
+                };
+            }
+            
+            // Panel Vendedor: permitir/denegar acceso según rol
+            if (tieneVendedor) {
+                navPanelVendedor.style.display = 'inline-block';
+                navPanelVendedor.href = '/vendedor/panel';
+                navPanelVendedor.classList.remove('disabled-link');
+                navPanelVendedor.removeAttribute('title');
+                navPanelVendedor.onclick = null;
+            } else {
+                navPanelVendedor.style.display = 'inline-block';
+                navPanelVendedor.href = '#';
+                navPanelVendedor.classList.add('disabled-link');
+                navPanelVendedor.title = 'Activa el rol de vendedor para acceder';
+                navPanelVendedor.onclick = (e) => {
+                    e.preventDefault();
+                    try { showMessage('No tienes el rol de vendedor activo', 'warning'); } catch(_) {}
+                    return false;
+                };
+            }
+        }
+
+
+        // Actualizar indicador de rol
+        function updateRoleIndicator(rolActivo) {
+            const rolIndicador = document.getElementById('rol-indicador');
+            const rolStatus = document.getElementById('rol-status');
+            
+            if (rolActivo === 'vendedor') {
+                rolIndicador.className = 'rol-indicador vendedor';
+                rolStatus.textContent = 'Vendedor Activo';
+            } else {
+                rolIndicador.className = 'rol-indicador comprador';
+                rolStatus.textContent = 'Comprador Activo';
+            }
+        }
+
+
+        // Actualizar visualización de roles
+        function updateRolesDisplay() {
+            const roles = userData.roles || ['comprador'];
+            const rolActivo = userData.rol_activo || 'comprador';
+            
+            console.log('Roles del usuario:', roles, 'Rol activo:', rolActivo);
+            
+            
+            // Actualizar información de roles
+            updateRolesInfo(roles, rolActivo);
+            
+        }
+
+        // Actualizar información de roles
+        function updateRolesInfo(roles, rolActivo) {
+            const rolesInfo = document.getElementById('roles-info');
+            const rolesSwitches = document.getElementById('roles-switches');
+            const rolesActions = document.getElementById('roles-actions');
+            const btnCambiarRol = document.getElementById('btn-cambiar-rol');
+            const btnCambiarRolText = document.getElementById('btn-cambiar-rol-text');
+            
+            // Mostrar información básica
+            rolesInfo.innerHTML = `
+                <p><strong>Rol activo:</strong> <span class="rol-activo-badge">${rolActivo}</span></p>
+                <p>Activa o desactiva los roles que necesites usando los switches.</p>
+            `;
+            
+            // Mostrar switches de roles
+            rolesSwitches.style.display = 'block';
+            updateRolesSwitches(roles, rolActivo);
+            
+            // Mostrar botón de cambiar rol si tiene múltiples roles
+            if (roles.length > 1) {
+                rolesActions.style.display = 'block';
+                btnCambiarRol.style.display = 'inline-flex';
+                
+                // Determinar el rol opuesto y actualizar el texto del botón
+                const rolOpuesto = rolActivo === 'vendedor' ? 'comprador' : 'vendedor';
+                const nombreRolOpuesto = rolOpuesto === 'vendedor' ? 'Vendedor' : 'Comprador';
+                btnCambiarRolText.textContent = `Cambiar a ${nombreRolOpuesto}`;
+                
+                // Actualizar el onclick del botón para cambiar al rol opuesto
+                btnCambiarRol.onclick = () => cambiarRol(rolOpuesto);
+            } else {
+                rolesActions.style.display = 'none';
+            }
+        }
+
+        // Actualizar switches de roles (estilo móvil: siempre mostrar ambos switches)
+        function updateRolesSwitches(roles, rolActivo) {
+            const rolesList = document.querySelector('#roles-switches .roles-list');
+            
+            const tieneComprador = roles.includes('comprador');
+            const tieneVendedor = roles.includes('vendedor');
+            
+            const rolesHTML = `
+                <div class="role-switch-item">
+                    <div class="role-info">
+                        <div class="role-icon vendedor">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="role-details">
+                            <h4>Vendedor</h4>
+                            <p>Publicar y vender productos</p>
+                        </div>
+                    </div>
+                    <div class="role-switch">
+                        <label class="switch">
+                            <input type="checkbox" id="switch-vendedor" ${tieneVendedor ? 'checked' : ''} 
+                                   onchange="toggleRole('vendedor', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-label">${tieneVendedor ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                </div>
+                
+                <div class="role-switch-item">
+                    <div class="role-info">
+                        <div class="role-icon comprador">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="role-details">
+                            <h4>Comprador</h4>
+                            <p>Explorar y comprar productos</p>
+                        </div>
+                    </div>
+                    <div class="role-switch">
+                        <label class="switch">
+                            <input type="checkbox" id="switch-comprador" ${tieneComprador ? 'checked' : ''} 
+                                   onchange="toggleRole('comprador', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="switch-label">${tieneComprador ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                </div>
+            `;
+            
+            rolesList.innerHTML = rolesHTML;
+            
+            // Actualizar navbar después de actualizar los switches
+            updateNavbarVisibility().catch(err => console.error('Error actualizando navbar:', err));
+        }
+
+        // Actualizar tarjetas de roles
+        function updateRolesCards(roles, rolActivo) {
+            const rolesContainer = document.getElementById('perfil-roles');
+            
+            const rolesHTML = roles.map(rol => {
+                const isActive = rol === rolActivo;
+                const icon = rol === 'vendedor' ? 'fas fa-store' : 'fas fa-shopping-cart';
+                const description = rol === 'vendedor' 
+                    ? 'Gestiona tus productos y ventas' 
+                    : 'Explora y compra productos';
+                
+                return `
+                    <div class="rol-item ${isActive ? 'activo' : ''}" data-rol="${rol}">
+                        <div class="rol-info">
+                            <i class="${icon}"></i>
+                            <span class="rol-nombre">${rol.charAt(0).toUpperCase() + rol.slice(1)}</span>
+                            <span class="rol-estado ${isActive ? 'activo' : 'inactivo'}">
+                                ${isActive ? 'Activo' : 'Disponible'}
+                            </span>
+                        </div>
+                        <div class="rol-actions">
+                            <span class="rol-description">${description}</span>
+                            ${!isActive && roles.length > 1 ? `
+                                <button class="btn-rol-cambiar" onclick="cambiarRol('${rol}')">
+                                    <i class="fas fa-exchange-alt"></i> Activar
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            rolesContainer.innerHTML = rolesHTML;
+
+            // Refrescar accesos rápidos al cambiar los switches
+            try { updateQuickAccess(userData.roles || []); } catch(e) {}
+        }
+
+        // Accesos rápidos en el sidebar
+        function updateQuickAccess(rolesInput) {
+            const container = document.getElementById('quick-access');
+            if (!container) return;
+
+            let roles = rolesInput || [];
+            if (typeof roles === 'string') roles = [roles];
+            roles = roles.map(r => String(r).toLowerCase().trim()).filter(Boolean);
+
+            const tieneComprador = roles.includes('comprador');
+            const tieneVendedor = roles.includes('vendedor');
+
+            container.innerHTML = `
+                <div style=\"display:flex; flex-direction:column; gap:8px;\">
+                    <a id=\"qa-vendedor\" href=\"${tieneVendedor ? '/vendedor/panel' : '#'}\" 
+                       style=\"display:inline-flex; align-items:center; gap:8px; justify-content:center; padding:10px; border-radius:8px; text-decoration:none; ${tieneVendedor ? 'background:#2ba656;color:#fff;' : 'background:#e9ecef;color:#6c757d; cursor:not-allowed;'}\">
+                        <i class=\"fas fa-store\"></i>
+                        <span>Ir al Panel Vendedor</span>
+                    </a>
+                    <a id=\"qa-comprador\" href=\"${tieneComprador ? '/comprador/panel' : '#'}\" 
+                       style=\"display:inline-flex; align-items:center; gap:8px; justify-content:center; padding:10px; border-radius:8px; text-decoration:none; ${tieneComprador ? 'background:#2ba656;color:#fff;' : 'background:#e9ecef;color:#6c757d; cursor:not-allowed;'}\">
+                        <i class=\"fas fa-shopping-cart\"></i>
+                        <span>Ir al Panel Comprador</span>
+                    </a>
+                </div>`;
+
+            if (!tieneComprador) {
+                const btn = document.getElementById('qa-comprador');
+                if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); showMessage('Activa el rol de comprador para acceder', 'warning'); });
+            }
+            if (!tieneVendedor) {
+                const btn = document.getElementById('qa-vendedor');
+                if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); showMessage('Activa el rol de vendedor para acceder', 'warning'); });
+            }
+        }
+
+        // Toggle de rol (activar/desactivar)
+        async function toggleRole(rol, activar) {
+            try {
+                if (!currentUser) {
+                    showMessage('No hay usuario autenticado', 'error');
+                    return;
+                }
+
+                // Normalizar roles: asegurar array de strings en minúsculas
+                let roles = userData.roles || [];
+                if (typeof roles === 'string') {
+                    roles = [roles];
+                }
+                roles = roles.map(r => String(r).toLowerCase().trim()).filter(r => r);
+                rol = String(rol).toLowerCase().trim();
+                
+                if (activar) {
+                    // Agregar rol si no existe
+                    if (!roles.includes(rol)) {
+                        showMessage(`Activando rol ${rol}...`, 'info');
+                        
+                        const nuevosRoles = Array.from(new Set([...roles, rol]));
+                        const updateData = {
+                            roles: nuevosRoles,
+                            fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        // Si es el primer rol o no hay rol activo, establecerlo como activo
+                        if (!userData.rol_activo || nuevosRoles.length === 1) {
+                            updateData.rol_activo = rol;
+                        }
+                        
+                        await db.collection('usuarios').doc(currentUser.uid).update(updateData);
+                        
+                        userData.roles = nuevosRoles;
+                        if (updateData.rol_activo) {
+                            userData.rol_activo = rol;
+                        }
+                        
+                        showMessage(`Rol ${rol} activado exitosamente`, 'success');
+
+                        // Sincronizar con la sesión de Flask para que el backend aplique los cambios de inmediato
+                        try {
+                            await fetch('/auth/sincronizar-rol', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({
+                                    user_id: currentUser.uid,
+                                    roles: nuevosRoles,
+                                    rol_activo: userData.rol_activo || rol,
+                                    nombre: userData.nombre || currentUser.displayName || (currentUser.email || '').split('@')[0],
+                                    email: currentUser.email
+                                })
+                            });
+                        } catch (e) { console.warn('sync rol (activar) fallo', e); }
+                    }
+                } else {
+                    // Verificar que no sea el último rol
+                    if (roles.length <= 1) {
+                        showMessage('No puedes desactivar tu único rol', 'warning');
+                        // Revertir el switch
+                        const switchElement = document.getElementById(`switch-${rol}`);
+                        if (switchElement) switchElement.checked = true;
+                        return;
+                    }
+                    
+                    showMessage(`Desactivando rol ${rol}...`, 'info');
+                    
+                    // Eliminar rol del array
+                    const nuevosRoles = roles.filter(r => r !== rol);
+                    
+                    // Si el rol desactivado era el activo, cambiar al otro rol disponible
+                    let nuevoRolActivo = userData.rol_activo;
+                    if (userData.rol_activo === rol) {
+                        nuevoRolActivo = nuevosRoles[0]; // Usar el primer rol disponible
+                    }
+                    
+                    await db.collection('usuarios').doc(currentUser.uid).update({
+                        roles: nuevosRoles,
+                        rol_activo: nuevoRolActivo,
+                        fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    userData.roles = nuevosRoles;
+                    userData.rol_activo = nuevoRolActivo;
+                    
+                    showMessage(`Rol ${rol} desactivado exitosamente`, 'success');
+                    if (nuevoRolActivo !== rol) {
+                        showMessage(`Se ha cambiado el rol activo a ${nuevoRolActivo}`, 'info');
+                    }
+
+                    // Sincronizar con la sesión de Flask (desactivación)
+                    try {
+                        await fetch('/auth/sincronizar-rol', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                user_id: currentUser.uid,
+                                roles: nuevosRoles,
+                                rol_activo: nuevoRolActivo,
+                                nombre: userData.nombre || currentUser.displayName || (currentUser.email || '').split('@')[0],
+                                email: currentUser.email
+                            })
+                        });
+                    } catch (e) { console.warn('sync rol (desactivar) fallo', e); }
+                }
+                
+                // Actualizar interfaz
+                updateRolesDisplay();
+                loadUserStats(); // Recargar estadísticas
+                
+                // Actualizar navbar inmediatamente con los datos actualizados
+                await updateNavbarVisibility();
+                try { updateQuickAccess(userData.roles || []); } catch(e) {}
+                
+            } catch (error) {
+                console.error('❌ Error cambiando estado del rol:', error);
+                showMessage('Error al cambiar el estado del rol', 'error');
+                // Revertir el switch en caso de error
+                document.getElementById(`switch-${rol}`).checked = !activar;
+            }
+        }
+
+        // Cambiar rol activo
+        async function cambiarRol(nuevoRol) {
+            try {
+                console.log('🔄 Iniciando cambio de rol a:', nuevoRol);
+                
+                if (!currentUser) {
+                    showMessage('No hay usuario autenticado', 'error');
+                    return;
+                }
+
+                showMessage(`Cambiando a rol ${nuevoRol}...`, 'info');
+
+                // Actualizar rol activo en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update({
+                    rol_activo: nuevoRol,
+                    fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Actualizar datos locales
+                userData.rol_activo = nuevoRol;
+                console.log('✅ Datos locales actualizados:', userData);
+
+                // Sincronizar con la sesión de Flask
+                try {
+                    const syncResponse = await fetch('/auth/sincronizar-rol', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            user_id: currentUser.uid,
+                            roles: userData.roles || [],
+                            rol_activo: nuevoRol,
+                            nombre: userData.nombre || currentUser.displayName || currentUser.email.split('@')[0],
+                            email: currentUser.email
+                        })
+                    });
+                    
+                    if (!syncResponse.ok) {
+                        console.warn('⚠️ Error sincronizando con Flask, continuando...');
+                    } else {
+                        const syncData = await syncResponse.json();
+                        console.log('✅ Rol sincronizado con Flask:', syncData);
+                    }
+                } catch (syncError) {
+                    console.warn('⚠️ Error sincronizando con Flask:', syncError);
+                    // Continuar aunque falle la sincronización
+                }
+
+                // Actualizar interfaz
+                updateProfileUI();
+                updateRolesDisplay();
+                await updateNavbarVisibility(); // Actualizar navbar principal
+                console.log('✅ Interfaz actualizada');
+
+                showMessage(`Rol cambiado a ${nuevoRol} exitosamente`, 'success');
+
+            } catch (error) {
+                console.error('❌ Error cambiando rol:', error);
+                showMessage('Error al cambiar el rol', 'error');
+            }
+        }
+
+        // Agregar rol de vendedor
+        async function agregarRolVendedor() {
+            try {
+                if (!currentUser) {
+                    showMessage('No hay usuario autenticado', 'error');
+                    return;
+                }
+
+                const roles = userData.roles || ['comprador'];
+                
+                if (roles.includes('vendedor')) {
+                    showMessage('Ya tienes el rol de vendedor', 'warning');
+                    return;
+                }
+
+                showMessage('Agregando rol de vendedor...', 'info');
+
+                // Agregar rol de vendedor
+                const nuevosRoles = [...roles, 'vendedor'];
+                
+                // Actualizar en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update({
+                    roles: nuevosRoles,
+                    fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Actualizar datos locales
+                userData.roles = nuevosRoles;
+
+                // Actualizar interfaz
+                updateRolesDisplay();
+                await updateNavbarVisibility(); // Actualizar navbar principal
+                loadUserStats(); // Recargar estadísticas
+
+                showMessage('Rol de vendedor agregado exitosamente', 'success');
+
+            } catch (error) {
+                console.error('❌ Error agregando rol de vendedor:', error);
+                showMessage('Error al agregar el rol de vendedor', 'error');
+            }
+        }
+
+        // Agregar rol de comprador
+        async function agregarRolComprador() {
+            try {
+                if (!currentUser) {
+                    showMessage('No hay usuario autenticado', 'error');
+                    return;
+                }
+
+                const roles = userData.roles || ['vendedor'];
+                
+                if (roles.includes('comprador')) {
+                    showMessage('Ya tienes el rol de comprador', 'warning');
+                    return;
+                }
+
+                showMessage('Agregando rol de comprador...', 'info');
+
+                // Agregar rol de comprador
+                const nuevosRoles = [...roles, 'comprador'];
+                
+                // Actualizar en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update({
+                    roles: nuevosRoles,
+                    fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Actualizar datos locales
+                userData.roles = nuevosRoles;
+
+                // Actualizar interfaz
+                updateRolesDisplay();
+                await updateNavbarVisibility(); // Actualizar navbar principal
+                loadUserStats(); // Recargar estadísticas
+
+                showMessage('Rol de comprador agregado exitosamente', 'success');
+
+            } catch (error) {
+                console.error('❌ Error agregando rol de comprador:', error);
+                showMessage('Error al agregar el rol de comprador', 'error');
+            }
+        }
+
+        // Eliminar rol
+        async function eliminarRol() {
+            try {
+                if (!currentUser) {
+                    showMessage('No hay usuario autenticado', 'error');
+                    return;
+                }
+
+                const roles = userData.roles || [];
+                
+                if (roles.length <= 1) {
+                    showMessage('No puedes eliminar tu único rol', 'warning');
+                    return;
+                }
+
+                // Mostrar modal de confirmación
+                const rolAEliminar = await mostrarModalEliminarRol(roles);
+                
+                if (!rolAEliminar) {
+                    return; // Usuario canceló
+                }
+
+                showMessage(`Eliminando rol ${rolAEliminar}...`, 'info');
+
+                // Eliminar rol
+                const nuevosRoles = roles.filter(rol => rol !== rolAEliminar);
+                const nuevoRolActivo = nuevosRoles[0]; // Usar el primer rol disponible
+
+                // Actualizar en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update({
+                    roles: nuevosRoles,
+                    rol_activo: nuevoRolActivo,
+                    fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Actualizar datos locales
+                userData.roles = nuevosRoles;
+                userData.rol_activo = nuevoRolActivo;
+
+                // Actualizar interfaz
+                updateProfileUI();
+                updateRolesDisplay();
+                await updateNavbarVisibility(); // Actualizar navbar principal
+                loadUserStats(); // Recargar estadísticas
+
+                showMessage(`Rol ${rolAEliminar} eliminado exitosamente`, 'success');
+
+            } catch (error) {
+                console.error('❌ Error eliminando rol:', error);
+                showMessage('Error al eliminar el rol', 'error');
+            }
+        }
+
+        // Mostrar modal para cambiar rol activo
+        function mostrarModalCambiarRol() {
+            const roles = userData.roles || [];
+            const rolActivo = userData.rol_activo || 'comprador';
+            
+            if (roles.length <= 1) {
+                showMessage('Necesitas múltiples roles para cambiar entre ellos', 'warning');
+                return;
+            }
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-exchange-alt"></i> Cambiar Rol Activo</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Selecciona el rol que deseas activar:</p>
+                        <div class="roles-list">
+                            ${roles.map(rol => `
+                                <div class="rol-option ${rol === rolActivo ? 'activo' : ''}" data-rol="${rol}">
+                                    <i class="fas fa-${rol === 'vendedor' ? 'store' : 'shopping-cart'}"></i>
+                                    <span>${rol.charAt(0).toUpperCase() + rol.slice(1)}</span>
+                                    ${rol === rolActivo ? '<span class="rol-actual">(Actual)</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancelar-cambiar">Cancelar</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Event listeners
+            const rolOptions = modal.querySelectorAll('.rol-option');
+            const btnCancelar = modal.querySelector('#cancelar-cambiar');
+
+            rolOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const rol = option.dataset.rol;
+                    if (rol !== rolActivo) {
+                        document.body.removeChild(modal);
+                        cambiarRol(rol);
+                    }
+                });
+            });
+
+            btnCancelar.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            // Cerrar al hacer clic fuera del modal
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
+            });
+        }
+
+        // Mostrar modal para seleccionar rol a eliminar
+        async function mostrarModalEliminarRol(roles) {
+            return new Promise((resolve) => {
+                // Crear modal
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Eliminar Rol</h3>
+                        </div>
+                        <div class="modal-body">
+                            <p>Selecciona el rol que deseas eliminar:</p>
+                            <div class="roles-list">
+                                ${roles.map(rol => `
+                                    <div class="rol-option" data-rol="${rol}">
+                                        <i class="fas fa-${rol === 'vendedor' ? 'store' : 'shopping-cart'}"></i>
+                                        <span>${rol.charAt(0).toUpperCase() + rol.slice(1)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" id="cancelar-eliminar">Cancelar</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Event listeners
+                const rolOptions = modal.querySelectorAll('.rol-option');
+                const btnCancelar = modal.querySelector('#cancelar-eliminar');
+
+                rolOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        const rol = option.dataset.rol;
+                        document.body.removeChild(modal);
+                        resolve(rol);
+                    });
+                });
+
+                btnCancelar.addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve(null);
+                });
+
+                // Cerrar al hacer clic fuera del modal
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                        resolve(null);
+                    }
+                });
+            });
+        }
+
+        // Cargar estadísticas del usuario
+        async function loadUserStats() {
+            try {
+                const roles = userData.roles || ['comprador'];
+                const rolActivo = userData.rol_activo || 'comprador';
+                
+                console.log('🔄 Cargando estadísticas para roles:', roles, 'Rol activo:', rolActivo);
+                
+                if (roles.length > 1) {
+                    // Usuario con múltiples roles - mostrar estadísticas de ambos
+                    await loadEstadisticasMultiples(roles);
+                } else if (rolActivo === 'vendedor') {
+                    await loadVendedorStats();
+                } else {
+                    await loadCompradorStats();
+                }
+
+            } catch (error) {
+                console.error('❌ Error cargando estadísticas:', error);
+            }
+        }
+
+        // Cargar estadísticas para usuarios con múltiples roles
+        async function loadEstadisticasMultiples(roles) {
+            try {
+                console.log('🔄 Cargando estadísticas múltiples para roles:', roles);
+                
+                const estadisticas = {
+                    vendedor: null,
+                    comprador: null
+                };
+
+                // Cargar estadísticas de vendedor si tiene ese rol
+                if (roles.includes('vendedor')) {
+                    console.log('📊 Cargando estadísticas de vendedor...');
+                    estadisticas.vendedor = await getVendedorStatsData();
+                }
+
+                // Cargar estadísticas de comprador si tiene ese rol
+                if (roles.includes('comprador')) {
+                    console.log('🛒 Cargando estadísticas de comprador...');
+                    estadisticas.comprador = await getCompradorStatsData();
+                }
+
+                // Mostrar estadísticas combinadas
+                showEstadisticasMultiples(estadisticas, roles);
+
+            } catch (error) {
+                console.error('❌ Error cargando estadísticas múltiples:', error);
+                // Fallback a estadísticas básicas
+                showEstadisticasMultiples({
+                    vendedor: null,
+                    comprador: null
+                }, roles);
+            }
+        }
+
+        // Obtener datos de estadísticas de vendedor
+        async function getVendedorStatsData() {
+            try {
+                // Cargar productos del vendedor
+                const productosSnapshot = await db.collection('productos')
+                    .where('vendedor_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalProductos = productosSnapshot.size;
+                let productosActivos = 0;
+                
+                productosSnapshot.forEach(doc => {
+                    const producto = doc.data();
+                    if (producto.activo !== false) {
+                        productosActivos++;
+                    }
+                });
+
+                // Cargar ventas del vendedor
+                const ventasSnapshot = await db.collection('ventas')
+                    .where('vendedor_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalVentas = ventasSnapshot.size;
+                let totalIngresos = 0;
+                let ventasEsteMes = 0;
+                const fechaActual = new Date();
+                const inicioMes = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 1);
+                
+                ventasSnapshot.forEach(doc => {
+                    const venta = doc.data();
+                    totalIngresos += venta.total || 0;
+                    
+                    // Contar ventas de este mes
+                    if (venta.fecha_venta && venta.fecha_venta.toDate() >= inicioMes) {
+                        ventasEsteMes++;
+                    }
+                });
+
+                return {
+                    totalProductos,
+                    productosActivos,
+                    productosInactivos: totalProductos - productosActivos,
+                    totalVentas,
+                    totalIngresos,
+                    ventasEsteMes
+                };
+
+            } catch (error) {
+                console.error('❌ Error obteniendo datos de vendedor:', error);
+                return {
+                    totalProductos: 0,
+                    productosActivos: 0,
+                    productosInactivos: 0,
+                    totalVentas: 0,
+                    totalIngresos: 0,
+                    ventasEsteMes: 0
+                };
+            }
+        }
+
+        // Obtener datos de estadísticas de comprador
+        async function getCompradorStatsData() {
+            try {
+                // Cargar compras realizadas
+                const comprasSnapshot = await db.collection('compras')
+                    .where('usuario_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalCompras = comprasSnapshot.size;
+                let totalGastado = 0;
+                
+                comprasSnapshot.forEach(doc => {
+                    const compra = doc.data();
+                    totalGastado += compra.total || 0;
+                });
+
+                return {
+                    totalCompras,
+                    totalGastado
+                };
+
+            } catch (error) {
+                console.error('❌ Error obteniendo datos de comprador:', error);
+                return {
+                    totalCompras: 0,
+                    totalGastado: 0
+                };
+            }
+        }
+
+        // Cargar estadísticas de vendedor
+        async function loadVendedorStats() {
+            try {
+                console.log('🔄 Cargando estadísticas de vendedor...');
+                
+                // Cargar productos del vendedor
+                const productosSnapshot = await db.collection('productos')
+                    .where('vendedor_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalProductos = productosSnapshot.size;
+                let productosActivos = 0;
+                let productosInactivos = 0;
+                
+                productosSnapshot.forEach(doc => {
+                    const producto = doc.data();
+                    if (producto.activo !== false) {
+                        productosActivos++;
+                    } else {
+                        productosInactivos++;
+                    }
+                });
+
+                // Cargar ventas del vendedor
+                const ventasSnapshot = await db.collection('ventas')
+                    .where('vendedor_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalVentas = ventasSnapshot.size;
+                let totalIngresos = 0;
+                let ventasEsteMes = 0;
+                const fechaActual = new Date();
+                const inicioMes = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 1);
+                
+                ventasSnapshot.forEach(doc => {
+                    const venta = doc.data();
+                    totalIngresos += venta.total || 0;
+                    
+                    // Contar ventas de este mes
+                    if (venta.fecha_venta && venta.fecha_venta.toDate() >= inicioMes) {
+                        ventasEsteMes++;
+                    }
+                });
+
+                // Cargar productos en carrito (desde localStorage por ahora)
+                const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+                const productosEnCarrito = carrito.length;
+
+                // Mostrar estadísticas de vendedor
+                showVendedorStats({
+                    totalProductos,
+                    productosActivos,
+                    productosInactivos,
+                    totalVentas,
+                    totalIngresos,
+                    ventasEsteMes,
+                    productosEnCarrito
+                });
+
+                console.log('✅ Estadísticas de vendedor cargadas:', {
+                    totalProductos,
+                    productosActivos,
+                    totalVentas,
+                    totalIngresos
+                });
+
+            } catch (error) {
+                console.error('❌ Error cargando estadísticas de vendedor:', error);
+                showVendedorStats({
+                    totalProductos: 0,
+                    productosActivos: 0,
+                    productosInactivos: 0,
+                    totalVentas: 0,
+                    totalIngresos: 0,
+                    ventasEsteMes: 0,
+                    productosEnCarrito: 0
+                });
+            }
+        }
+
+        // Cargar estadísticas de comprador
+        async function loadCompradorStats() {
+            try {
+                console.log('🔄 Cargando estadísticas de comprador...');
+                
+                // Cargar compras realizadas
+                const comprasSnapshot = await db.collection('compras')
+                    .where('usuario_id', '==', currentUser.uid)
+                    .get();
+                
+                const totalCompras = comprasSnapshot.size;
+                let totalGastado = 0;
+                
+                comprasSnapshot.forEach(doc => {
+                    const compra = doc.data();
+                    totalGastado += compra.total || 0;
+                });
+
+                // Cargar productos en carrito (desde localStorage por ahora)
+                const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+                const productosEnCarrito = carrito.length;
+
+                // Mostrar estadísticas de comprador
+                showCompradorStats({
+                    totalCompras,
+                    totalGastado,
+                    productosEnCarrito
+                });
+
+                console.log('✅ Estadísticas de comprador cargadas:', {
+                    totalCompras,
+                    totalGastado
+                });
+
+            } catch (error) {
+                console.error('❌ Error cargando estadísticas de comprador:', error);
+                showCompradorStats({
+                    totalCompras: 0,
+                    totalGastado: 0,
+                    productosEnCarrito: 0
+                });
+            }
+        }
+
+        // Mostrar estadísticas de vendedor
+        function showVendedorStats(stats) {
+            const statsGrid = document.getElementById('stats-grid');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon vendedor">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.totalProductos}</span>
+                        <span class="stat-label">Productos Publicados</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon activos">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.productosActivos}</span>
+                        <span class="stat-label">Productos Activos</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon ventas">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.totalVentas}</span>
+                        <span class="stat-label">Ventas Realizadas</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon ingresos">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">$${stats.totalIngresos.toFixed(2)}</span>
+                        <span class="stat-label">Total Ingresos</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon mes">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.ventasEsteMes}</span>
+                        <span class="stat-label">Ventas Este Mes</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon carrito">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.productosEnCarrito}</span>
+                        <span class="stat-label">En Mi Carrito</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mostrar estadísticas de comprador
+        function showCompradorStats(stats) {
+            const statsGrid = document.getElementById('stats-grid');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon comprador">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.totalCompras}</span>
+                        <span class="stat-label">Compras Realizadas</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon gasto">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">$${stats.totalGastado.toFixed(2)}</span>
+                        <span class="stat-label">Total Gastado</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon carrito">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-number">${stats.productosEnCarrito}</span>
+                        <span class="stat-label">Productos en Carrito</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Mostrar estadísticas múltiples (vendedor + comprador)
+        function showEstadisticasMultiples(estadisticas, roles) {
+            const statsGrid = document.getElementById('stats-grid');
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const productosEnCarrito = carrito.length;
+            
+            let html = '';
+            
+            // Agregar encabezado si tiene múltiples roles
+            if (roles.length > 1) {
+            }
+            
+            // Estadísticas de vendedor
+            if (estadisticas.vendedor) {
+                html += `
+                    <div class="role-stats-section">
+                        <div class="role-stats-header">
+                            <h5><i class="fas fa-store"></i> Como Vendedor</h5>
+                        </div>
+                        <div class="role-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon vendedor">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">${estadisticas.vendedor.totalProductos}</span>
+                                    <span class="stat-label">Productos Publicados</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon activos">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">${estadisticas.vendedor.productosActivos}</span>
+                                    <span class="stat-label">Productos Activos</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon ventas">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">${estadisticas.vendedor.totalVentas}</span>
+                                    <span class="stat-label">Ventas Realizadas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon ingresos">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">$${estadisticas.vendedor.totalIngresos.toFixed(2)}</span>
+                                    <span class="stat-label">Total Ingresos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Estadísticas de comprador
+            if (estadisticas.comprador) {
+                html += `
+                    <div class="role-stats-section">
+                        <div class="role-stats-header">
+                            <h5><i class="fas fa-shopping-cart"></i> Como Comprador</h5>
+                        </div>
+                        <div class="role-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon comprador">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">${estadisticas.comprador.totalCompras}</span>
+                                    <span class="stat-label">Compras Realizadas</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon gasto">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">$${estadisticas.comprador.totalGastado.toFixed(2)}</span>
+                                    <span class="stat-label">Total Gastado</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon carrito">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number">${productosEnCarrito}</span>
+                                    <span class="stat-label">En Mi Carrito</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            
+            statsGrid.innerHTML = html;
+        }
+
+        // Actualizar perfil
+        async function updateProfile() {
+            try {
+                const nombre = document.getElementById('form-nombre').value.trim();
+                const email = document.getElementById('form-email').value.trim();
+                const password = document.getElementById('password').value;
+                const passwordConfirm = document.getElementById('password_confirm').value;
+
+                if (!nombre || !email) {
+                    showMessage('Nombre y email son obligatorios', 'error');
+                    return;
+                }
+
+                if (password && password !== passwordConfirm) {
+                    showMessage('Las contraseñas no coinciden', 'error');
+                    return;
+                }
+
+                showMessage('Actualizando perfil...', 'info');
+
+                // Actualizar perfil en Firebase Auth
+                if (nombre !== currentUser.displayName) {
+                    await currentUser.updateProfile({ displayName: nombre });
+                }
+
+                // Actualizar email si es necesario
+                if (email !== currentUser.email) {
+                    await currentUser.updateEmail(email);
+                }
+
+                // Actualizar contraseña si se proporcionó
+                if (password) {
+                    await currentUser.updatePassword(password);
+                }
+
+                // Actualizar datos en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update({
+                    nombre: nombre,
+                    email: email,
+                    fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Recargar datos
+                await loadUserData();
+                showMessage('Perfil actualizado correctamente', 'success');
+
+                // Limpiar campos de contraseña
+                document.getElementById('password').value = '';
+                document.getElementById('password_confirm').value = '';
+
+            } catch (error) {
+                console.error('❌ Error actualizando perfil:', error);
+                let errorMessage = 'Error al actualizar el perfil';
+                
+                switch (error.code) {
+                    case 'auth/requires-recent-login':
+                        errorMessage = 'Debes volver a iniciar sesión para cambiar el email';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'La contraseña es muy débil';
+                        break;
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'El email ya está en uso';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                showMessage(errorMessage, 'error');
+            }
+        }
+
+        // Mostrar mensajes (con notificaciones desde la esquina)
+        function showMessage(message, type = 'info') {
+            // Crear elemento de notificación
+            const notificacion = document.createElement('div');
+            notificacion.className = 'notificacion-mensaje';
+            
+            // Colores según el tipo
+            const colors = {
+                success: '#4CAF50',
+                error: '#f44336',
+                warning: '#ff9800',
+                info: '#2196F3'
+            };
+            
+            // Iconos según el tipo
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+            
+            notificacion.innerHTML = `
+                <i class="fas fa-${icons[type] || icons.info}"></i>
+                ${message}
+            `;
+            
+            // Agregar estilos
+            notificacion.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type] || colors.info};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            // Agregar animación CSS si no existe
+            if (!document.querySelector('#notificacion-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notificacion-styles';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(notificacion);
+            
+            // Remover después de 3 segundos con animación de salida
+            setTimeout(() => {
+                notificacion.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notificacion.parentNode) {
+                        notificacion.parentNode.removeChild(notificacion);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Mostrar indicador de carga
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'loading-indicator';
+            loadingDiv.className = 'flash info';
+            loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando perfil...';
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(loadingDiv, mainContent.firstChild);
+        }
+
+        // Ocultar indicador de carga
+        function hideLoading() {
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔄 Inicializando perfil de usuario...');
+            showLoading();
+            
+            try {
+                const firebaseReady = await initializeFirebase();
+                if (firebaseReady) {
+                    // Ocultar enlaces por defecto para evitar parpadeos
+                    const navPanelComprador = document.getElementById('nav-panel-comprador');
+                    const navPanelVendedor = document.getElementById('nav-panel-vendedor');
+                    if (navPanelComprador) navPanelComprador.style.display = 'none';
+                    if (navPanelVendedor) navPanelVendedor.style.display = 'none';
+
+                    // Suscribirse en tiempo real a roles del usuario
+                    try {
+                        const auth = firebase.auth();
+                        const user = auth.currentUser || await new Promise(resolve => auth.onAuthStateChanged(resolve));
+                        if (user) {
+                            if (window.__perfilRolesUnsub) { try { window.__perfilRolesUnsub(); } catch(e) {} }
+                    window.__perfilRolesUnsub = firebase.firestore().collection('usuarios').doc(user.uid)
+                        .onSnapshot(async (doc) => {
+                                    if (doc && doc.exists) {
+                                        userData = doc.data() || {};
+                                        await updateNavbarVisibility();
+                                try { updateQuickAccess(userData.roles || []); } catch(e) { console.warn(e); }
+                                    }
+                                }, (err) => console.warn('onSnapshot roles error:', err));
+                        }
+                    } catch (e) { console.warn('No se pudo suscribir a roles en tiempo real:', e); }
+
+                    await loadUserData();
+                } else {
+                    showMessage('Error al inicializar Firebase', 'error');
+                }
+            } catch (error) {
+                console.error('Error inicializando perfil:', error);
+                showMessage('Error al cargar el perfil', 'error');
+            } finally {
+                hideLoading();
+            }
+
+            // Event listeners
+            document.getElementById('btn-actualizar').addEventListener('click', (e) => {
+                e.preventDefault();
+                updateProfile();
+            });
+
+            document.getElementById('btn-cancelar').addEventListener('click', () => {
+                // Recargar datos originales
+                loadUserData();
+                document.getElementById('password').value = '';
+                document.getElementById('password_confirm').value = '';
+            });
+
+            // Event listeners para gestión de roles
+            document.getElementById('btn-agregar-vendedor').addEventListener('click', () => {
+                const roles = userData.roles || [];
+                if (roles.includes('comprador')) {
+                    agregarRolVendedor();
+                } else if (roles.includes('vendedor')) {
+                    agregarRolComprador();
+                }
+            });
+
+            document.getElementById('btn-eliminar-rol').addEventListener('click', () => {
+                eliminarRol();
+            });
+
+            // El botón de cambiar rol ahora se configura dinámicamente en updateRolesInfo
+
+            // Función para simular roles múltiples (solo para pruebas)
+            window.simularRolesMultiples = function() {
+                if (userData) {
+                    userData.roles = ['comprador', 'vendedor'];
+                    userData.rol_activo = 'comprador';
+                    updateRolesDisplay();
+                    loadUserStats(); // Recargar estadísticas con roles múltiples
+                    showMessage('Roles múltiples simulados para pruebas', 'info');
+                }
+            };
+
+            // Función para cambiar rol rápidamente (solo para pruebas)
+            window.cambiarRolRapido = function(rol) {
+                if (userData) {
+                    userData.rol_activo = rol;
+                    updateRolesDisplay();
+                    loadUserStats(); // Recargar estadísticas según el rol
+                    showMessage(`Rol cambiado a ${rol} (simulación)`, 'info');
+                }
+            };
+
+            // Función para simular datos de vendedor (solo para pruebas)
+            window.simularDatosVendedor = function() {
+                if (userData && userData.rol_activo === 'vendedor') {
+                    showVendedorStats({
+                        totalProductos: 15,
+                        productosActivos: 12,
+                        productosInactivos: 3,
+                        totalVentas: 8,
+                        totalIngresos: 1250.50,
+                        ventasEsteMes: 3,
+                        productosEnCarrito: 2
+                    });
+                    showMessage('Datos de vendedor simulados para pruebas', 'info');
+                } else {
+                    showMessage('Cambia a rol de vendedor primero', 'warning');
+                }
+            };
+
+            // Función para simular datos de comprador (solo para pruebas)
+            window.simularDatosComprador = function() {
+                if (userData && userData.rol_activo === 'comprador') {
+                    showCompradorStats({
+                        totalCompras: 5,
+                        totalGastado: 450.75,
+                        productosEnCarrito: 3
+                    });
+                    showMessage('Datos de comprador simulados para pruebas', 'info');
+                } else {
+                    showMessage('Cambia a rol de comprador primero', 'warning');
+                }
+            };
+
+            // Función para simular estadísticas múltiples (solo para pruebas)
+            window.simularEstadisticasMultiples = function() {
+                if (userData && userData.roles && userData.roles.length > 1) {
+                    const estadisticas = {
+                        vendedor: {
+                            totalProductos: 12,
+                            productosActivos: 10,
+                            productosInactivos: 2,
+                            totalVentas: 15,
+                            totalIngresos: 2250.80,
+                            ventasEsteMes: 4
+                        },
+                        comprador: {
+                            totalCompras: 8,
+                            totalGastado: 650.25
+                        }
+                    };
+                    
+                    showEstadisticasMultiples(estadisticas, userData.roles);
+                    showMessage('Estadísticas múltiples simuladas para pruebas', 'info');
+                } else {
+                    showMessage('Simula roles múltiples primero con simularRolesMultiples()', 'warning');
+                }
+            };
+        });
+    </script>
 </body>
 </html>

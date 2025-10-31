@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Gestión de Roles - AgroMarket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #2ba656;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1e8a47;
+        }
+        .test-button.secondary {
+            background: #6c757d;
+        }
+        .test-button.secondary:hover {
+            background: #545b62;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.success:hover {
+            background: #218838;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .test-button.danger:hover {
+            background: #c82333;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .roles-preview {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .role-card {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 15px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .role-card.activo {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .role-card.vendedor {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .role-card.comprador {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .simulation-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .simulation-controls button {
+            flex: 1;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>👥 Test de Gestión de Roles - AgroMarket</h1>
+        
+        <div class="test-section">
+            <h3>1. Estado Actual del Usuario</h3>
+            <button class="test-button" onclick="verificarUsuario()">Verificar Usuario</button>
+            <div id="usuario-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Simulación de Estados</h3>
+            <div class="simulation-controls">
+                <button class="test-button secondary" onclick="simularSoloComprador()">Solo Comprador</button>
+                <button class="test-button secondary" onclick="simularSoloVendedor()">Solo Vendedor</button>
+                <button class="test-button success" onclick="simularAmbosRoles()">Ambos Roles</button>
+            </div>
+            <div id="simulacion-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Pruebas de Gestión de Roles</h3>
+            <button class="test-button success" onclick="probarAgregarRol()">Probar Agregar Rol</button>
+            <button class="test-button danger" onclick="probarEliminarRol()">Probar Eliminar Rol</button>
+            <button class="test-button" onclick="probarCambiarRol()">Probar Cambiar Rol</button>
+            <div id="gestion-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Vista Previa de Roles</h3>
+            <div id="roles-preview" class="roles-preview">
+                <p>Los roles se mostrarán aquí...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Navegación</h3>
+            <button class="test-button" onclick="window.location.href='/auth/perfil'">Ir al Perfil</button>
+            <button class="test-button secondary" onclick="window.location.href='/login'">Ir al Login</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="/static/js/firebase-config.js"></script>
+
+    <script>
+        let auth = null;
+        let db = null;
+        let currentUser = null;
+        let userData = null;
+
+        async function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK no está cargado');
+                }
+
+                if (firebase.apps.length > 0) {
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                } else {
+                    const app = firebase.initializeApp(window.firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                }
+
+                db.settings({
+                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                    ignoreUndefinedProperties: true
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        async function loadUserData() {
+            try {
+                await initializeFirebase();
+                
+                const user = auth.currentUser;
+                if (!user) {
+                    throw new Error('No hay usuario autenticado');
+                }
+
+                const userDoc = await db.collection('usuarios').doc(user.uid).get();
+                
+                if (userDoc.exists) {
+                    userData = userDoc.data();
+                    currentUser = user;
+                } else {
+                    throw new Error('Usuario sin datos en Firestore');
+                }
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                userData = null;
+                currentUser = null;
+            }
+        }
+
+        async function verificarUsuario() {
+            const resultDiv = document.getElementById('usuario-result');
+            resultDiv.style.display = 'block';
+            
+            try {
+                await loadUserData();
+                
+                if (!userData) {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.innerHTML = '❌ No se pudieron cargar los datos del usuario';
+                    return;
+                }
+
+                const rolActivo = userData.rol_activo || 'comprador';
+                const roles = userData.roles || ['comprador'];
+
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Usuario Verificado:</strong><br>
+                    • UID: ${currentUser.uid}<br>
+                    • Email: ${currentUser.email}<br>
+                    • Nombre: ${userData.nombre || 'No definido'}<br>
+                    • Rol activo: <strong>${rolActivo}</strong><br>
+                    • Roles disponibles: ${roles.join(', ')}<br>
+                    • Tiene múltiples roles: ${roles.length > 1 ? 'Sí' : 'No'}
+                `;
+
+                mostrarRolesPreview(roles, rolActivo);
+
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function simularSoloComprador() {
+            userData = {
+                roles: ['comprador'],
+                rol_activo: 'comprador'
+            };
+            
+            mostrarRolesPreview(['comprador'], 'comprador');
+            
+            const resultDiv = document.getElementById('simulacion-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result success';
+            resultDiv.innerHTML = '✅ Simulado: Solo rol de Comprador - Puede agregar rol de Vendedor';
+        }
+
+        function simularSoloVendedor() {
+            userData = {
+                roles: ['vendedor'],
+                rol_activo: 'vendedor'
+            };
+            
+            mostrarRolesPreview(['vendedor'], 'vendedor');
+            
+            const resultDiv = document.getElementById('simulacion-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result success';
+            resultDiv.innerHTML = '✅ Simulado: Solo rol de Vendedor - Puede agregar rol de Comprador';
+        }
+
+        function simularAmbosRoles() {
+            userData = {
+                roles: ['comprador', 'vendedor'],
+                rol_activo: 'comprador'
+            };
+            
+            mostrarRolesPreview(['comprador', 'vendedor'], 'comprador');
+            
+            const resultDiv = document.getElementById('simulacion-result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'test-result success';
+            resultDiv.innerHTML = '✅ Simulado: Ambos roles - Puede cambiar entre roles y eliminar uno';
+        }
+
+        function probarAgregarRol() {
+            const resultDiv = document.getElementById('gestion-result');
+            resultDiv.style.display = 'block';
+            
+            if (!userData) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ Simula un estado de usuario primero';
+                return;
+            }
+
+            const roles = userData.roles || [];
+            
+            if (roles.length >= 2) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ Ya tienes ambos roles disponibles';
+                return;
+            }
+
+            const rolFaltante = roles.includes('comprador') ? 'vendedor' : 'comprador';
+            
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = `
+                ✅ <strong>Puede agregar rol:</strong><br>
+                • Rol faltante: <strong>${rolFaltante}</strong><br>
+                • Botón disponible: "Agregar Rol ${rolFaltante.charAt(0).toUpperCase() + rolFaltante.slice(1)}"<br>
+                • Función: ${rolFaltante === 'vendedor' ? 'agregarRolVendedor()' : 'agregarRolComprador()'}
+            `;
+        }
+
+        function probarEliminarRol() {
+            const resultDiv = document.getElementById('gestion-result');
+            resultDiv.style.display = 'block';
+            
+            if (!userData) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ Simula un estado de usuario primero';
+                return;
+            }
+
+            const roles = userData.roles || [];
+            
+            if (roles.length <= 1) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ No puedes eliminar tu único rol';
+                return;
+            }
+
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = `
+                ✅ <strong>Puede eliminar rol:</strong><br>
+                • Roles disponibles: ${roles.join(', ')}<br>
+                • Botón disponible: "Eliminar Rol"<br>
+                • Función: eliminarRol()<br>
+                • Modal: mostrarModalEliminarRol()
+            `;
+        }
+
+        function probarCambiarRol() {
+            const resultDiv = document.getElementById('gestion-result');
+            resultDiv.style.display = 'block';
+            
+            if (!userData) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ Simula un estado de usuario primero';
+                return;
+            }
+
+            const roles = userData.roles || [];
+            
+            if (roles.length <= 1) {
+                resultDiv.className = 'test-result warning';
+                resultDiv.innerHTML = '⚠️ Necesitas múltiples roles para cambiar entre ellos';
+                return;
+            }
+
+            resultDiv.className = 'test-result info';
+            resultDiv.innerHTML = `
+                ✅ <strong>Puede cambiar rol:</strong><br>
+                • Roles disponibles: ${roles.join(', ')}<br>
+                • Botón disponible: "Cambiar Rol Activo"<br>
+                • Función: cambiarRol()<br>
+                • Opciones: ${roles.map(rol => `"${rol}"`).join(', ')}
+            `;
+        }
+
+        function mostrarRolesPreview(roles, rolActivo) {
+            const container = document.getElementById('roles-preview');
+            
+            const rolesHTML = roles.map(rol => {
+                const isActivo = rol === rolActivo;
+                return `
+                    <div class="role-card ${rol} ${isActivo ? 'activo' : ''}">
+                        <i class="fas fa-${rol === 'vendedor' ? 'store' : 'shopping-cart'}"></i>
+                        ${rol.charAt(0).toUpperCase() + rol.slice(1)}
+                        ${isActivo ? ' (Activo)' : ''}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <h4>Roles del Usuario:</h4>
+                <div>${rolesHTML}</div>
+                <p style="margin-top: 15px; color: #666;">
+                    <strong>Estado:</strong> ${roles.length > 1 ? 'Múltiples roles' : 'Un solo rol'}<br>
+                    <strong>Acciones disponibles:</strong> ${getAccionesDisponibles(roles)}
+                </p>
+            `;
+        }
+
+        function getAccionesDisponibles(roles) {
+            if (roles.length > 1) {
+                return 'Cambiar rol activo, Eliminar rol';
+            } else {
+                const rolFaltante = roles.includes('comprador') ? 'vendedor' : 'comprador';
+                return `Agregar rol ${rolFaltante}`;
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🧪 Página de test de gestión de roles cargada');
+            await loadUserData();
+        });
+    </script>
+</body>
+</html>

@@ -3,171 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ producto.nombre }} - AgroMarket</title>
+    <title>Detalle del Producto - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_producto.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-<nav>
-    <div class="nav-left">
-        <div class="logo"><h2>AgroMarket</h2></div>
-        <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
-    </div>
-    <div class="menu">
-        <a href="{{ url_for('comprador.panel_comprador') }}">Home</a>
-        <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-        <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
-        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
-        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
-    </div>
-</nav>
-
-<main class="product-detail-main" data-product-id="{{ producto.id }}">
-    <!-- Back Button and Breadcrumb -->
-    <div class="navigation-header">
-        {% if categoria_filtro %}
-            <a href="{{ url_for('comprador.ver_productos', categoria=categoria_filtro) }}" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-                Volver a {{ categoria_filtro|title }}
-            </a>
-        {% else %}
-            <a href="{{ url_for('comprador.ver_productos') }}" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-                Volver a Productos
-            </a>
-        {% endif %}
-        <div class="breadcrumb">
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong id="nav-user-name">{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
             <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-            {% if categoria_filtro %}
-                <i class="fas fa-chevron-right"></i>
-                <a href="{{ url_for('comprador.ver_productos', categoria=categoria_filtro) }}">{{ categoria_filtro|title }}</a>
-            {% endif %}
-            <i class="fas fa-chevron-right"></i>
-            <span>{{ producto.nombre }}</span>
+            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
         </div>
-    </div>
+    </nav>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-messages">
-          {% for category, message in messages %}
-            <div class="flash-message {{ category }}">
-              {% if category == 'success' %}
-                <i class="fas fa-check-circle"></i>
-              {% elif category == 'danger' %}
-                <i class="fas fa-exclamation-circle"></i>
-              {% elif category == 'warning' %}
-                <i class="fas fa-exclamation-triangle"></i>
-              {% elif category == 'info' %}
-                <i class="fas fa-info-circle"></i>
-              {% endif %}
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-
-    <!-- Product Detail Container -->
-    <div class="product-detail-container">
-        <!-- Product Image Section -->
-        <div class="product-image-section">
-            <div class="main-image">
-                {% if producto.imagen %}
-                    <img src="{{ url_for('static', filename='uploads/' + producto.imagen) }}" alt="{{ producto.nombre }}" id="mainImage">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/no-image.png') }}" alt="Sin imagen" id="mainImage">
-                {% endif %}
-            </div>
+    <main class="product-detail-main" data-product-id="{{ producto_id }}">
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <i class="fas fa-spinner"></i>
+            <p>Cargando producto...</p>
         </div>
 
-        <!-- Product Info Section -->
-        <div class="product-info-section">
-            <!-- Product Header -->
-            <div class="product-header">
-                <h1 class="product-title">{{ producto.nombre }}</h1>
-                <div class="product-category">
-                    <span class="category-badge">{{ producto.categoria|title }}</span>
+        <!-- Error State -->
+        <div class="error-state" id="errorState" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Error al cargar el producto</h3>
+            <p id="errorMessage"></p>
+            <a href="{{ url_for('comprador.ver_productos') }}" class="btn btn-primary">Volver a Productos</a>
+        </div>
+
+        <!-- Product Content -->
+        <div id="productContent" style="display: none;">
+            <!-- Navigation Header -->
+            <div class="navigation-header">
+                <a href="{{ url_for('comprador.ver_productos') }}" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a Productos
+                </a>
+                <div class="breadcrumb">
+                    <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span id="breadcrumb-category"></span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span id="breadcrumb-product"></span>
                 </div>
             </div>
 
-            <!-- Price and Stock -->
-            <div class="price-stock-section">
-                <div class="price-section">
-                    <span class="price-label">Precio:</span>
-                    <span class="price-value">${{ "%.2f"|format(producto.precio) }} MXN</span>
+            <!-- Product Detail Container -->
+            <div class="product-detail-container">
+                <!-- Image Gallery Section -->
+                <div class="product-image-section">
+                    <div class="product-gallery">
+                        <div class="main-image-container">
+                            <img src="/static/images/product-placeholder.png" alt="Producto" id="mainImage">
+                        </div>
+                        <div class="thumbnail-gallery" id="thumbnailGallery">
+                            <!-- Thumbnails se cargarán dinámicamente -->
+                        </div>
+                    </div>
                 </div>
-                <div class="stock-section">
-                    <span class="stock-label">Disponible:</span>
-                    <span class="stock-value">{{ producto.stock }} unidades</span>
+
+                <!-- Product Info Section -->
+                <div class="product-info-section">
+                    <div class="product-header">
+                        <h1 class="product-title" id="productTitle">Cargando...</h1>
+                        <div class="product-category">
+                            <span class="category-badge" id="productCategory">-</span>
+                        </div>
+                    </div>
+
+                    <div class="price-stock-section">
+                        <div class="price-section">
+                            <span class="price-label">Precio:</span>
+                            <span class="price-value" id="productPrice">$0.00 MXN</span>
+                        </div>
+                        <div class="stock-section">
+                            <span class="stock-label">Stock disponible:</span>
+                            <span class="stock-value" id="productStock">0</span>
+                            <span class="stock-unit" id="productUnit">kg</span>
+                        </div>
+                    </div>
+
+                    <div class="product-description">
+                        <h3>Descripción</h3>
+                        <p id="productDescription">Cargando descripción...</p>
+                    </div>
+
+                    <div class="quantity-section">
+                        <label for="quantity">Cantidad:</label>
+                        <div class="quantity-controls">
+                            <button type="button" class="btn-quantity" id="decreaseBtn">-</button>
+                            <input type="number" id="quantity" name="quantity" value="1" min="1" max="1" class="quantity-input">
+                            <button type="button" class="btn-quantity" id="increaseBtn">+</button>
+                        </div>
+                        <span class="stock-info" id="stockInfo">Disponible: 0 unidades</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary add-to-cart-btn" id="addToCartBtn">
+                            <i class="fas fa-shopping-cart"></i>
+                            Agregar al Carrito
+                        </button>
+                        <button class="btn btn-success buy-now-btn" id="buyNowBtn">
+                            <i class="fas fa-bolt"></i>
+                            Comprar Ahora
+                        </button>
+                    </div>
                 </div>
-                {% if producto.unidad_minima %}
-                <div class="unit-section">
-                    <span class="unit-label">Unidad mínima:</span>
-                    <span class="unit-value">{{ producto.unidad_minima }}</span>
-                </div>
-                {% endif %}
             </div>
 
-            <!-- Product Description -->
-            <div class="product-description">
-                <h3>Descripción</h3>
-                <p>{{ producto.descripcion }}</p>
-            </div>
-
-            <!-- Quantity Selector -->
-            <div class="quantity-section">
-                <label for="quantity">Cantidad:</label>
-                <div class="quantity-controls">
-                    <button type="button" class="btn-quantity" id="decreaseBtn">-</button>
-                    <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ producto.stock }}" class="quantity-input">
-                    <button type="button" class="btn-quantity" id="increaseBtn">+</button>
-                </div>
-                <span class="stock-info">Disponible: {{ producto.stock }} unidades</span>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="action-buttons">
-                <button class="btn btn-primary add-to-cart-btn">
-                    <i class="fas fa-shopping-cart"></i>
-                    Agregar al Carrito
-                </button>
-                <button class="btn btn-success buy-now-btn">
-                    <i class="fas fa-bolt"></i>
-                    Comprar Ahora
-                </button>
-            </div>
-
-            <!-- Seller Information -->
-            <div class="seller-info">
-                <h3>Información del Vendedor</h3>
-                <div class="seller-details">
-                    <div class="seller-item">
+            <!-- Seller Information Card -->
+            <div class="seller-card" id="sellerCard">
+                <div class="seller-header">
+                    <div class="seller-avatar" id="sellerAvatar">
                         <i class="fas fa-store"></i>
-                        <span class="seller-label">Vendedor:</span>
-                        <span class="seller-value">{{ producto.vendedor_nombre }}</span>
                     </div>
-                    <div class="seller-item">
-                        <i class="fas fa-envelope"></i>
-                        <span class="seller-label">Contacto:</span>
-                        <span class="seller-value">{{ producto.vendedor_email }}</span>
+                    <div class="seller-info">
+                        <h3 id="sellerName">Cargando...</h3>
+                        <p id="sellerEmail">-</p>
                     </div>
-                    <div class="seller-item">
+                </div>
+                <div class="seller-details-grid">
+                    <div class="seller-detail-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span class="seller-label">Ubicación:</span>
-                        <span class="seller-value">Ciudad de México, México</span>
+                        <span id="sellerLocation">Ubicación no disponible</span>
+                    </div>
+                    <div class="seller-detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Vendedor desde <span id="sellerSince">-</span></span>
+                    </div>
+                    <div class="seller-detail-item">
+                        <i class="fas fa-box"></i>
+                        <span><span id="sellerProducts">0</span> productos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <div class="comments-header">
+                    <h2><i class="fas fa-comments"></i> Comentarios (<span id="commentsCount">0</span>)</h2>
+                </div>
+
+                <!-- Comment Form -->
+                <div class="comment-form" id="commentForm" style="display: none;">
+                    <h3>Escribe un comentario</h3>
+                    <div class="comment-input-group">
+                        <label>Calificación</label>
+                        <div class="rating-input" id="ratingInput">
+                            <i class="fas fa-star" data-rating="1"></i>
+                            <i class="fas fa-star" data-rating="2"></i>
+                            <i class="fas fa-star" data-rating="3"></i>
+                            <i class="fas fa-star" data-rating="4"></i>
+                            <i class="fas fa-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                    <div class="comment-input-group">
+                        <label for="commentText">Tu comentario</label>
+                        <textarea id="commentText" placeholder="Comparte tu opinión sobre este producto..."></textarea>
+                    </div>
+                    <button class="btn btn-primary" id="submitCommentBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        Publicar Comentario
+                    </button>
+                </div>
+
+                <!-- Comments List -->
+                <div class="comment-list" id="commentsList">
+                    <div class="no-comments">
+                        <i class="fas fa-comment-slash"></i>
+                        <p>Aún no hay comentarios. Sé el primero en opinar.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
-</main>
+    <!-- Firebase SDKs -->
+    <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-<script src="{{ url_for('static', filename='js/detalle_producto.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='js/detalle_producto.js') }}"></script>
 </body>
 </html>

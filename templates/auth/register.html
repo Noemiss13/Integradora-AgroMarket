@@ -6,19 +6,27 @@
     <title>Registro - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
 </head>
 <body>
-    <div class="auth-wrapper register-mode">
-        <!-- Solo lado del formulario -->
-        <div class="form-side" style="flex: 1;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div class="logo-auth" style="font-size: 2rem; color: #2ba656;">
-                    <i class="fas fa-leaf" style="color: #7ff29c;"></i>AgroMarket
+    <div class="auth-wrapper" id="authWrapper">
+        <!-- Lado Izquierdo (Info) -->
+        <div class="info-side" id="infoSide">
+            <div class="info-content">
+                <div class="logo-auth">
+                    <i class="fas fa-leaf"></i>AgroMarket
                 </div>
+                <h2>¡Únete a nuestra comunidad!</h2>
+                <p>Conecta con productores locales y encuentra los mejores productos frescos del campo</p>
+                <a href="/login" class="btn-switch">Ya tengo cuenta</a>
             </div>
+        </div>
 
-            <h1>Crear Cuenta</h1>
-            <p class="form-subtitle">Únete a nuestra comunidad de compradores y vendedores</p>
+        <!-- Lado Derecho (Formulario) -->
+        <div class="form-side">
+            <div class="form-container" id="registerForm">
+                <h1>Crear Cuenta</h1>
+                <p class="form-subtitle">Únete a nuestra comunidad de compradores y vendedores</p>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -81,137 +89,243 @@
                     </small>
                 </div>
 
-                <button type="submit" class="btn-primary">
+                <!-- Campos adicionales para vendedores -->
+                <div id="vendedorFields" class="vendedor-fields" style="display: none;">
+                    <!-- Nombre de la tienda -->
+                    <div class="input-group">
+                        <label for="nombre_tienda">Nombre de tu tienda o negocio</label>
+                        <input type="text" name="nombre_tienda" id="nombre_tienda" placeholder="Ej: La Granja de Juan" maxlength="100">
+                        <small>
+                            <i class="fas fa-store"></i> 
+                            Nombre con el que aparecerás como vendedor
+                        </small>
+                    </div>
+
+                    <!-- Ubicación -->
+                    <div class="input-group">
+                        <label for="ubicacion">Ubicación</label>
+                        <input type="text" name="ubicacion" id="ubicacion" placeholder="Ej: Ciudad, Estado o Dirección" maxlength="200">
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i> 
+                            ¿Dónde vendes tus productos?
+                        </small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
                     <i class="fas fa-user-plus"></i> Crear mi Cuenta
                 </button>
             </form>
 
-            <div class="links">
-                <a href="{{ url_for('auth.login') }}">
-                    <i class="fas fa-sign-in-alt"></i> Ya tengo una cuenta
-                </a>
-                <div class="divider">
-                    <span>o</span>
+                <div class="links">
+                    <a href="{{ url_for('general.home') }}">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
                 </div>
-                <a href="{{ url_for('general.home') }}">
-                    <i class="fas fa-home"></i> Volver al Inicio
-                </a>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="/static/js/firebase-config.js"></script>
+
     <script>
+        console.log('📄 Página de registro cargada (solo vista)');
+        
         // Mostrar/ocultar contraseña
         const togglePassword = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
-        const passwordStrength = document.getElementById('passwordStrength');
-        const strengthFill = document.getElementById('strengthFill');
 
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
 
-        // Validador de fuerza de contraseña
-        passwordInput.addEventListener('input', function() {
-            const password = this.value;
-            
-            if (password.length > 0) {
-                passwordStrength.style.display = 'block';
-            } else {
-                passwordStrength.style.display = 'none';
-                return;
-            }
+        // Validador de fuerza de contraseña (solo visual)
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const passwordStrength = document.getElementById('passwordStrength');
+                const strengthFill = document.getElementById('strengthFill');
+                
+                if (password.length > 0) {
+                    passwordStrength.style.display = 'block';
+                } else {
+                    passwordStrength.style.display = 'none';
+                    return;
+                }
 
-            // Verificar requisitos
-            const hasLength = password.length >= 6;
-            const hasLetter = /[a-zA-Z]/.test(password);
-            const hasNumber = /[0-9]/.test(password);
+                // Verificar requisitos
+                const hasLength = password.length >= 6;
+                const hasLetter = /[a-zA-Z]/.test(password);
+                const hasNumber = /[0-9]/.test(password);
 
-            // Actualizar indicadores visuales
-            updateRequirement('req-length', hasLength);
-            updateRequirement('req-letter', hasLetter);
-            updateRequirement('req-number', hasNumber);
+                // Actualizar indicadores visuales
+                updateRequirement('req-length', hasLength);
+                updateRequirement('req-letter', hasLetter);
+                updateRequirement('req-number', hasNumber);
 
-            // Calcular fuerza
-            let strength = 0;
-            if (hasLength) strength++;
-            if (hasLetter) strength++;
-            if (hasNumber) strength++;
+                // Calcular fuerza
+                let strength = 0;
+                if (hasLength) strength++;
+                if (hasLetter) strength++;
+                if (hasNumber) strength++;
 
-            // Actualizar barra
-            strengthFill.className = 'strength-fill';
-            if (strength === 1) {
-                strengthFill.classList.add('weak');
-            } else if (strength === 2) {
-                strengthFill.classList.add('medium');
-            } else if (strength === 3) {
-                strengthFill.classList.add('strong');
-            }
-        });
+                // Actualizar barra
+                if (strengthFill) {
+                    strengthFill.className = 'strength-fill';
+                    if (strength === 1) {
+                        strengthFill.classList.add('weak');
+                    } else if (strength === 2) {
+                        strengthFill.classList.add('medium');
+                    } else if (strength === 3) {
+                        strengthFill.classList.add('strong');
+                    }
+                }
+            });
+        }
 
         function updateRequirement(id, isValid) {
             const element = document.getElementById(id);
-            if (isValid) {
-                element.classList.add('valid');
-            } else {
-                element.classList.remove('valid');
+            if (element) {
+                if (isValid) {
+                    element.classList.add('valid');
+                } else {
+                    element.classList.remove('valid');
+                }
             }
         }
 
-        // Validación del formulario
+        // Manejo real de registro con Firebase Auth
         const registerForm = document.getElementById('registerForm');
-        const submitBtn = registerForm.querySelector('.btn-primary');
-
-        registerForm.addEventListener('submit', function(e) {
-            const nombre = document.getElementById('nombre').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const rol = document.getElementById('rol').value;
-
-            let errores = [];
-
-            // Validar nombre
-            if (nombre.length < 4) {
-                errores.push('El nombre debe tener al menos 4 caracteres');
-            }
-
-            // Validar email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                errores.push('Ingresa un correo electrónico válido');
-            }
-
-            // Validar contraseña
-            if (password.length < 6) {
-                errores.push('La contraseña debe tener al menos 6 caracteres');
-            }
-
-            // Validar rol
-            if (!rol) {
-                errores.push('Selecciona un rol inicial');
-            }
-
-            if (errores.length > 0) {
+        const submitBtn = document.getElementById('submitBtn');
+        if (registerForm) {
+            registerForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                alert('❌ Errores en el formulario:\n\n' + errores.join('\n'));
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
-            } else {
-                submitBtn.classList.add('loading');
-                submitBtn.disabled = true;
-            }
-        });
+                try {
+                    // Validaciones básicas
+                    const nombre = document.getElementById('nombre')?.value?.trim();
+                    const email = document.getElementById('email')?.value?.trim();
+                    const password = document.getElementById('password')?.value || '';
+                    const rol = document.getElementById('rol')?.value;
+                    const nombreTienda = document.getElementById('nombre_tienda')?.value?.trim();
+                    const ubicacion = document.getElementById('ubicacion')?.value?.trim();
 
-        // Efecto hover en el select de rol
+                    if (!nombre || !email || !password || !rol) {
+                        alert('Completa todos los campos');
+                        return;
+                    }
+
+                    // Validaciones adicionales para vendedores
+                    if (rol === 'vendedor') {
+                        if (!nombreTienda || nombreTienda.length < 3) {
+                            alert('El nombre de la tienda es obligatorio y debe tener al menos 3 caracteres');
+                            document.getElementById('nombre_tienda')?.focus();
+                            return;
+                        }
+                        if (!ubicacion || ubicacion.length < 5) {
+                            alert('La ubicación es obligatoria y debe tener al menos 5 caracteres');
+                            document.getElementById('ubicacion')?.focus();
+                            return;
+                        }
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Creando cuenta...';
+                    }
+
+                    // Inicializar Firebase si hace falta
+                    if (typeof firebase === 'undefined') throw new Error('Firebase no cargado');
+                    if (!window.firebaseConfig) throw new Error('Config de Firebase no disponible');
+                    if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
+
+                    const auth = firebase.auth();
+                    const db = firebase.firestore();
+
+                    // Crear cuenta
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = cred.user;
+
+                    // Actualizar displayName
+                    await user.updateProfile({ displayName: nombre });
+
+                    // Guardar documento del usuario
+                    const roles = [rol.toLowerCase()];
+                    const userData = {
+                        nombre,
+                        email,
+                        roles,
+                        rol_activo: rol.toLowerCase(),
+                        fecha_registro: firebase.firestore.FieldValue.serverTimestamp(),
+                        activo: true
+                    };
+
+                    // Agregar datos adicionales si es vendedor
+                    if (rol === 'vendedor') {
+                        userData.nombre_tienda = nombreTienda;
+                        userData.ubicacion = ubicacion;
+                    }
+
+                    await db.collection('usuarios').doc(user.uid).set(userData, { merge: true });
+
+                    // Redirigir según rol elegido
+                    const redirectUrl = rol === 'vendedor' ? '/vendedor/panel' : '/comprador/panel';
+                    window.location.href = redirectUrl;
+
+                } catch (err) {
+                    console.error('❌ Error registrando usuario:', err);
+                    let msg = 'No se pudo crear la cuenta.';
+                    if (err && err.message) msg = err.message;
+                    alert(msg);
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Crear mi Cuenta';
+                    }
+                }
+            });
+        }
+
+        // Efecto hover en el select de rol y mostrar/ocultar campos de vendedor
         const rolSelect = document.getElementById('rol');
-        rolSelect.addEventListener('change', function() {
-            if (this.value) {
-                this.style.color = '#2d3748';
-            }
-        });
+        const vendedorFields = document.getElementById('vendedorFields');
+        const nombreTiendaInput = document.getElementById('nombre_tienda');
+        const ubicacionInput = document.getElementById('ubicacion');
+        
+        if (rolSelect && vendedorFields) {
+            rolSelect.addEventListener('change', function() {
+                if (this.value) {
+                    this.style.color = '#2d3748';
+                }
+                
+                // Mostrar campos adicionales si es vendedor
+                if (this.value === 'vendedor') {
+                    vendedorFields.style.display = 'block';
+                    // Hacer los campos requeridos
+                    if (nombreTiendaInput) nombreTiendaInput.required = true;
+                    if (ubicacionInput) ubicacionInput.required = true;
+                } else {
+                    vendedorFields.style.display = 'none';
+                    // Quitar requerido si no es vendedor
+                    if (nombreTiendaInput) {
+                        nombreTiendaInput.required = false;
+                        nombreTiendaInput.value = '';
+                    }
+                    if (ubicacionInput) {
+                        ubicacionInput.required = false;
+                        ubicacionInput.value = '';
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>

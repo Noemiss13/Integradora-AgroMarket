@@ -23,12 +23,12 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="{{ url_for('vendedor.panel_vendedor') }}" class="activo">Home</a>
-        <a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a>
-        <a href="{{ url_for('vendedor.productos') }}">Mis Productos</a>
-        <a href="{{ url_for('vendedor.ventas') }}">Ventas</a>
-        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
-        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+        <a href="/vendedor/panel" class="activo" id="nav-inicio-vendedor">Home</a>
+        <a href="/vendedor/agregar_producto" id="nav-agregar-vendedor">Agregar Productos</a>
+        <a href="/vendedor/mis_productos" id="nav-mis-productos-vendedor">Mis Productos</a>
+        <a href="#" onclick="alert('Función próximamente')" id="nav-ventas-vendedor">Ventas</a>
+        <a href="/auth/perfil">Mi Perfil</a>
+        <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
@@ -43,18 +43,83 @@
         </div>
       {% endif %}
     {% endwith %}
-
-    <h1>Bienvenido, {{ nombre }}</h1>
-    <p>Este es tu panel principal donde podrás administrar tus productos y ventas.</p>
+    
 </main>
 
 <!-- PWA: Registrar Service Worker -->
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
-    .then((reg) => console.log("✅ Service Worker registrado:", reg))
-    .catch((err) => console.error("❌ Error al registrar el SW:", err));
+    .then((reg) => console.log("Service Worker registrado:", reg))
+    .catch((err) => console.error("Error al registrar el SW:", err));
   }
+</script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDZWmY0ggZthOKv17yHH57pkXsie_U2YnI",
+        authDomain: "agromarket-625b2.firebaseapp.com",
+        projectId: "agromarket-625b2",
+        storageBucket: "agromarket-625b2.firebasestorage.app",
+        messagingSenderId: "18163605615",
+        appId: "1:18163605615:web:6910d608e280b028d6ad9a",
+        measurementId: "G-CVL9DRNMG1"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Verificar autenticación
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log('Usuario autenticado:', user.email);
+            // Actualizar el nombre del usuario en la página
+            const saludoElement = document.querySelector('.saludo-usuario strong');
+            if (saludoElement) {
+                saludoElement.textContent = user.displayName || user.email;
+            }
+        }
+    });
+
+    // Función para cerrar sesión
+    function cerrarSesion() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            // Usar Firebase si está disponible
+            if (window.initializeFirebaseInstant) {
+                window.initializeFirebaseInstant().then(({ auth }) => {
+                    auth.signOut().then(() => {
+                        console.log('✅ Sesión cerrada correctamente');
+                        window.location.href = '/auth/login';
+                    }).catch((error) => {
+                        console.error('❌ Error al cerrar sesión:', error);
+                        window.location.href = '/auth/login';
+                    });
+                }).catch(() => {
+                    window.location.href = '/auth/login';
+                });
+            } else {
+                window.location.href = '/auth/login';
+            }
+        }
+    }
+
+    // Actualizar enlaces de logout
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLinks = document.querySelectorAll('a[href*="logout"]');
+        logoutLinks.forEach(link => {
+            link.onclick = function(e) {
+                e.preventDefault();
+                cerrarSesion();
+            };
+        });
+    });
 </script>
 </body>
 </html>

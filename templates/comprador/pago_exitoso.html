@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Pago Exitoso - AgroMarket{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="confetti" id="confetti"></div>
+
+<!-- Navbar del comprador -->
+<nav style="margin: 0 16px 16px;">
+    <div class="nav-left">
+        <div class="logo"><h2>AgroMarket</h2></div>
+        <div class="saludo-usuario">Hola, <strong id="success-user-name">Usuario</strong></div>
+    </div>
+    <div class="menu">
+        <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+        <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+        <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+    </div>
+</nav>
+
+<div class="success-container">
+    <div class="success-icon"></div>
+    
+    <h1 class="success-title">¡Pago Exitoso! 🎉</h1>
+    
+    <p class="success-message">
+        ¡Gracias por tu compra! Tu pago ha sido procesado correctamente y tu pedido está siendo preparado.
+    </p>
+    
+    <div class="order-details">
+        <div class="order-info">
+            <span class="order-label">Número de transacción:</span>
+            <span class="order-value" id="transaction-id">Cargando...</span>
+        </div>
+        <div class="order-info">
+            <span class="order-label">Fecha de pago:</span>
+            <span class="order-value" id="payment-date">Cargando...</span>
+        </div>
+        <div class="order-info">
+            <span class="order-label">Monto pagado:</span>
+            <span class="order-value" id="payment-amount">Cargando...</span>
+        </div>
+        <div class="order-info">
+            <span class="order-label">Estado:</span>
+            <span class="order-value" style="color: #4CAF50;">✓ Completado</span>
+        </div>
+    </div>
+    
+    <div class="loading-spinner" id="loading-spinner"></div>
+    
+    <div class="action-buttons">
+        <a href="{{ url_for('comprador.ver_productos') }}" class="btn-success">🛒 Continuar Comprando</a>
+        <a href="{{ url_for('comprador.panel_comprador') }}" class="btn-secondary">📦 Ver mis compras</a>
+        <a href="{{ url_for('general.home') }}" class="btn-secondary">🏠 Ir al Inicio</a>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 10px; border-left: 4px solid #4CAF50;">
+        <h4 style="color: #2e7d32; margin-bottom: 10px;">📧 Confirmación por correo</h4>
+        <p style="color: #666; margin: 0;">
+            Te hemos enviado un correo electrónico con los detalles de tu compra. 
+            Revisa tu bandeja de entrada y la carpeta de spam.
+        </p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fondo limpio para esta página
+    document.body.classList.add('success-page');
+    
+    // Crear confetti
+    createConfetti();
+    
+    // Cargar detalles del pago
+    loadPaymentDetails();
+    
+    // Limpiar carrito
+    clearCart();
+});
+
+function createConfetti() {
+    const confettiContainer = document.getElementById('confetti');
+    const colors = ['#4CAF50', '#FFC107', '#FF9800', '#2196F3', '#E91E63'];
+    
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti-piece';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        confettiContainer.appendChild(confetti);
+    }
+    
+    // Limpiar confetti después de 5 segundos
+    setTimeout(() => {
+        confettiContainer.style.display = 'none';
+    }, 5000);
+}
+
+function loadPaymentDetails() {
+    const loadingSpinner = document.getElementById('loading-spinner');
+    loadingSpinner.style.display = 'block';
+    
+    // Cargar datos reales del pago
+    setTimeout(() => {
+        const paymentIntentId = localStorage.getItem('paymentIntentId');
+        const paymentDate = localStorage.getItem('paymentDate');
+        const totalAmount = localStorage.getItem('totalAmount');
+        
+        // Mostrar ID de transacción real
+        document.getElementById('transaction-id').textContent = paymentIntentId || 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        
+        // Mostrar fecha real del pago
+        if (paymentDate) {
+            const date = new Date(paymentDate);
+            document.getElementById('payment-date').textContent = date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            document.getElementById('payment-date').textContent = new Date().toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Mostrar monto real
+        document.getElementById('payment-amount').textContent = '$' + (totalAmount || '0.00');
+        
+        loadingSpinner.style.display = 'none';
+    }, 1500);
+}
+
+function clearCart() {
+    // Limpiar carrito del localStorage
+    localStorage.removeItem('carrito');
+    sessionStorage.removeItem('carrito');
+    
+    console.log('🛒 Carrito limpiado exitosamente');
+}
+
+// Limpiar datos de pago después de 30 segundos
+setTimeout(() => {
+    localStorage.removeItem('totalAmount');
+    localStorage.removeItem('paymentIntentId');
+    localStorage.removeItem('paymentDate');
+    console.log('🧹 Datos de pago limpiados');
+}, 30000);
+
+// Redirigir automáticamente después de 10 segundos si no hay interacción
+let redirectTimer = setTimeout(() => {
+    window.location.href = "{{ url_for('comprador.panel_comprador') }}";
+}, 10000);
+
+// Cancelar redirección automática si el usuario interactúa
+document.addEventListener('click', () => {
+    clearTimeout(redirectTimer);
+});
+
+// Intentar personalizar saludo de navbar
+try {
+    if (window.firebaseConfig && window.firebase) {
+        if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
+        const auth = firebase.auth();
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const strong = document.getElementById('success-user-name');
+                if (strong) strong.textContent = user.displayName || (user.email || '').split('@')[0];
+            }
+        });
+    }
+} catch(_) {}
+</script>
+{% endblock %}

@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar Producto - AgroMarket</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/formulario_productos.css') }}">
+    <link rel="stylesheet" href="/static/css/navbar.css">
+    <link rel="stylesheet" href="/static/css/estilos_vendedor.css">
+    <link rel="stylesheet" href="/static/css/formulario_productos.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -16,12 +16,12 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a>
-        <a href="{{ url_for('vendedor.agregar_producto') }}" class="activo">Agregar Productos</a>
-        <a href="{{ url_for('vendedor.productos') }}">Mis Productos</a>
-        <a href="{{ url_for('vendedor.ventas') }}">Ventas</a>
-        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
-        <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+        <a href="/vendedor/panel">Home</a>
+        <a href="/vendedor/agregar_producto" class="activo">Agregar Productos</a>
+        <a href="/vendedor/mis_productos">Mis Productos</a>
+        <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/auth/perfil">Mi Perfil</a>
+        <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
@@ -39,16 +39,28 @@
     {% endwith %}
 
     <div class="product-form-container">
-        <div class="form-column">
-            <form action="{{ url_for('vendedor.agregar_producto') }}" method="POST" enctype="multipart/form-data" id="productForm">
+        <form id="productForm" class="form-two-columns">
+            <!-- Columna izquierda: Campos del formulario -->
+            <div class="form-left-column">
                 <div class="form-group">
                     <label for="nombre">Nombre del producto:</label>
-                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Manzanas rojas" required>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Manzanas rojas" required maxlength="100">
+                    <div id="nombre-error" class="field-error" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="nombre-error-texto"></span>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label for="descripcion">Descripción:</label>
-                    <textarea id="descripcion" name="descripcion" placeholder="Describe tu producto, origen, características especiales, etc." required></textarea>
+                    <textarea id="descripcion" name="descripcion" placeholder="Describe tu producto, origen, características especiales, etc." required maxlength="1000"></textarea>
+                    <div id="descripcion-error" class="field-error" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span id="descripcion-error-texto"></span>
+                    </div>
+                    <small class="char-counter">
+                        <span id="descripcion-counter">0</span>/1000 caracteres
+                    </small>
                 </div>
 
                 <div class="form-row">
@@ -61,10 +73,15 @@
                             <option value="semillas">Semillas</option>
                             <option value="otros">Otros</option>
                         </select>
+                        <div id="categoria-error" class="field-error" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Debes seleccionar una categoría</span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="unidad">Unidad mínima:</label>
                         <select id="unidad" name="unidad" required>
+                            <option value="">--Selecciona una--</option>
                             <option value="kg">kg</option>
                             <option value="reja">Reja</option>
                             <option value="tonelada">Tonelada</option>
@@ -73,6 +90,10 @@
                             <i class="fas fa-info-circle"></i>
                             <span>Mínimo 5 kg por unidad</span>
                         </div>
+                        <div id="unidad-error" class="field-error" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Debes seleccionar una unidad</span>
+                        </div>
                     </div>
                 </div>
 
@@ -80,168 +101,904 @@
                     <div class="form-group">
                         <label for="precio">Precio (MXN):</label>
                         <input type="number" id="precio" name="precio" min="0" step="0.01" placeholder="25.50" required>
+                        <div id="precio-error" class="field-error" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span id="precio-error-texto"></span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="stock">Cantidad disponible:</label>
                         <input type="number" id="stock" name="stock" min="1" step="1" placeholder="100" required>
                         <div id="stock-mensaje" class="stock-mensaje" style="display: none;">
                             <i class="fas fa-info-circle"></i>
-                            <span>Mínimo 5 unidades</span>
+                            <span id="stock-mensaje-texto">Mínimo 5 unidades</span>
+                        </div>
+                        <div id="stock-error" class="stock-error" style="display: none;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>El mínimo son 5 kg. No se permiten valores menores.</span>
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <!-- Columna derecha: Imágenes y botón -->
+            <div class="form-right-column">
                 <div class="form-group">
-                    <label>Imagen del producto:</label>
-                    <div class="file-upload-area" id="fileUploadArea">
-                        <input type="file" id="imagen" name="imagen" accept="image/*" class="file-input" aria-label="Seleccionar imagen del producto" required>
-                        <div class="file-upload-content">
-                            <div class="file-upload-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <div class="file-upload-text">Haz clic para subir una imagen</div>
-                            <div class="file-upload-subtext">o arrastra y suelta una imagen aquí</div>
+                    <label for="imagen">Imágenes del producto:</label>
+                    <div class="image-upload-container">
+                        <input type="file" id="imagen" name="imagen" accept="image/*" multiple style="display: none;">
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haz clic para seleccionar una o más imágenes</p>
+                            <small>Formatos: JPG, PNG, GIF (máx. 5MB cada una. Máximo 5 imágenes)</small>
                         </div>
-                    </div>
-                    <div id="imagePreview" class="image-preview" style="display: none;">
-                        <img id="previewImg" src="" alt="Vista previa de la imagen">
-                        <button type="button" id="removeImage" class="remove-image-btn">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <div class="images-preview-container" id="imagesPreviewContainer" style="display: none;">
+                            <div class="images-grid" id="imagesGrid">
+                                <!-- Las imágenes se agregarán aquí dinámicamente -->
+                            </div>
+                            <div class="images-actions">
+                                <button type="button" id="addMoreImagesBtn" class="add-more-images-btn">
+                                    <i class="fas fa-plus"></i> Subir más imágenes
+                                </button>
+                                <button type="button" id="removeAllImages" class="remove-all-btn">
+                                    <i class="fas fa-trash"></i> Eliminar todas
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <button type="submit" class="submit-btn">
                     <i class="fas fa-upload"></i> Publicar Producto
                 </button>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </main>
 
+<!-- Script unificado para toda la funcionalidad -->
 <script>
+    console.log('🚀 Iniciando script unificado...');
+    
+    // Variables globales
+    let imagenesSeleccionadas = []; // Array para múltiples imágenes
+    let auth = null;
+    let db = null;
+    let storage = null;
+    let currentUser = null;
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyDZWmY0ggZthOKv17yHH57pkXsie_U2YnI",
+        authDomain: "agromarket-625b2.firebaseapp.com",
+        projectId: "agromarket-625b2",
+        storageBucket: "agromarket-625b2.firebasestorage.app",
+        messagingSenderId: "18163605615",
+        appId: "1:18163605615:web:6910d608e280b028d6ad9a",
+        measurementId: "G-CVL9DRNMG1"
+    };
+
+    // Función para mostrar mensajes
+    function mostrarMensaje(mensaje, tipo) {
+        console.log(`📢 Mensaje: ${mensaje} (${tipo})`);
+        
+        let messageDiv = document.getElementById('message');
+        if (!messageDiv) {
+            messageDiv = document.createElement('div');
+            messageDiv.id = 'message';
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                max-width: 300px;
+            `;
+            document.body.appendChild(messageDiv);
+        }
+
+        messageDiv.textContent = mensaje;
+        messageDiv.className = `message ${tipo}`;
+        
+        if (tipo === 'success') {
+            messageDiv.style.backgroundColor = '#4CAF50';
+        } else if (tipo === 'error') {
+            messageDiv.style.backgroundColor = '#f44336';
+        } else {
+            messageDiv.style.backgroundColor = '#2196F3';
+        }
+
+        messageDiv.style.display = 'block';
+
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Función para cerrar sesión
+    function cerrarSesion() {
+        if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+            if (auth) {
+                auth.signOut().then(() => {
+                    console.log('✅ Sesión cerrada correctamente');
+                    window.location.href = '/auth/login';
+                }).catch((error) => {
+                    console.error('❌ Error al cerrar sesión:', error);
+                    alert('Error al cerrar sesión. Intenta de nuevo.');
+                });
+            } else {
+                console.log('⚠️ Auth no disponible, redirigiendo directamente');
+                window.location.href = '/auth/login';
+            }
+        }
+    }
+
+    // Función para guardar producto en Firestore
+    async function guardarProducto(datosProducto) {
+        try {
+            console.log('💾 Guardando producto en Firestore...');
+            
+            // Verificar que Firebase esté inicializado
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK no está cargado');
+            }
+            
+            if (!db) {
+                // Intentar obtener la instancia de Firestore
+                db = firebase.firestore();
+                if (!db) {
+                    throw new Error('Firestore no está inicializado');
+                }
+            }
+            
+            if (!currentUser) {
+                throw new Error('Usuario no autenticado');
+            }
+            
+            // Validar datos del producto
+            if (!datosProducto.nombre || datosProducto.nombre.trim().length < 3) {
+                throw new Error('El nombre del producto debe tener al menos 3 caracteres');
+            }
+            
+            if (!datosProducto.descripcion || datosProducto.descripcion.trim().length < 10) {
+                throw new Error('La descripción debe tener al menos 10 caracteres');
+            }
+            
+            if (datosProducto.precio <= 0) {
+                throw new Error('El precio debe ser mayor a 0');
+            }
+            
+            if (datosProducto.stock <= 0) {
+                throw new Error('El stock debe ser mayor a 0');
+            }
+            
+            // Validación específica para kg
+            if (datosProducto.unidad === 'kg' && datosProducto.stock < 5) {
+                throw new Error('El mínimo son 5 kg. No se permiten valores menores a 5.');
+            }
+            
+            // Agregar metadatos del producto
+            const productoCompleto = {
+                nombre: datosProducto.nombre.trim(),
+                descripcion: datosProducto.descripcion.trim(),
+                categoria: datosProducto.categoria,
+                unidad: datosProducto.unidad,
+                precio: parseFloat(datosProducto.precio),
+                stock: parseInt(datosProducto.stock),
+                vendedor_id: currentUser.uid,
+                vendedor_email: currentUser.email,
+                vendedor_nombre: currentUser.displayName || currentUser.email.split('@')[0],
+                fecha_publicacion: firebase.firestore.FieldValue.serverTimestamp(),
+                fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp(),
+                activo: true,
+                vendido: 0,
+                calificacion_promedio: 0,
+                total_calificaciones: 0
+            };
+            
+            console.log('📋 Datos del producto a guardar:', productoCompleto);
+            
+            // Guardar en Firestore
+            const docRef = await db.collection('productos').add(productoCompleto);
+            console.log('✅ Producto guardado con ID:', docRef.id);
+            
+            return docRef.id;
+            
+        } catch (error) {
+            console.error('❌ Error guardando producto:', error);
+            throw error;
+        }
+    }
+
+    // Función para subir imagen a Firebase Storage
+    async function subirImagen(archivo, productoId, indice) {
+        try {
+            console.log(`📤 Subiendo imagen ${indice + 1} a Firebase Storage...`);
+            
+            // Verificar que Firebase esté inicializado
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK no está cargado');
+            }
+            
+            if (!storage) {
+                // Intentar obtener la instancia de Storage
+                storage = firebase.storage();
+                if (!storage) {
+                    throw new Error('Firebase Storage no está inicializado');
+                }
+            }
+            
+            // Validar archivo
+            if (!archivo) {
+                throw new Error('No se seleccionó ningún archivo');
+            }
+            
+            // Validar tipo de archivo
+            const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+            if (!tiposPermitidos.includes(archivo.type)) {
+                throw new Error('Tipo de archivo no permitido. Use JPG, PNG, GIF o WebP');
+            }
+            
+            // Validar tamaño (5MB máximo)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (archivo.size > maxSize) {
+                throw new Error('El archivo es demasiado grande. Máximo 5MB');
+            }
+            
+            // Crear nombre único para el archivo
+            const timestamp = Date.now();
+            const extension = archivo.name.split('.').pop();
+            const nombreArchivo = `productos/${productoId}/imagen_${indice}_${timestamp}.${extension}`;
+            const storageRef = storage.ref(nombreArchivo);
+            
+            console.log('📁 Subiendo archivo:', nombreArchivo);
+            
+            // Subir archivo con metadata
+            const metadata = {
+                contentType: archivo.type,
+                customMetadata: {
+                    productoId: productoId,
+                    vendedorId: currentUser.uid,
+                    fechaSubida: new Date().toISOString(),
+                    indice: indice.toString()
+                }
+            };
+            
+            const snapshot = await storageRef.put(archivo, metadata);
+            console.log('✅ Imagen subida:', snapshot.metadata.name);
+            
+            // Obtener URL de descarga
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            console.log('🔗 URL de descarga:', downloadURL);
+            
+            return downloadURL;
+            
+        } catch (error) {
+            console.error('❌ Error subiendo imagen:', error);
+            throw error;
+        }
+    }
+
+    // Función para subir múltiples imágenes
+    async function subirImagenes(productoId) {
+        if (!imagenesSeleccionadas || imagenesSeleccionadas.length === 0) {
+            return [];
+        }
+        
+        const urls = [];
+        for (let i = 0; i < imagenesSeleccionadas.length; i++) {
+            const url = await subirImagen(imagenesSeleccionadas[i], productoId, i);
+            urls.push(url);
+        }
+        return urls;
+    }
+
+    // Configurar todo cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
-        // Elementos del DOM
+        console.log('📄 DOM cargado - Configurando todo...');
+        
+        // Configurar formulario
         const form = document.getElementById('productForm');
-        const fileInput = document.getElementById('imagen');
-        const fileUploadArea = document.getElementById('fileUploadArea');
+        if (form) {
+            console.log('✅ Formulario encontrado');
+            
+            // Manejar envío del formulario
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('📝 Procesando formulario...');
+                
+                try {
+                    // Mostrar mensaje de carga
+                    mostrarMensaje('⏳ Guardando producto...', 'info');
+                    
+                    // Recopilar datos del formulario
+                    const datosProducto = {
+                        nombre: document.getElementById('nombre').value.trim(),
+                        descripcion: document.getElementById('descripcion').value.trim(),
+                        categoria: document.getElementById('categoria').value,
+                        unidad: document.getElementById('unidad').value,
+                        precio: parseFloat(document.getElementById('precio').value),
+                        stock: parseInt(document.getElementById('stock').value)
+                    };
+                    
+                    // Validar datos básicos
+                    if (!datosProducto.nombre || !datosProducto.descripcion || !datosProducto.categoria) {
+                        throw new Error('Por favor completa todos los campos obligatorios');
+                    }
+                    
+                    if (isNaN(datosProducto.precio) || datosProducto.precio <= 0) {
+                        throw new Error('El precio debe ser un número mayor a 0');
+                    }
+                    
+                    if (isNaN(datosProducto.stock) || datosProducto.stock <= 0) {
+                        throw new Error('El stock debe ser un número mayor a 0');
+                    }
+                    
+                    // Validación específica para kg
+                    if (datosProducto.unidad === 'kg' && datosProducto.stock < 5) {
+                        throw new Error('El mínimo son 5 kg. No se permiten valores menores a 5.');
+                    }
+                    
+                    // Validar longitud mínima
+                    if (datosProducto.nombre.trim().length < 3) {
+                        throw new Error('El nombre debe tener al menos 3 caracteres');
+                    }
+                    
+                    if (datosProducto.descripcion.trim().length < 10) {
+                        throw new Error('La descripción debe tener al menos 10 caracteres');
+                    }
+                    
+                    // Guardar producto en Firestore
+                    mostrarMensaje('💾 Guardando producto...', 'info');
+                    const productoId = await guardarProducto(datosProducto);
+                    
+                    // Subir imágenes si existen
+                    if (imagenesSeleccionadas && imagenesSeleccionadas.length > 0) {
+                        mostrarMensaje(`📤 Subiendo ${imagenesSeleccionadas.length} imagen(es)...`, 'info');
+                        const imagenesUrls = await subirImagenes(productoId);
+                        
+                        // Actualizar producto con URLs de imágenes
+                        // La primera imagen es la principal
+                        const updateData = {
+                            imagen: imagenesUrls[0] || null,
+                            imagenes: imagenesUrls,
+                            fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        await db.collection('productos').doc(productoId).update(updateData);
+                        
+                        console.log('✅ Imágenes actualizadas en el producto:', imagenesUrls.length);
+                    }
+                    
+                    // Éxito
+                    console.log('✅ Producto guardado exitosamente');
+                    mostrarMensaje('✅ ¡Producto guardado exitosamente!', 'success');
+                    
+                    // Limpiar formulario
+                    form.reset();
+                    if (imageUploadArea) imageUploadArea.style.display = 'block';
+                    if (imagesPreviewContainer) imagesPreviewContainer.style.display = 'none';
+                    imagenesSeleccionadas = [];
+                    const imagesGrid = document.getElementById('imagesGrid');
+                    if (imagesGrid) imagesGrid.innerHTML = '';
+                    
+                    // Redirigir después de 2 segundos
+                    setTimeout(() => {
+                        window.location.href = '/vendedor/mis_productos';
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('❌ Error guardando producto:', error);
+                    mostrarMensaje('❌ Error: ' + error.message, 'error');
+                }
+            });
+        } else {
+            console.error('❌ Formulario no encontrado');
+        }
+
+        // Configurar manejo de imágenes múltiples
+        const imagenInput = document.getElementById('imagen');
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const imagesPreviewContainer = document.getElementById('imagesPreviewContainer');
+        const imagesGrid = document.getElementById('imagesGrid');
+        const removeAllImagesBtn = document.getElementById('removeAllImages');
+        
+        // Función para mostrar vista previa de imágenes
+        function mostrarVistasPrevia() {
+            const addMoreBtn = document.getElementById('addMoreImagesBtn');
+            const maxImages = 5;
+            
+            if (imagenesSeleccionadas.length === 0) {
+                if (imageUploadArea) imageUploadArea.style.display = 'block';
+                if (imagesPreviewContainer) imagesPreviewContainer.style.display = 'none';
+                if (imagesGrid) imagesGrid.innerHTML = '';
+                return;
+            }
+            
+            // Siempre mostrar el contenedor de imágenes si hay al menos una
+            if (imageUploadArea) imageUploadArea.style.display = 'none';
+            if (imagesPreviewContainer) imagesPreviewContainer.style.display = 'block';
+            
+            // Mostrar grid de imágenes
+            if (imagesGrid) {
+                imagesGrid.innerHTML = imagenesSeleccionadas.map((archivo, index) => {
+                    const url = URL.createObjectURL(archivo);
+                    return `
+                        <div class="image-preview-item" data-index="${index}">
+                            <img src="${url}" alt="Vista previa ${index + 1}">
+                            <button type="button" class="remove-image-btn" onclick="removerImagen(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            ${index === 0 ? '<span class="primary-badge">Principal</span>' : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Mostrar/ocultar botón "Subir más imágenes" según el número de imágenes
+            if (addMoreBtn) {
+                if (imagenesSeleccionadas.length < maxImages) {
+                    addMoreBtn.style.display = 'flex';
+                } else {
+                    addMoreBtn.style.display = 'none';
+                }
+            }
+        }
+        
+        // Función para remover una imagen específica
+        window.removerImagen = function(index) {
+            console.log('🗑️ Removiendo imagen', index);
+            imagenesSeleccionadas.splice(index, 1);
+            mostrarVistasPrevia();
+            
+            // Actualizar input file
+            if (imagenInput) {
+                const dt = new DataTransfer();
+                imagenesSeleccionadas.forEach(archivo => dt.items.add(archivo));
+                imagenInput.files = dt.files;
+            }
+        };
+        
+        if (imagenInput && imageUploadArea) {
+            console.log('✅ Elementos de imagen encontrados');
+            
+            // Hacer clic en el área de subida
+            imageUploadArea.addEventListener('click', function() {
+                console.log('🖱️ Clic en área de subida');
+                imagenInput.click();
+            });
+            
+            // Manejar selección de archivos múltiples
+            imagenInput.addEventListener('change', function(e) {
+                console.log('📁 Archivos seleccionados');
+                const archivos = Array.from(e.target.files);
+                
+                if (archivos.length === 0) return;
+                
+                // Validar número máximo de imágenes (5)
+                const maxImages = 5;
+                if (archivos.length > maxImages) {
+                    alert(`❌ Puedes seleccionar máximo ${maxImages} imágenes`);
+                    // Mantener solo las primeras 5
+                    archivos.splice(maxImages);
+                }
+                
+                // Validar cada archivo
+                const archivosValidos = [];
+                archivos.forEach((archivo, index) => {
+                    console.log(`📄 Archivo ${index + 1}:`, archivo.name, archivo.size, archivo.type);
+
+                    // Validar tipo de archivo
+                    if (!archivo.type.startsWith('image/')) {
+                        alert(`❌ El archivo "${archivo.name}" no es una imagen válida`);
+                        return;
+                    }
+
+                    // Validar tamaño (5MB máximo)
+                    if (archivo.size > 5 * 1024 * 1024) {
+                        alert(`❌ La imagen "${archivo.name}" es demasiado grande. Máximo 5MB`);
+                        return;
+                    }
+
+                    archivosValidos.push(archivo);
+                });
+                
+                // Verificar cuántas imágenes podemos agregar
+                const espaciosDisponibles = maxImages - imagenesSeleccionadas.length;
+                
+                if (espaciosDisponibles <= 0) {
+                    alert(`❌ Ya has seleccionado el máximo de ${maxImages} imágenes`);
+                    return;
+                }
+                
+                // Agregar solo las imágenes que quepan
+                const imagenesAAgregar = archivosValidos.slice(0, espaciosDisponibles);
+                imagenesSeleccionadas = [...imagenesSeleccionadas, ...imagenesAAgregar];
+                
+                if (archivosValidos.length > espaciosDisponibles) {
+                    alert(`⚠️ Solo se agregaron ${espaciosDisponibles} imagen(es). Ya tienes ${maxImages} imágenes en total.`);
+                }
+                
+                mostrarVistasPrevia();
+                console.log(`✅ ${imagenesSeleccionadas.length} imagen(es) seleccionada(s)`);
+            });
+            
+            // Botón para remover todas las imágenes
+            if (removeAllImagesBtn) {
+                removeAllImagesBtn.addEventListener('click', function() {
+                    console.log('🗑️ Removiendo todas las imágenes');
+                    imagenesSeleccionadas = [];
+                    if (imagenInput) imagenInput.value = '';
+                    mostrarVistasPrevia();
+                });
+            }
+            
+            // Botón para agregar más imágenes
+            const addMoreImagesBtn = document.getElementById('addMoreImagesBtn');
+            if (addMoreImagesBtn) {
+                addMoreImagesBtn.addEventListener('click', function() {
+                    console.log('➕ Agregando más imágenes');
+                    imagenInput.click();
+                });
+            }
+        } else {
+            console.error('❌ Elementos de imagen no encontrados');
+        }
+
+        // Configurar validación de unidad
         const unidadSelect = document.getElementById('unidad');
         const unidadMensaje = document.getElementById('unidad-mensaje');
         const stockInput = document.getElementById('stock');
         const stockMensaje = document.getElementById('stock-mensaje');
-        const imagePreview = document.getElementById('imagePreview');
-        const previewImg = document.getElementById('previewImg');
-        const removeImageBtn = document.getElementById('removeImage');
+        const stockMensajeTexto = document.getElementById('stock-mensaje-texto');
+        const stockError = document.getElementById('stock-error');
 
-        console.log('DOM cargado, elementos encontrados:');
-        console.log('fileInput:', fileInput);
-        console.log('fileUploadArea:', fileUploadArea);
-        console.log('imagePreview:', imagePreview);
+        // Función para validar stock basado en unidad
+        function validarStock() {
+            const unidad = unidadSelect.value;
+            const stock = parseInt(stockInput.value) || 0;
+            
+            if (unidad === 'kg') {
+                // Los mensajes informativos ya se muestran al cambiar la unidad
+                // Solo validar el valor
+                if (stock > 0 && stock < 5) {
+                    // Mostrar error
+                    if (stockError) {
+                        stockError.style.display = 'flex';
+                    }
+                    if (stockInput) {
+                        stockInput.setCustomValidity('El mínimo son 5 kg. No se permiten valores menores a 5.');
+                        stockInput.style.borderColor = '#dc3545';
+                    }
+                    return false;
+                } else {
+                    // Ocultar error
+                    if (stockError) {
+                        stockError.style.display = 'none';
+                    }
+                    if (stockInput) {
+                        stockInput.setCustomValidity('');
+                        stockInput.style.borderColor = '';
+                    }
+                    return true;
+                }
+            } else {
+                // Ocultar mensajes
+                if (stockMensaje) {
+                    stockMensaje.style.display = 'none';
+                }
+                if (unidadMensaje) {
+                    unidadMensaje.style.display = 'none';
+                }
+                if (stockError) {
+                    stockError.style.display = 'none';
+                }
+                if (stockInput) {
+                    stockInput.setCustomValidity('');
+                    stockInput.style.borderColor = '';
+                }
+                return true;
+            }
+        }
 
-        // Manejo del mensaje de unidad y validación de cantidad
-        if (unidadSelect && unidadMensaje && stockMensaje && stockInput) {
+        if (unidadSelect && stockInput) {
+            // Validar cuando cambia la unidad
             unidadSelect.addEventListener('change', (e) => {
                 if (e.target.value === 'kg') {
-                    unidadMensaje.style.display = 'flex';
-                    stockMensaje.style.display = 'flex';
-                    stockInput.min = 5;
-                } else {
-                    unidadMensaje.style.display = 'none';
-                    stockMensaje.style.display = 'none';
-                    stockInput.min = 1;
-                }
-            });
-        }
-
-        // Función para mostrar vista previa de imagen
-        function handleImagePreview(file) {
-            console.log('Mostrando vista previa para:', file.name);
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                console.log('Imagen cargada correctamente');
-                if (previewImg) {
-                    previewImg.src = e.target.result;
-                }
-                if (imagePreview) {
-                    imagePreview.style.display = 'block';
-                }
-                if (fileUploadArea) {
-                    fileUploadArea.style.display = 'none';
-                }
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Función para remover imagen
-        function removeImage() {
-            console.log('Removiendo imagen');
-            if (fileInput) {
-                fileInput.value = '';
-            }
-            if (imagePreview) {
-                imagePreview.style.display = 'none';
-            }
-            if (fileUploadArea) {
-                fileUploadArea.style.display = 'block';
-            }
-        }
-
-        // Manejo de subida de archivos
-        if (fileUploadArea && fileInput) {
-            // Drag & drop
-            fileUploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.add('dragover');
-            });
-
-            fileUploadArea.addEventListener('dragleave', function() {
-                fileUploadArea.classList.remove('dragover');
-            });
-
-            fileUploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    handleImagePreview(files[0]);
-                }
-            });
-        }
-
-        // Event listener para cambio de archivo
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                console.log('Cambio en input de archivo:', e.target.files);
-                if (e.target.files.length > 0) {
-                    const file = e.target.files[0];
-                    console.log('Archivo seleccionado:', file.name, file.type);
-                    if (file && file.type.startsWith('image/')) {
-                        handleImagePreview(file);
-                    } else {
-                        alert('Por favor selecciona un archivo de imagen válido');
+                    // Mostrar mensaje inmediatamente
+                    if (unidadMensaje) {
+                        unidadMensaje.style.display = 'flex';
                     }
+                    if (stockMensaje && stockMensajeTexto) {
+                        stockMensaje.style.display = 'flex';
+                        stockMensajeTexto.textContent = 'Mínimo 5 kg';
+                    }
+                    stockInput.min = 5;
+                    // Si ya hay un valor, validarlo
+                    if (stockInput.value) {
+                        validarStock();
+                    }
+                } else {
+                    // Ocultar mensajes inmediatamente
+                    if (unidadMensaje) {
+                        unidadMensaje.style.display = 'none';
+                    }
+                    if (stockMensaje) {
+                        stockMensaje.style.display = 'none';
+                    }
+                    if (stockError) {
+                        stockError.style.display = 'none';
+                    }
+                    stockInput.min = 1;
+                    validarStock();
+                }
+            });
+            
+            // Validar en tiempo real cuando el usuario escribe
+            stockInput.addEventListener('input', () => {
+                validarStock();
+            });
+            
+            // Validar cuando el campo pierde el foco
+            stockInput.addEventListener('blur', () => {
+                validarStock();
+            });
+            
+            // Validar inicialmente si ya hay un valor
+            if (unidadSelect.value === 'kg' && stockInput.value) {
+                validarStock();
+            }
+        }
+
+        // ============================================
+        // VALIDACIONES EN TIEMPO REAL PARA TODOS LOS CAMPOS
+        // ============================================
+        
+        // Validación de nombre
+        const nombreInput = document.getElementById('nombre');
+        const nombreError = document.getElementById('nombre-error');
+        const nombreErrorTexto = document.getElementById('nombre-error-texto');
+        
+        if (nombreInput && nombreError && nombreErrorTexto) {
+            nombreInput.addEventListener('blur', () => {
+                const nombre = nombreInput.value.trim();
+                if (nombre.length === 0) {
+                    nombreError.style.display = 'flex';
+                    nombreErrorTexto.textContent = 'El nombre es obligatorio';
+                    nombreInput.style.borderColor = '#dc3545';
+                } else if (nombre.length < 3) {
+                    nombreError.style.display = 'flex';
+                    nombreErrorTexto.textContent = 'El nombre debe tener al menos 3 caracteres';
+                    nombreInput.style.borderColor = '#dc3545';
+                } else if (nombre.length > 100) {
+                    nombreError.style.display = 'flex';
+                    nombreErrorTexto.textContent = 'El nombre no puede exceder 100 caracteres';
+                    nombreInput.style.borderColor = '#dc3545';
+                } else {
+                    nombreError.style.display = 'none';
+                    nombreInput.style.borderColor = '';
+                }
+            });
+            
+            nombreInput.addEventListener('input', () => {
+                if (nombreInput.value.trim().length >= 3 && nombreInput.value.trim().length <= 100) {
+                    nombreError.style.display = 'none';
+                    nombreInput.style.borderColor = '';
+                }
+            });
+        }
+        
+        // Validación de descripción
+        const descripcionTextarea = document.getElementById('descripcion');
+        const descripcionError = document.getElementById('descripcion-error');
+        const descripcionErrorTexto = document.getElementById('descripcion-error-texto');
+        const descripcionCounter = document.getElementById('descripcion-counter');
+        
+        if (descripcionTextarea && descripcionError && descripcionErrorTexto && descripcionCounter) {
+            // Actualizar contador
+            descripcionTextarea.addEventListener('input', () => {
+                const length = descripcionTextarea.value.length;
+                descripcionCounter.textContent = length;
+                
+                if (length < 10) {
+                    descripcionError.style.display = 'flex';
+                    descripcionErrorTexto.textContent = `Mínimo 10 caracteres (${length}/10)`;
+                    descripcionTextarea.style.borderColor = '#dc3545';
+                } else if (length > 1000) {
+                    descripcionError.style.display = 'flex';
+                    descripcionErrorTexto.textContent = 'Máximo 1000 caracteres';
+                    descripcionTextarea.style.borderColor = '#dc3545';
+                } else {
+                    descripcionError.style.display = 'none';
+                    descripcionTextarea.style.borderColor = '';
+                }
+            });
+            
+            descripcionTextarea.addEventListener('blur', () => {
+                const descripcion = descripcionTextarea.value.trim();
+                if (descripcion.length === 0) {
+                    descripcionError.style.display = 'flex';
+                    descripcionErrorTexto.textContent = 'La descripción es obligatoria';
+                    descripcionTextarea.style.borderColor = '#dc3545';
+                } else if (descripcion.length < 10) {
+                    descripcionError.style.display = 'flex';
+                    descripcionErrorTexto.textContent = 'La descripción debe tener al menos 10 caracteres';
+                    descripcionTextarea.style.borderColor = '#dc3545';
+                } else if (descripcion.length > 1000) {
+                    descripcionError.style.display = 'flex';
+                    descripcionErrorTexto.textContent = 'La descripción no puede exceder 1000 caracteres';
+                    descripcionTextarea.style.borderColor = '#dc3545';
+                } else {
+                    descripcionError.style.display = 'none';
+                    descripcionTextarea.style.borderColor = '';
+                }
+            });
+        }
+        
+        // Validación de categoría
+        const categoriaSelect = document.getElementById('categoria');
+        const categoriaError = document.getElementById('categoria-error');
+        
+        if (categoriaSelect && categoriaError) {
+            categoriaSelect.addEventListener('change', () => {
+                if (categoriaSelect.value === '') {
+                    categoriaError.style.display = 'flex';
+                    categoriaSelect.style.borderColor = '#dc3545';
+                } else {
+                    categoriaError.style.display = 'none';
+                    categoriaSelect.style.borderColor = '';
+                }
+            });
+        }
+        
+        // Validación de unidad
+        const unidadError = document.getElementById('unidad-error');
+        
+        if (unidadSelect && unidadError) {
+            unidadSelect.addEventListener('change', () => {
+                if (unidadSelect.value === '') {
+                    unidadError.style.display = 'flex';
+                    unidadSelect.style.borderColor = '#dc3545';
+                } else {
+                    unidadError.style.display = 'none';
+                    unidadSelect.style.borderColor = '';
+                }
+            });
+        }
+        
+        // Validación de precio
+        const precioInput = document.getElementById('precio');
+        const precioError = document.getElementById('precio-error');
+        const precioErrorTexto = document.getElementById('precio-error-texto');
+        
+        if (precioInput && precioError && precioErrorTexto) {
+            precioInput.addEventListener('blur', () => {
+                const precio = parseFloat(precioInput.value);
+                if (isNaN(precio) || precioInput.value === '') {
+                    precioError.style.display = 'flex';
+                    precioErrorTexto.textContent = 'El precio es obligatorio';
+                    precioInput.style.borderColor = '#dc3545';
+                } else if (precio <= 0) {
+                    precioError.style.display = 'flex';
+                    precioErrorTexto.textContent = 'El precio debe ser mayor a 0';
+                    precioInput.style.borderColor = '#dc3545';
+                } else {
+                    precioError.style.display = 'none';
+                    precioInput.style.borderColor = '';
+                }
+            });
+            
+            precioInput.addEventListener('input', () => {
+                const precio = parseFloat(precioInput.value);
+                if (!isNaN(precio) && precio > 0) {
+                    precioError.style.display = 'none';
+                    precioInput.style.borderColor = '';
+                }
+            });
+        }
+        
+        // Validación de stock (además de la validación especial de kg)
+        if (stockInput && stockError) {
+            stockInput.addEventListener('blur', () => {
+                const stock = parseInt(stockInput.value);
+                const unidad = unidadSelect ? unidadSelect.value : '';
+                
+                if (isNaN(stock) || stockInput.value === '') {
+                    stockError.style.display = 'flex';
+                    stockError.querySelector('span').textContent = 'La cantidad es obligatoria';
+                    stockInput.style.borderColor = '#dc3545';
+                } else if (stock <= 0) {
+                    stockError.style.display = 'flex';
+                    stockError.querySelector('span').textContent = 'La cantidad debe ser mayor a 0';
+                    stockInput.style.borderColor = '#dc3545';
+                } else if (unidad === 'kg' && stock < 5) {
+                    stockError.style.display = 'flex';
+                    stockError.querySelector('span').textContent = 'El mínimo son 5 kg. No se permiten valores menores.';
+                    stockInput.style.borderColor = '#dc3545';
+                } else if (unidad !== 'kg') {
+                    // Solo ocultar error si no es kg o si es kg y >= 5
+                    stockError.style.display = 'none';
+                    stockInput.style.borderColor = '';
                 }
             });
         }
 
-        // Event listener para remover imagen
-        if (removeImageBtn) {
-            removeImageBtn.addEventListener('click', removeImage);
-        }
-
-        // Validación del formulario
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const submitBtn = form.querySelector('.submit-btn');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
+        // Función para inicializar Firebase
+        function inicializarFirebase() {
+            return new Promise((resolve, reject) => {
+                try {
+                    console.log('🔥 Inicializando Firebase...');
+                    
+                    // Verificar si Firebase está disponible
+                    if (typeof firebase === 'undefined') {
+                        throw new Error('Firebase SDK no está cargado');
+                    }
+                    
+                    // Verificar si Firebase ya está inicializado
+                    if (firebase.apps.length === 0) {
+                        // Inicializar Firebase
+                        firebase.initializeApp(firebaseConfig);
+                        console.log('✅ Firebase inicializado');
+                    } else {
+                        console.log('✅ Firebase ya estaba inicializado');
+                    }
+                    
+                    // Obtener instancias de Firebase
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    storage = firebase.storage();
+                    
+                    // Configurar Firestore
+                    db.settings({
+                        cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                        ignoreUndefinedProperties: true
+                    });
+                    
+                    console.log('✅ Instancias de Firebase obtenidas');
+                    resolve({ auth, db, storage });
+                    
+                } catch (error) {
+                    console.error('❌ Error inicializando Firebase:', error);
+                    reject(error);
                 }
             });
         }
+
+        // Inicializar Firebase
+        inicializarFirebase().then(() => {
+            console.log('🔥 Firebase inicializado correctamente');
+            
+            // Verificar autenticación
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    console.log('👤 Usuario autenticado:', user.email);
+                } else {
+                    console.log('👤 Usuario no autenticado');
+                    // Redirigir al login si no está autenticado
+                    window.location.href = '/auth/login';
+                }
+            });
+            
+        }).catch((error) => {
+            console.error('❌ Error inicializando Firebase:', error);
+            mostrarMensaje('❌ Error de conexión. Recarga la página.', 'error');
+        });
+
+        console.log('✅ Todo configurado correctamente');
     });
 </script>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+<!-- Firebase Instant -->
+<script src="/static/js/firebase-instant.js"></script>
 </body>
 </html>

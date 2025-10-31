@@ -5,13 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgroMarket - Información</title>
 
+  <!-- PWA: Manifest y theme color -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Iconos -->
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
+
   <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
   <!-- Iconos -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
   <!-- CSS -->
+ 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_informacion.css') }}">
 </head>
+
+
 <body>
 
 
@@ -93,9 +106,6 @@
   <div class="cards">
     <!-- Misión -->
     <div class="card reveal reveal-zoom" style="border-left:6px solid #35a76b;">
-      <div class="thumb">
-        <img src="{{ url_for('static', filename='images/mision.png') }}" alt="Misión">
-      </div>
       <h4>Misión</h4>
       <p>
         Ofrecer soluciones innovadoras en el sector agrícola mediante tecnología,
@@ -105,39 +115,12 @@
 
     <!-- Visión -->
     <div class="card reveal reveal-zoom" style="border-left:6px solid #f7b84b;">
-      <div class="thumb">
-        <img src="{{ url_for('static', filename='images/vision.png') }}" alt="Visión">
-      </div>
       <h4>Visión</h4>
       <p>
         Ser la plataforma líder en comercio agrícola digital en la región, 
         impulsando la modernización y competitividad del sector.
       </p>
     </div>
-
-    <!-- Valores -->
-    <div class="card reveal reveal-zoom" style="border-left:6px solid #3b82f6;">
-      <div class="thumb">
-        <img src="{{ url_for('static', filename='images/valores.png') }}" alt="Valores">
-      </div>
-      <h4>Valores</h4>
-      <p>
-        Transparencia, compromiso, innovación, sostenibilidad y confianza en cada transacción.
-      </p>
-    </div>
-
-    <!-- Objetivos -->
-    <div class="card reveal reveal-zoom" style="border-left:6px solid #f97316;">
-      <div class="thumb">
-        <img src="{{ url_for('static', filename='images/objetivos.png') }}" alt="Objetivos">
-      </div>
-      <h4>Objetivos</h4>
-      <p>
-        Facilitar la conexión entre productores y compradores, 
-        reduciendo intermediarios y potenciando la economía agrícola.
-      </p>
-    </div>
-  </div>
 </section>
 
 <!-- Separador -->
@@ -251,6 +234,13 @@
     document.querySelectorAll('.future, .cards .card, .what, .benef, .healthy .wrap').forEach(n=>obs.observe(n));
   </script>
   <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then((reg) => console.log("✅ Service Worker registrado:", reg))
+    .catch((err) => console.error("❌ Error al registrar el SW:", err));
+  }
+</script>
 
 </body>
 </html>

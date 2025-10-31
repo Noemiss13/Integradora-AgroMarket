@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Panel Comprador - AgroMarket</title>
+    <link rel="stylesheet" href="static/css/navbar.css">
+    <link rel="stylesheet" href="static/css/estilos_comprador.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- ===== Menú superior ===== -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>Usuario de Prueba</strong></div>
+        </div>
+        <div class="menu">
+            <a href="#" class="activo">Inicio</a>
+            <a href="#">Productos</a>
+            <a href="#">Carrito</a>
+            <a href="#">Mi Perfil</a>
+            <a href="#">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- ===== Sección Explora Categorías ===== -->
+        <section class="categorias-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Explora categorías</h2>
+                    <p>Elige una categoría para descubrir productos frescos de productores locales.</p>
+                </div>
+                <div class="section-controls">
+                    <input type="text" placeholder="Buscar productos..." class="search-input">
+                    <button class="sort-btn">Ordenar por</button>
+                </div>
+            </div>
+            
+            <div class="categorias-grid" id="categoriasGrid">
+                <!-- Las categorías se cargarán dinámicamente aquí -->
+            </div>
+        </section>
+
+        <!-- ===== Sección Recomendaciones ===== -->
+        <section class="productos-populares-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <h2>Recomendaciones</h2>
+                    <p>Productos destacados seleccionados especialmente para ti.</p>
+                </div>
+                <div class="section-controls">
+                    <button class="filter-btn" onclick="toggleFilters()">Filtrar</button>
+                    <button class="sort-btn" onclick="toggleSort()">Ordenar</button>
+                </div>
+            </div>
+            
+            <!-- Loading state -->
+            <div class="loading-products" id="loadingProducts">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando productos...</p>
+            </div>
+            
+            <!-- Products grid -->
+            <div class="productos-populares-grid" id="productosGrid" style="display: none;">
+                <!-- Los productos se cargarán dinámicamente aquí -->
+            </div>
+            
+            <!-- Empty state -->
+            <div class="empty-products" id="emptyProducts" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <h3>No hay productos disponibles</h3>
+                <p>No se encontraron productos en este momento. Intenta más tarde.</p>
+            </div>
+            
+            <!-- Botones de prueba temporal -->
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="probarFirebase()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                    🧪 Probar Firebase
+                </button>
+                <button onclick="cargarCategorias()" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                    🔄 Cargar Categorías
+                </button>
+                <button onclick="cargarRecomendaciones()" style="background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                    🛍️ Cargar Recomendaciones
+                </button>
+                <button onclick="mostrarDatosEjemplo()" style="background: #9C27B0; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    📋 Datos de Ejemplo
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Firebase Config -->
+    <script src="static/js/firebase-config.js"></script>
+    
+    <script>
+        // Variables globales
+        let productos = [];
+        let categorias = [];
+        let currentFilter = 'all';
+
+        // Función para mostrar datos de ejemplo
+        function mostrarDatosEjemplo() {
+            console.log('📋 Mostrando datos de ejemplo...');
+            
+            // Categorías de ejemplo
+            const categoriasEjemplo = [
+                { nombre: 'Todos los productos', count: 12, icon: 'fas fa-th-large' },
+                { nombre: 'Frutas', count: 4, icon: 'fas fa-apple-alt' },
+                { nombre: 'Verduras', count: 5, icon: 'fas fa-carrot' },
+                { nombre: 'Cereales', count: 2, icon: 'fas fa-seedling' },
+                { nombre: 'Legumbres', count: 1, icon: 'fas fa-peas' }
+            ];
+            
+            // Productos de ejemplo
+            const productosEjemplo = [
+                {
+                    id: 'ejemplo1',
+                    nombre: 'Manzanas Orgánicas',
+                    categoria: 'frutas',
+                    precio: 25,
+                    stock: 50,
+                    unidad: 'kg',
+                    imagen_url: null
+                },
+                {
+                    id: 'ejemplo2',
+                    nombre: 'Tomates Frescos',
+                    categoria: 'verduras',
+                    precio: 18,
+                    stock: 30,
+                    unidad: 'kg',
+                    imagen_url: null
+                },
+                {
+                    id: 'ejemplo3',
+                    nombre: 'Arroz Integral',
+                    categoria: 'cereales',
+                    precio: 35,
+                    stock: 20,
+                    unidad: 'kg',
+                    imagen_url: null
+                },
+                {
+                    id: 'ejemplo4',
+                    nombre: 'Lechuga Hidropónica',
+                    categoria: 'verduras',
+                    precio: 15,
+                    stock: 25,
+                    unidad: 'pieza',
+                    imagen_url: null
+                },
+                {
+                    id: 'ejemplo5',
+                    nombre: 'Plátanos Maduros',
+                    categoria: 'frutas',
+                    precio: 12,
+                    stock: 40,
+                    unidad: 'kg',
+                    imagen_url: null
+                },
+                {
+                    id: 'ejemplo6',
+                    nombre: 'Frijoles Negros',
+                    categoria: 'legumbres',
+                    precio: 28,
+                    stock: 15,
+                    unidad: 'kg',
+                    imagen_url: null
+                }
+            ];
+            
+            // Mostrar categorías
+            mostrarCategorias(categoriasEjemplo);
+            
+            // Mostrar productos
+            mostrarProductos(productosEjemplo);
+        }
+
+        // Función para mostrar categorías
+        function mostrarCategorias(categoriasParaMostrar) {
+            const categoriasGrid = document.getElementById('categoriasGrid');
+            
+            const categoriasHTML = categoriasParaMostrar.map(categoria => `
+                <a href="#" class="categoria-card ${categoria.nombre === 'Todos los productos' ? 'todos-productos-card' : ''}">
+                    <div class="categoria-header">
+                        <h3>${categoria.nombre}</h3>
+                        <span class="product-count">${categoria.count}</span>
+                    </div>
+                    <div class="categoria-image">
+                        <div class="categoria-icon">
+                            <i class="${categoria.icon}"></i>
+                        </div>
+                        <div class="categoria-tag">${categoria.nombre === 'Todos los productos' ? 'COMPLETO' : 'DISPONIBLE'}</div>
+                    </div>
+                </a>
+            `).join('');
+            
+            categoriasGrid.innerHTML = categoriasHTML;
+        }
+
+        // Función para mostrar productos
+        function mostrarProductos(productosParaMostrar) {
+            const productosGrid = document.getElementById('productosGrid');
+            const loadingProducts = document.getElementById('loadingProducts');
+            const emptyProducts = document.getElementById('emptyProducts');
+            
+            // Ocultar loading
+            loadingProducts.style.display = 'none';
+            
+            if (productosParaMostrar.length === 0) {
+                productosGrid.style.display = 'none';
+                emptyProducts.style.display = 'flex';
+                return;
+            }
+            
+            // Mostrar productos
+            emptyProducts.style.display = 'none';
+            productosGrid.style.display = 'grid';
+            
+            const productosHTML = productosParaMostrar.map(producto => `
+                <article class="producto-card-popular" data-id="${producto.id}">
+                    <a href="#" class="producto-link">
+                        <div class="producto-image">
+                            ${producto.imagen_url ? 
+                                `<img src="${producto.imagen_url}" alt="${producto.nombre}" onerror="this.src='/static/images/product-placeholder.png'">` :
+                                `<div class="producto-placeholder"><i class="fas fa-box"></i></div>`
+                            }
+                        </div>
+                        
+                        <div class="producto-info">
+                            <h3>${producto.nombre}</h3>
+                            <p class="producto-categoria">${producto.categoria}</p>
+                            <div class="producto-precio">
+                                <span class="precio">$${producto.precio}</span>
+                                <span class="unidad">/${producto.unidad || 'kg'}</span>
+                            </div>
+                            <div class="producto-stock">
+                                <span class="stock">Stock: ${producto.stock} ${producto.unidad || 'kg'}</span>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <form class="form-carrito-popular" onsubmit="agregarAlCarrito(event, '${producto.id}')">
+                        <div class="cantidad-controls">
+                            <button type="button" onclick="cambiarCantidad('${producto.id}', -1)">-</button>
+                            <input type="number" name="cantidad" value="1" min="1" max="${producto.stock}" class="cantidad-input" id="cantidad-${producto.id}">
+                            <button type="button" onclick="cambiarCantidad('${producto.id}', 1)">+</button>
+                        </div>
+                        <button type="submit" class="btn-agregar-carrito">
+                            <i class="fas fa-cart-plus"></i> Agregar
+                        </button>
+                    </form>
+                </article>
+            `).join('');
+            
+            productosGrid.innerHTML = productosHTML;
+        }
+
+        // Funciones de prueba
+        function probarFirebase() {
+            console.log('🧪 Probando Firebase...');
+            alert('Función de prueba de Firebase ejecutada. Revisa la consola.');
+        }
+
+        function cargarCategorias() {
+            console.log('🔄 Cargando categorías...');
+            mostrarDatosEjemplo();
+        }
+
+        function cargarRecomendaciones() {
+            console.log('🛍️ Cargando recomendaciones...');
+            mostrarDatosEjemplo();
+        }
+
+        function toggleFilters() {
+            alert('Función de filtros próximamente');
+        }
+
+        function toggleSort() {
+            alert('Función de ordenamiento próximamente');
+        }
+
+        function cambiarCantidad(productoId, cambio) {
+            const input = document.getElementById(`cantidad-${productoId}`);
+            const nuevaCantidad = parseInt(input.value) + cambio;
+            const maxStock = parseInt(input.max);
+            
+            if (nuevaCantidad >= 1 && nuevaCantidad <= maxStock) {
+                input.value = nuevaCantidad;
+            }
+        }
+
+        function agregarAlCarrito(event, productoId) {
+            event.preventDefault();
+            alert(`Producto ${productoId} agregado al carrito`);
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Página de prueba cargada');
+            mostrarDatosEjemplo();
+        });
+    </script>
+</body>
+</html>

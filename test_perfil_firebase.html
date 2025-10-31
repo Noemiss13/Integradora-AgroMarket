@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Perfil Firebase - AgroMarket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-button {
+            background: #2ba656;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1e8a47;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test de Perfil Firebase - AgroMarket</h1>
+        
+        <div class="test-section">
+            <h3>1. Verificar Firebase</h3>
+            <button class="test-button" onclick="testFirebase()">Probar Firebase</button>
+            <div id="firebase-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Verificar Usuario Autenticado</h3>
+            <button class="test-button" onclick="testUser()">Verificar Usuario</button>
+            <div id="user-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Cargar Datos del Perfil</h3>
+            <button class="test-button" onclick="testProfileData()">Cargar Perfil</button>
+            <div id="profile-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Navegación</h3>
+            <button class="test-button" onclick="window.location.href='/auth/perfil'">Ir al Perfil</button>
+            <button class="test-button" onclick="window.location.href='/login'">Ir al Login</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="/static/js/firebase-config.js"></script>
+
+    <script>
+        let auth = null;
+        let db = null;
+
+        async function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK no está cargado');
+                }
+
+                if (firebase.apps.length > 0) {
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                } else {
+                    const app = firebase.initializeApp(window.firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                }
+
+                db.settings({
+                    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                    ignoreUndefinedProperties: true
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        async function testFirebase() {
+            const resultDiv = document.getElementById('firebase-result');
+            resultDiv.style.display = 'block';
+            
+            try {
+                const success = await initializeFirebase();
+                if (success) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = '✅ Firebase inicializado correctamente';
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.innerHTML = '❌ Error inicializando Firebase';
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testUser() {
+            const resultDiv = document.getElementById('user-result');
+            resultDiv.style.display = 'block';
+            
+            try {
+                await initializeFirebase();
+                
+                // Probar método directo
+                let user = auth.currentUser;
+                console.log('Usuario directo:', user);
+                
+                if (!user) {
+                    console.log('🔄 Usuario no disponible directamente, esperando...');
+                    
+                    // Esperar con timeout
+                    user = await new Promise((resolve, reject) => {
+                        const timeout = setTimeout(() => {
+                            reject(new Error('Timeout esperando usuario'));
+                        }, 3000);
+                        
+                        const unsubscribe = auth.onAuthStateChanged((user) => {
+                            clearTimeout(timeout);
+                            unsubscribe();
+                            resolve(user);
+                        });
+                    });
+                }
+                
+                if (user) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        ✅ Usuario autenticado:<br>
+                        • UID: ${user.uid}<br>
+                        • Email: ${user.email}<br>
+                        • Nombre: ${user.displayName || 'No definido'}<br>
+                        • Email verificado: ${user.emailVerified ? 'Sí' : 'No'}<br>
+                        • Proveedor: ${user.providerData[0]?.providerId || 'N/A'}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result info';
+                    resultDiv.innerHTML = 'ℹ️ No hay usuario autenticado. Debes iniciar sesión primero.';
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testProfileData() {
+            const resultDiv = document.getElementById('profile-result');
+            resultDiv.style.display = 'block';
+            
+            try {
+                await initializeFirebase();
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    resultDiv.className = 'test-result info';
+                    resultDiv.innerHTML = 'ℹ️ No hay usuario autenticado. Debes iniciar sesión primero.';
+                    return;
+                }
+
+                const userDoc = await db.collection('usuarios').doc(user.uid).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        ✅ Datos del perfil cargados:<br>
+                        • Nombre: ${userData.nombre || 'No definido'}<br>
+                        • Email: ${userData.email || 'No definido'}<br>
+                        • Roles: ${JSON.stringify(userData.roles || [])}<br>
+                        • Rol activo: ${userData.rol_activo || 'No definido'}<br>
+                        • Fecha registro: ${userData.fecha_registro ? 'Definida' : 'No definida'}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result info';
+                    resultDiv.innerHTML = 'ℹ️ Usuario sin datos en Firestore. Se creará automáticamente al acceder al perfil.';
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Inicializar Firebase al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 Página de test cargada');
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Carrito - AgroMarket</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
 </head>
@@ -151,7 +152,7 @@
                                 <span class="metodo-icon">💳</span>
                                 <div class="metodo-info">
                                     <span class="metodo-title">Tarjeta de débito/crédito</span>
-                                    <span class="metodo-desc">Pago seguro con tarjeta</span>
+                                    <span class="metodo-desc">Pago seguro con Stripe</span>
                                 </div>
                             </label>
                         </div>
@@ -172,22 +173,19 @@
                     <div id="tarjeta-campos" class="tarjeta-campos" style="display: none;">
                         <div class="form-group">
                             <label for="nombre_titular">Nombre del titular</label>
-                            <input type="text" id="nombre_titular" name="nombre_titular" placeholder="Nombre completo del titular" maxlength="100">
+                            <input type="text" id="nombre_titular" name="nombre_titular" placeholder="Nombre completo del titular" maxlength="100" required>
                         </div>
 
-                        <div class="form-group">
-                            <label for="numero_tarjeta">Número de tarjeta</label>
-                            <input type="text" id="numero_tarjeta" name="numero_tarjeta" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </div>
-
-                        <div class="form-row">
+                        <!-- Elemento de Stripe para tarjeta -->
+                        <div id="stripe-card-container" style="display: none;">
                             <div class="form-group">
-                                <label for="fecha_vencimiento">Fecha de vencimiento</label>
-                                <input type="text" id="fecha_vencimiento" name="fecha_vencimiento" placeholder="MM/AA" maxlength="5">
-                            </div>
-                            <div class="form-group">
-                                <label for="cvv">CVV</label>
-                                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="4">
+                                <label class="form-label">Información de la tarjeta</label>
+                                <div id="card-element" class="stripe-input-container">
+                                    <!-- Stripe Elements creará los campos aquí -->
+                                </div>
+                                <div id="card-errors" class="error-message" role="alert"></div>
+                                <!-- Mensaje de error de pago -->
+                                <div id="payment-error" class="error-message" style="display: none;"></div>
                             </div>
                         </div>
 
@@ -197,6 +195,14 @@
                                 Enviar comprobante al correo electrónico
                             </label>
                         </div>
+                        
+                        <!-- Mensaje de error de pago -->
+                        <div id="payment-error" class="payment-error" style="display: none;"></div>
+                        
+                        <!-- Loading spinner -->
+                        <div id="payment-loading" class="payment-loading" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Procesando pago...</p>
                         </div>
                     </div>
                 </div>
@@ -230,7 +236,7 @@
                         <textarea id="nota" name="nota" placeholder="Agrega una nota para el vendedor..." rows="3"></textarea>
             </div>
 
-                    <button type="submit" class="btn-proceder-pago">Proceder al pago</button>
+                    <button type="submit" class="btn-proceder-pago" id="stripe-payment-button">Proceder al pago</button>
             </form>
             </aside>
         {% else %}
@@ -246,6 +252,764 @@
     </main>
 
     <!-- ===== JavaScript ===== -->
+    <!-- Firebase SDKs para carrito dinámico -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="/static/js/firebase-config.js"></script>
+
+    <script>
+        // Render dinámico del carrito desde Firestore
+        let db;
+        let carritoItems = [];
+
+        async function initFirebaseCarrito() {
+            try {
+                if (typeof firebase === 'undefined') return false;
+                if (firebase.apps.length === 0) {
+                    if (window.firebaseConfig) firebase.initializeApp(window.firebaseConfig);
+                }
+                db = firebase.firestore();
+                db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED, ignoreUndefinedProperties: true });
+                return true;
+            } catch (e) {
+                console.error('Error inicializando Firebase (carrito):', e);
+                return false;
+            }
+        }
+
+        // Actualiza el saludo del usuario usando Firebase Auth/Firestore (same logic as perfil.html)
+        async function actualizarSaludoUsuario() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    console.log('Usuario no autenticado, no se puede actualizar el saludo.');
+                    return;
+                }
+
+                console.log('✅ Usuario autenticado encontrado:', {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    emailVerified: user.emailVerified
+                });
+                
+                // Obtener datos del usuario desde Firestore (same as perfil.html)
+                const userDoc = await db.collection('usuarios').doc(user.uid).get();
+                
+                let nombre = 'Usuario'; // Default fallback
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    nombre = userData.nombre || user.displayName || user.email.split('@')[0];
+                    console.log('✅ Nombre obtenido de Firestore:', nombre);
+                } else {
+                    // Fallback to displayName or email part
+                    nombre = user.displayName || user.email.split('@')[0];
+                    console.log('⚠️ Usuario sin datos en Firestore, usando fallback:', nombre);
+                }
+
+                const el = document.querySelector('.saludo-usuario strong');
+                if (el) {
+                    el.textContent = nombre;
+                    console.log('✅ Saludo actualizado a:', nombre);
+                } else {
+                    console.log('❌ Elemento .saludo-usuario strong no encontrado.');
+                }
+            } catch (error) {
+                console.error('❌ Error actualizando saludo:', error);
+                // Fallback to email part
+                const user = firebase.auth().currentUser;
+                if (user) {
+                    const nombre = user.email.split('@')[0];
+                    const el = document.querySelector('.saludo-usuario strong');
+                    if (el) {
+                        el.textContent = nombre;
+                    }
+                }
+            }
+        }
+
+        function currency(n) {
+            return `$${Number(n || 0).toFixed(2)}`;
+        }
+
+        function renderCarritoDin() {
+            const main = document.querySelector('main.carrito-main');
+            const vacio = main.querySelector('.carrito-vacio');
+            const serverSection = main.querySelector('.carrito-productos');
+            const serverAside = main.querySelector('.carrito-checkout');
+
+            // Si no hay items, mostrar vacío y salir
+            if (!carritoItems || carritoItems.length === 0) {
+                if (serverSection) serverSection.style.display = '';
+                if (serverAside) serverAside.style.display = '';
+                if (vacio) vacio.style.display = '';
+                return;
+            }
+
+            // Ocultar server-render si existe y estado vacío
+            if (vacio) vacio.style.display = 'none';
+            if (serverSection) serverSection.style.display = 'none';
+            if (serverAside) serverAside.style.display = 'none';
+
+            let contenedor = document.getElementById('carrito-dinamico');
+            if (!contenedor) {
+                contenedor = document.createElement('div');
+                contenedor.id = 'carrito-dinamico';
+                contenedor.style.display = 'grid';
+                contenedor.style.gridTemplateColumns = '1fr 320px';
+                contenedor.style.gap = '1.5rem';
+                main.appendChild(contenedor);
+            }
+
+            const subtotal = carritoItems.reduce((acc, it) => acc + (Number(it.precio) * Number(it.cantidad)), 0);
+            const envio = 4.50;
+            const impuestos = subtotal * 0.1;
+            const total = subtotal + envio + impuestos;
+
+            // Columna izquierda: lista
+            const izquierda = document.createElement('section');
+            izquierda.className = 'carrito-productos';
+            izquierda.innerHTML = `
+                <header class="carrito-header">
+                    <h1>Carrito</h1>
+                    <p>Revisa tus artículos antes de pagar</p>
+                </header>
+                <div class="productos-lista" id="lista-carrito-din"></div>
+                <div class="carrito-nota"><p>Nota: Las cantidades y precios son referenciales.</p></div>
+                
+                <!-- Método de pago -->
+                <div class="metodo-pago-section accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('pago-content-din')">
+                        <div class="accordion-title">
+                            <h3>Método de pago</h3>
+                            <p class="metodo-pago-subtitle">Selecciona tu método de pago</p>
+                        </div>
+                        <span class="accordion-icon" id="pago-icon-din">▼</span>
+                    </div>
+                    <div class="accordion-content" id="pago-content-din" style="display: none;">
+                        <div class="metodo-pago-options">
+                            <div class="metodo-option" data-value="efectivo">
+                                <input type="radio" id="metodo_efectivo_din" name="metodo_pago_din" value="efectivo">
+                                <label for="metodo_efectivo_din">
+                                    <span class="metodo-icon">💵</span>
+                                    <div class="metodo-info">
+                                        <span class="metodo-title">Efectivo contra entrega</span>
+                                        <span class="metodo-desc">Paga cuando recibas tu pedido</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="metodo-option" data-value="transferencia">
+                                <input type="radio" id="metodo_transferencia_din" name="metodo_pago_din" value="transferencia">
+                                <label for="metodo_transferencia_din">
+                                    <span class="metodo-icon">🏦</span>
+                                    <div class="metodo-info">
+                                        <span class="metodo-title">Transferencia bancaria</span>
+                                        <span class="metodo-desc">Transferencia directa a nuestra cuenta</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="metodo-option" data-value="tarjeta">
+                                <input type="radio" id="metodo_tarjeta_din" name="metodo_pago_din" value="tarjeta">
+                                <label for="metodo_tarjeta_din">
+                                    <span class="metodo-icon">💳</span>
+                                    <div class="metodo-info">
+                                        <span class="metodo-title">Tarjeta de débito/crédito</span>
+                                        <span class="metodo-desc">Pago seguro con Stripe</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Mensaje para efectivo -->
+                        <div id="efectivo-mensaje-din" class="metodo-mensaje" style="display: none;">
+                            <div class="mensaje-info">
+                                <span class="mensaje-icon">💡</span>
+                                <div class="mensaje-content">
+                                    <h4>Información importante</h4>
+                                    <p>Al seleccionar pago en efectivo, deberás pagar el monto total cuando recibas tu pedido. El repartidor llevará el cambio exacto.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Campos adicionales para tarjeta -->
+                        <div id="tarjeta-campos-din" class="tarjeta-campos" style="display: none;">
+                            <div class="form-group">
+                                <label for="nombre_titular_din">Nombre del titular</label>
+                                <input type="text" id="nombre_titular_din" name="nombre_titular_din" placeholder="Nombre completo del titular" maxlength="100" required>
+                            </div>
+                            
+                            <!-- Elementos de Stripe separados para formulario tradicional -->
+                            <div id="stripe-card-container-din" style="display: none;">
+                                <div class="form-group">
+                                    <label for="card-number-element-din" class="form-label">Número de tarjeta</label>
+                                    <div class="card-number-wrapper">
+                                        <div id="card-number-element-din" class="stripe-field-input">
+                                            <!-- Stripe creará el campo aquí -->
+                                        </div>
+                                        <div id="card-brand-icon-din" class="card-brand-icon">
+                                            <!-- Icono de la marca de tarjeta aparecerá aquí -->
+                                        </div>
+                                    </div>
+                                    <div id="card-number-errors-din" class="field-error"></div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group form-group-half">
+                                        <label for="card-expiry-element-din" class="form-label">Fecha de vencimiento</label>
+                                        <div id="card-expiry-element-din" class="stripe-field-input">
+                                            <!-- Stripe creará el campo aquí -->
+                                        </div>
+                                        <div id="card-expiry-errors-din" class="field-error"></div>
+                                    </div>
+                                    
+                                    <div class="form-group form-group-half">
+                                        <label for="card-cvc-element-din" class="form-label">CVC</label>
+                                        <div id="card-cvc-element-din" class="stripe-field-input">
+                                            <!-- Stripe creará el campo aquí -->
+                                        </div>
+                                        <div id="card-cvc-errors-din" class="field-error"></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="card-errors-din" class="error-message" role="alert"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="enviar_comprobante_din" name="enviar_comprobante_din" value="1">
+                                    Enviar comprobante al correo electrónico
+                                </label>
+                            </div>
+                            
+                            <!-- Mensaje de error de pago -->
+                            <div id="payment-error-din" class="payment-error" style="display: none;"></div>
+                            
+                            <!-- Loading spinner -->
+                            <div id="payment-loading-din" class="payment-loading" style="display: none;">
+                                <div class="spinner"></div>
+                                <p>Procesando pago...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Columna derecha: resumen
+            const derecha = document.createElement('aside');
+            derecha.className = 'carrito-checkout';
+            derecha.innerHTML = `
+                <div class="checkout-summary">
+                    <h3>Resumen del pedido</h3>
+                    <div class="summary-line"><span>Subtotal</span><span id="subtotal-din">${currency(subtotal)}</span></div>
+                    <div class="summary-line"><span>Envío estimado</span><span id="envio-din">${currency(envio)}</span></div>
+                    <div class="summary-line"><span>Impuestos</span><span id="impuestos-din">${currency(impuestos)}</span></div>
+                    <div class="summary-line total"><span>Total</span><span id="total-din">${currency(total)}</span></div>
+                </div>
+                
+                <form class="checkout-form" id="checkout-form-din" onsubmit="event.preventDefault(); procesarPagoDin();">
+                    <div class="form-group">
+                        <label for="nota-din">Nota para el vendedor</label>
+                        <textarea id="nota-din" placeholder="Agrega una nota para el vendedor..." rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn-proceder-pago" id="stripe-payment-button-din">Proceder al pago</button>
+                </form>
+            `;
+
+            contenedor.innerHTML = '';
+            contenedor.appendChild(izquierda);
+            contenedor.appendChild(derecha);
+
+            // Configurar listeners para métodos de pago dinámicos
+            setTimeout(() => {
+                configurarMetodosPagoDin(total);
+            }, 100);
+
+            // Render de items
+            const lista = izquierda.querySelector('#lista-carrito-din');
+            lista.innerHTML = carritoItems.map((item) => {
+                const imagen = item.imagen && String(item.imagen).trim() !== '' ? item.imagen : '/static/images/product-placeholder.png';
+                return `
+                    <div class="producto-carrito-item" data-doc-id="${item._docId}">
+                        <div class="producto-imagen">
+                            <img src="${imagen}" alt="${item.nombre}" loading="lazy" onerror="this.src='/static/images/product-placeholder.png'">
+                        </div>
+                        <div class="producto-info">
+                            <h3>${item.nombre}</h3>
+                            <div class="producto-details">
+                                <span class="producto-origin">${item.origen || 'Local'} • ${item.unidad || 'kg'}</span>
+                            </div>
+                            <div class="producto-cantidad">
+                                <div class="cantidad-controls">
+                                    <button class="btn-cantidad-carrito disminuir" onclick="actualizarCantidadDin('${item._docId}', -1)">-</button>
+                                    <span class="cantidad-display">${item.cantidad} ${item.unidad || 'kg'}</span>
+                                    <button class="btn-cantidad-carrito aumentar" onclick="actualizarCantidadDin('${item._docId}', 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="producto-precio">
+                            <span>${currency(Number(item.precio) * Number(item.cantidad))}</span>
+                        </div>
+                        <div class="producto-acciones">
+                            <button class="btn-eliminar" onclick="eliminarItemDin('${item._docId}')" title="Eliminar del carrito">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function cargarCarritoDin() {
+            try {
+                const ok = await initFirebaseCarrito();
+                if (!ok) return;
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                const snap = await db.collection('carrito').where('usuario_id', '==', user.uid).get();
+                carritoItems = [];
+                snap.forEach(doc => {
+                    carritoItems.push({ _docId: doc.id, ...doc.data() });
+                });
+                renderCarritoDin();
+            } catch (e) {
+                console.error('Error cargando carrito dinámico:', e);
+            }
+        }
+
+        async function actualizarCantidadDin(docId, delta) {
+            try {
+                const idx = carritoItems.findIndex(i => i._docId === docId);
+                if (idx === -1) return;
+                const item = carritoItems[idx];
+                const nuevo = Math.max(1, Number(item.cantidad) + Number(delta));
+                // Opcional: si conoces el stock, podrías limitar aquí
+                await db.collection('carrito').doc(docId).update({ cantidad: nuevo, fecha_agregado: new Date().toISOString() });
+                carritoItems[idx].cantidad = nuevo;
+                renderCarritoDin();
+            } catch (e) {
+                console.error('Error actualizando cantidad:', e);
+            }
+        }
+
+        async function eliminarItemDin(docId) {
+            try {
+                await db.collection('carrito').doc(docId).delete();
+                carritoItems = carritoItems.filter(i => i._docId !== docId);
+                renderCarritoDin();
+            } catch (e) {
+                console.error('Error eliminando item:', e);
+            }
+        }
+
+        // Variable global para almacenar el total actual
+        let totalCarritoDin = 0;
+        let cardElementDin = null;
+
+        // Configurar métodos de pago dinámicos
+        function configurarMetodosPagoDin(total) {
+            totalCarritoDin = total;
+            console.log('💰 Total del carrito:', total);
+            
+            const metodoOptions = document.querySelectorAll('input[name="metodo_pago_din"]');
+            const tarjetaCampos = document.getElementById('tarjeta-campos-din');
+            const efectivoMensaje = document.getElementById('efectivo-mensaje-din');
+            const stripeCardContainer = document.getElementById('stripe-card-container-din');
+
+            metodoOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    if (tarjetaCampos) tarjetaCampos.style.display = 'none';
+                    if (efectivoMensaje) efectivoMensaje.style.display = 'none';
+                    if (stripeCardContainer) stripeCardContainer.style.display = 'none';
+                    
+                    const nombreTitular = document.getElementById('nombre_titular_din');
+                    if (nombreTitular) nombreTitular.required = false;
+
+                    if (this.value === 'tarjeta') {
+                        if (tarjetaCampos) tarjetaCampos.style.display = 'block';
+                        if (stripeCardContainer) stripeCardContainer.style.display = 'block';
+                        if (nombreTitular) nombreTitular.required = true;
+                        // Inicializar Stripe card element
+                        setTimeout(() => {
+                            inicializarStripeDin();
+                        }, 300);
+                    } else if (this.value === 'efectivo') {
+                        if (efectivoMensaje) efectivoMensaje.style.display = 'block';
+                    }
+                });
+            });
+        }
+
+        // Inicializar Stripe para carrito dinámico con campos separados
+        function inicializarStripeDin() {
+            if (typeof Stripe === 'undefined') {
+                console.error('Stripe no está cargado');
+                return;
+            }
+
+            const cardNumberContainer = document.getElementById('card-number-element-din');
+            const cardExpiryContainer = document.getElementById('card-expiry-element-din');
+            const cardCvcContainer = document.getElementById('card-cvc-element-din');
+            
+            if (!cardNumberContainer || !cardExpiryContainer || !cardCvcContainer) {
+                console.error('Contenedores de Stripe no encontrados');
+                return;
+            }
+
+            // Limpiar contenedores
+            cardNumberContainer.innerHTML = '';
+            cardExpiryContainer.innerHTML = '';
+            cardCvcContainer.innerHTML = '';
+
+            try {
+                // Inicializar Stripe si no existe con diseño personalizado para formulario tradicional
+                if (!window.stripeDin) {
+                    window.stripeDin = Stripe('pk_test_51S4nWTKFtQrWkPCD3FRrULpKifZ43LK9m3RcNn9TFpbzYqNU36uInxGyKRuuV78HtuC5drNe0qeZWei34yKGiYeF00M9L6swJq');
+                    window.elementsDin = window.stripeDin.elements({
+                        appearance: {
+                            theme: 'none',
+                            variables: {
+                                colorPrimary: '#2ba656',
+                                colorBackground: '#ffffff',
+                                colorText: '#2c3e50',
+                                colorDanger: '#e74c3c',
+                                colorTextSecondary: '#6c757d',
+                                fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+                                fontSizeBase: '16px',
+                                spacingUnit: '4px'
+                            },
+                            rules: {
+                                '.Input': {
+                                    backgroundColor: '#ffffff',
+                                    border: '2px solid #e9ecef',
+                                    borderRadius: '8px',
+                                    padding: '12px 14px',
+                                    fontSize: '16px',
+                                    transition: 'all 0.2s ease',
+                                    boxShadow: 'none'
+                                },
+                                '.Input:focus': {
+                                    borderColor: '#2ba656',
+                                    boxShadow: '0 0 0 3px rgba(43, 166, 86, 0.1)',
+                                    outline: 'none'
+                                },
+                                '.Input--invalid': {
+                                    borderColor: '#e74c3c',
+                                    color: '#e74c3c'
+                                },
+                                '.Input--empty': {
+                                    borderColor: '#e9ecef'
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Crear elementos separados para formulario tradicional
+                const cardNumberElement = window.elementsDin.create('cardNumber', {
+                    placeholder: '1234 5678 9012 3456'
+                });
+                
+                const cardExpiryElement = window.elementsDin.create('cardExpiry', {
+                    placeholder: 'MM/AA'
+                });
+                
+                const cardCvcElement = window.elementsDin.create('cardCvc', {
+                    placeholder: '123'
+                });
+
+                // Montar elementos
+                cardNumberElement.mount('#card-number-element-din');
+                cardExpiryElement.mount('#card-expiry-element-din');
+                cardCvcElement.mount('#card-cvc-element-din');
+
+                // Guardar elementos globalmente
+                window.cardNumberElementDin = cardNumberElement;
+                window.cardExpiryElementDin = cardExpiryElement;
+                window.cardCvcElementDin = cardCvcElement;
+
+                // Manejar errores y detección de marca de tarjeta
+                cardNumberElement.on('change', function(event) {
+                    const errorElement = document.getElementById('card-number-errors-din');
+                    const brandIcon = document.getElementById('card-brand-icon-din');
+                    
+                    // Manejar errores
+                    if (errorElement) {
+                        if (event.error && event.error.type === 'validation_error') {
+                            errorElement.textContent = event.error.message;
+                            errorElement.style.display = 'block';
+                        } else {
+                            errorElement.textContent = '';
+                            errorElement.style.display = 'none';
+                        }
+                    }
+                    
+                    // Mostrar icono de marca de tarjeta
+                    if (brandIcon && event.brand) {
+                        const brand = event.brand.toLowerCase();
+                        let brandName = '';
+                        let iconClass = '';
+                        
+                        switch(brand) {
+                            case 'visa':
+                                brandName = 'Visa';
+                                iconClass = 'fab fa-cc-visa';
+                                break;
+                            case 'mastercard':
+                                brandName = 'Mastercard';
+                                iconClass = 'fab fa-cc-mastercard';
+                                break;
+                            case 'amex':
+                            case 'american_express':
+                                brandName = 'American Express';
+                                iconClass = 'fab fa-cc-amex';
+                                break;
+                            case 'discover':
+                                brandName = 'Discover';
+                                iconClass = 'fab fa-cc-discover';
+                                break;
+                            case 'diners':
+                                brandName = 'Diners Club';
+                                iconClass = 'fab fa-cc-diners-club';
+                                break;
+                            case 'jcb':
+                                brandName = 'JCB';
+                                iconClass = 'fab fa-cc-jcb';
+                                break;
+                            default:
+                                brandName = brand.charAt(0).toUpperCase() + brand.slice(1);
+                                iconClass = 'far fa-credit-card';
+                        }
+                        
+                        if (event.complete && event.brand !== 'unknown') {
+                            brandIcon.innerHTML = `<i class="${iconClass}" title="${brandName}"></i>`;
+                            brandIcon.style.display = 'flex';
+                        } else if (!event.empty) {
+                            brandIcon.innerHTML = `<i class="${iconClass}" title="${brandName}"></i>`;
+                            brandIcon.style.display = 'flex';
+                        } else {
+                            brandIcon.innerHTML = '';
+                            brandIcon.style.display = 'none';
+                        }
+                    }
+                });
+
+                cardExpiryElement.on('change', function(event) {
+                    const errorElement = document.getElementById('card-expiry-errors-din');
+                    if (errorElement) {
+                        if (event.error && event.error.type === 'validation_error') {
+                            errorElement.textContent = event.error.message;
+                            errorElement.style.display = 'block';
+                        } else {
+                            errorElement.textContent = '';
+                            errorElement.style.display = 'none';
+                        }
+                    }
+                });
+
+                cardCvcElement.on('change', function(event) {
+                    const errorElement = document.getElementById('card-cvc-errors-din');
+                    if (errorElement) {
+                        if (event.error && event.error.type === 'validation_error') {
+                            errorElement.textContent = event.error.message;
+                            errorElement.style.display = 'block';
+                        } else {
+                            errorElement.textContent = '';
+                            errorElement.style.display = 'none';
+                        }
+                    }
+                });
+
+                console.log('✅ Stripe Card Elements montados (formulario tradicional)');
+
+            } catch (error) {
+                console.error('❌ Error creando Stripe card elements:', error);
+            }
+        }
+
+        // Procesar pago del carrito dinámico
+        async function procesarPagoDin() {
+            const selectedPaymentMethod = document.querySelector('input[name="metodo_pago_din"]:checked');
+            
+            if (!selectedPaymentMethod) {
+                alert('Por favor selecciona un método de pago');
+                return;
+            }
+
+            if (selectedPaymentMethod.value === 'tarjeta') {
+                await procesarPagoStripeDin();
+            } else {
+                // Para otros métodos, solo mostrar mensaje
+                alert(`Procesando pago con ${selectedPaymentMethod.value}. Total: $${totalCarritoDin.toFixed(2)}`);
+            }
+        }
+
+        // Procesar pago con Stripe (carrito dinámico)
+        async function procesarPagoStripeDin() {
+            console.log('💳 Procesando pago con Stripe - Total:', totalCarritoDin);
+            
+            // Verificar que los elementos de Stripe estén disponibles
+            if (!window.cardNumberElementDin || !window.cardExpiryElementDin || !window.cardCvcElementDin) {
+                alert('❌ Error: Campos de tarjeta no están disponibles. Por favor selecciona método de pago con tarjeta.');
+                return;
+            }
+
+            const submitButton = document.getElementById('stripe-payment-button-din');
+            const loadingSpinner = document.getElementById('payment-loading-din');
+            const errorContainer = document.getElementById('payment-error-din');
+
+            try {
+                // Mostrar loading
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Procesando...';
+                }
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'block';
+                }
+                if (errorContainer) {
+                    errorContainer.style.display = 'none';
+                }
+
+                // Crear Payment Intent con el total correcto
+                const response = await fetch('/comprador/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin', // Incluir cookies de sesión
+                    body: JSON.stringify({
+                        amount: Math.round(totalCarritoDin * 100) // Convertir a centavos
+                    })
+                });
+
+                // Verificar que la respuesta sea JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('❌ Error: El servidor devolvió HTML en lugar de JSON:', text.substring(0, 200));
+                    throw new Error('Error en el servidor. Por favor, verifica que estés autenticado e intenta nuevamente.');
+                }
+
+                // Verificar status HTTP
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => {
+                        throw new Error(`Error del servidor (${response.status}): ${response.statusText}`);
+                    });
+                    throw new Error(errorData.error || `Error del servidor (${response.status})`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Respuesta del servidor:', data);
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (!data.client_secret) {
+                    throw new Error('No se recibió el client_secret del servidor');
+                }
+
+                // Confirmar pago
+                const nombreTitular = document.getElementById('nombre_titular_din')?.value || 'Cliente AgroMarket';
+                // Crear el payment method usando los elementos separados
+                const { error: createError, paymentMethod } = await window.stripeDin.createPaymentMethod({
+                    type: 'card',
+                    card: window.cardNumberElementDin,
+                    billing_details: {
+                        name: nombreTitular,
+                    },
+                });
+
+                if (createError) {
+                    throw new Error(createError.message);
+                }
+
+                // Confirmar el pago con el payment method
+                const { error: stripeError, paymentIntent } = await window.stripeDin.confirmCardPayment(
+                    data.client_secret,
+                    {
+                        payment_method: paymentMethod.id
+                    }
+                );
+
+                if (stripeError) {
+                    throw new Error(stripeError.message);
+                }
+
+                // Pago exitoso
+                if (paymentIntent.status === 'succeeded') {
+                    console.log('🎉 Pago exitoso:', paymentIntent.id);
+                    
+                    // Limpiar carrito de Firestore
+                    const user = firebase.auth().currentUser;
+                    if (user && db) {
+                        const carritoSnapshot = await db.collection('carrito')
+                            .where('usuario_id', '==', user.uid)
+                            .get();
+                        
+                        const deletePromises = carritoSnapshot.docs.map(doc => doc.ref.delete());
+                        await Promise.all(deletePromises);
+                        console.log('✅ Carrito limpiado de Firestore');
+                    }
+                    
+                    // Guardar información del pago
+                    localStorage.setItem('totalAmount', totalCarritoDin.toFixed(2));
+                    localStorage.setItem('paymentIntentId', paymentIntent.id);
+                    localStorage.setItem('paymentDate', new Date().toISOString());
+                    
+                    // Redirigir a página de éxito
+                    window.location.href = '/comprador/stripe-success';
+                }
+
+            } catch (error) {
+                console.error('❌ Error en el pago:', error);
+                
+                let errorMsg = 'Error al procesar el pago. Intenta nuevamente.';
+                
+                if (error.message) {
+                    errorMsg = error.message;
+                } else if (typeof error === 'string') {
+                    errorMsg = error;
+                }
+                
+                // Mensajes más amigables para errores comunes
+                if (errorMsg.includes('HTML') || errorMsg.includes('autenticado')) {
+                    errorMsg = '⚠️ Parece que no estás autenticado. Por favor, recarga la página y vuelve a intentar.';
+                } else if (errorMsg.includes('client_secret')) {
+                    errorMsg = '⚠️ Error al crear el intento de pago. Verifica tu conexión e intenta nuevamente.';
+                }
+                
+                if (errorContainer) {
+                    errorContainer.textContent = errorMsg;
+                    errorContainer.style.display = 'block';
+                } else {
+                    alert('Error en el pago: ' + errorMsg);
+                }
+            } finally {
+                // Ocultar loading
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Proceder al pago';
+                }
+                if (loadingSpinner) {
+                    loadingSpinner.style.display = 'none';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const ok = await initFirebaseCarrito();
+            if (!ok) return;
+            firebase.auth().onAuthStateChanged(function(user){
+                if (user) {
+                    cargarCarritoDin();
+                }
+            });
+            // Intento inicial
+            if (firebase.auth().currentUser) cargarCarritoDin();
+        });
+    </script>
     <script>
         // Función para toggle del acordeón
         function toggleAccordion(contentId) {
@@ -340,8 +1104,27 @@
             // Add cursor pointer to indicate clickable
             message.style.cursor = 'pointer';
         });
+
+        // Mostrar/ocultar campos de Stripe cuando se selecciona tarjeta
+        const metodoTarjeta = document.getElementById('metodo_tarjeta');
+        const stripeCardContainer = document.getElementById('stripe-card-container');
+        
+        if (metodoTarjeta && stripeCardContainer) {
+            metodoTarjeta.addEventListener('change', function() {
+                if (this.checked) {
+                    stripeCardContainer.style.display = 'block';
+                } else {
+                    stripeCardContainer.style.display = 'none';
+                }
+            });
+        }
     </script>
+
+    <!-- Scripts de Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="{{ url_for('static', filename='js/stripe-professional.js') }}"></script>
 
 </body>
 </html>
+
 

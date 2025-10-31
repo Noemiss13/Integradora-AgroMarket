@@ -12,7 +12,12 @@ class Config:
     
     # Configuración del servidor
     HOST = "127.0.0.1"
-    PORT = 3000
+    PORT = 8000
+    
+    # Configuración de Stripe
+    STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY') or 'pk_test_51S4nWTKFtQrWkPCD3FRrULpKifZ43LK9m3RcNn9TFpbzYqNU36uInxGyKRuuV78HtuC5drNe0qeZWei34yKGiYeF00M9L6swJq'
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY') or 'sk_test_51S4nWTKFtQrWkPCDrCpPfYlsfL8ypkkhPfUlhMucmh1tS1afbn5QBZG4kNPI3bAyZpp8hKMS9rzRPkWGN06i0uwB00FEGEsbBX'
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET') or 'whsec_your_webhook_secret_here'
     
 
 class DevelopmentConfig(Config):

@@ -15,6 +15,21 @@ main h1 {
     justify-content: center;
     margin-top: 0px;
     min-height: 600px;
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1600px) {
+    .product-form-container {
+        padding: 0 40px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .product-form-container {
+        padding: 0 60px;
+    }
 }
 
 /* Columna del formulario */
@@ -161,6 +176,11 @@ main h1 {
     box-shadow: none;
 }
 
+/* Ajuste para botón en layout de dos columnas (agregar producto) */
+.form-right-column .submit-btn {
+    margin-top: 0;
+}
+
 /* Mensajes flash mejorados */
 .flashes {
     margin-bottom: 20px;
@@ -205,6 +225,55 @@ main h1 {
 .stock-mensaje i {
     color: #0277bd;
     font-size: 0.9rem;
+}
+
+/* Mensaje de error para stock */
+.stock-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.stock-error i {
+    color: #dc2626;
+    font-size: 0.9rem;
+}
+
+/* Mensajes de error generales para campos */
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.field-error i {
+    color: #dc2626;
+    font-size: 0.9rem;
+}
+
+/* Contador de caracteres */
+.char-counter {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-align: right;
 }
 
 /* Vista previa de imagen */
@@ -273,5 +342,398 @@ main h1 {
     
     .file-upload-icon {
         font-size: 2rem;
+    }
+}
+
+/* ===========================================
+   ESTILOS PARA SUBIDA DE IMÁGENES
+   =========================================== */
+
+.image-upload-container {
+    margin-top: 10px;
+}
+
+.image-upload-area {
+    border: 2px dashed #4CAF50;
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #f8fff8;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.image-upload-area:hover {
+    border-color: #2e7d32;
+    background: #f0f8f0;
+    transform: translateY(-2px);
+}
+
+.image-upload-area i {
+    font-size: 3rem;
+    color: #4CAF50;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.image-upload-area p {
+    margin: 0 0 10px 0;
+    color: #2e7d32;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.image-upload-area small {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.image-preview {
+    position: relative;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 2px solid #e2e8f0;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.remove-image-btn:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+/* Estados de carga */
+.image-upload-area.uploading {
+    border-color: #ffc107;
+    background: #fffbf0;
+}
+
+.image-upload-area.uploading i {
+    color: #ffc107;
+    animation: spin 1s linear infinite;
+}
+
+.image-upload-area.uploading p {
+    color: #856404;
+}
+
+.image-upload-area.success {
+    border-color: #28a745;
+    background: #f0fff4;
+}
+
+.image-upload-area.success i {
+    color: #28a745;
+}
+
+.image-upload-area.success p {
+    color: #155724;
+}
+
+.image-upload-area.error {
+    border-color: #dc3545;
+    background: #fff5f5;
+}
+
+.image-upload-area.error i {
+    color: #dc3545;
+}
+
+.image-upload-area.error p {
+    color: #721c24;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===========================================
+   ESTILOS PARA GALERÍA DE MÚLTIPLES IMÁGENES
+   =========================================== */
+
+.images-preview-container {
+    margin-top: 15px;
+}
+
+.images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.image-preview-item:first-child {
+    border-color: #2ba656;
+}
+
+.image-preview-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.image-preview-item .remove-image-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    z-index: 10;
+}
+
+.image-preview-item .remove-image-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
+}
+
+.primary-badge {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: rgba(43, 166, 86, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.images-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.add-more-images-btn {
+    flex: 1;
+    padding: 10px;
+    background: #f0fdf4;
+    color: #2ba656;
+    border: 2px solid #86efac;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.add-more-images-btn:hover {
+    background: #dcfce7;
+    border-color: #4ade80;
+    color: #16a34a;
+}
+
+.remove-all-btn {
+    flex: 1;
+    padding: 10px;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 2px solid #fecaca;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.remove-all-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+/* ===========================================
+   LAYOUT DE DOS COLUMNAS PARA FORMULARIOS
+   =========================================== */
+
+/* Layout de dos columnas */
+.form-two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.form-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Botones de formulario específicos para editar */
+.form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 0;
+    align-items: stretch;
+}
+
+/* Botón de actualizar (editar producto) */
+.form-right-column .submit-btn,
+.form-buttons .submit-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin-top: 0;
+}
+
+.form-right-column .submit-btn:hover,
+.form-buttons .submit-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.form-right-column .submit-btn:disabled,
+.form-buttons .submit-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Botón de cancelar (editar producto) */
+.cancel-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.cancel-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1600px) {
+    .form-two-columns {
+        max-width: 1800px;
+        gap: 60px;
+    }
+    
+    .form-left-column,
+    .form-right-column {
+        gap: 25px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .form-two-columns {
+        max-width: 95%;
+        gap: 80px;
+    }
+    
+    .form-left-column,
+    .form-right-column {
+        gap: 30px;
+    }
+}
+
+/* Responsive - Layout de dos columnas */
+@media (max-width: 1024px) {
+    .form-two-columns {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-two-columns {
+        gap: 25px;
     }
 }

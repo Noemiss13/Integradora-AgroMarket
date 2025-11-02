@@ -20,6 +20,39 @@
 }
 
 /* ===================== */
+/* Botón Mis Pedidos */
+/* ===================== */
+.mis-pedidos-section {
+    margin-bottom: 16px;
+}
+
+.btn-mis-pedidos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-mis-pedidos:hover {
+    background: linear-gradient(135deg, #228B22 0%, #1d7a1d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-mis-pedidos i {
+    font-size: 1.1rem;
+}
+
+/* ===================== */
 /* Reset y tipografía */
 /* ===================== */
 * {
@@ -106,23 +139,99 @@ body {
 /* ===================== */
 /* Layout Principal */
 /* ===================== */
-.perfil-layout {
+.main-content {
+    min-height: calc(100vh - 80px);
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 2rem 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 350px 1fr;
     gap: 2rem;
     align-items: start;
 }
 
-/* ===================== */
-/* Información del Usuario */
-/* ===================== */
-.perfil-info {
+.sidebar {
     background: var(--bg-white);
     border-radius: var(--border-radius);
     padding: 2rem;
     box-shadow: var(--shadow);
     position: sticky;
     top: 100px;
+}
+
+.main-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.profile-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.form-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.roles-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+}
+
+/* ===================== */
+/* Información del Usuario */
+/* ===================== */
+.user-card {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.user-avatar {
+    margin-bottom: 1.5rem;
+}
+
+.user-avatar i {
+    font-size: 4rem;
+    color: var(--primary-color);
+}
+
+.user-info h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.user-info p {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.user-role {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+    color: white;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: var(--shadow);
 }
 
 .perfil-header {
@@ -304,13 +413,17 @@ body {
     font-size: 1.1rem;
 }
 
-.quick-nav-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+.quick-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.quick-nav-item {
+.quick-nav li {
+    margin-bottom: 0.75rem;
+}
+
+.quick-nav a {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -321,17 +434,18 @@ body {
     color: var(--text-dark);
     transition: var(--transition);
     border: 2px solid transparent;
+    font-weight: 500;
 }
 
-.quick-nav-item:hover {
+.quick-nav a:hover {
     background: var(--primary-color);
     color: white;
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
 }
 
-.quick-nav-item i {
-    font-size: 1.2rem;
+.quick-nav a i {
+    font-size: 1.1rem;
     width: 20px;
     text-align: center;
 }
@@ -339,20 +453,13 @@ body {
 /* ===================== */
 /* Formularios */
 /* ===================== */
-.perfil-forms {
+.perfil-form {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
-.form-section {
-    background: var(--bg-white);
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    box-shadow: var(--shadow);
-}
-
-.form-section h2 {
+.form-card h2 {
     color: var(--text-dark);
     margin-bottom: 1.5rem;
     display: flex;
@@ -362,11 +469,24 @@ body {
     font-weight: 600;
 }
 
-.form-section h3 {
+.roles-card h2 {
     color: var(--text-dark);
-    margin-bottom: 1rem;
-    font-size: 1.1rem;
-    font-weight: 500;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.roles-content {
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+.roles-content p {
+    margin: 0;
+    font-size: 0.95rem;
 }
 
 .form-group {
@@ -436,6 +556,16 @@ body {
     box-shadow: var(--shadow-hover);
 }
 
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.form-buttons .btn {
+    min-width: 180px;
+}
+
 .btn-secondary {
     background: linear-gradient(135deg, var(--text-muted), #495057);
     color: white;
@@ -447,8 +577,447 @@ body {
 }
 
 /* ===================== */
+/* Navegación por Rol */
+/* ===================== */
+.nav-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+}
+
+.nav-section h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-dark);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-section h3 i {
+    color: var(--primary-color);
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-item {
+    width: 100%;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    font-size: 0.9rem;
+}
+
+.nav-link:hover {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border-color: var(--border-color);
+    transform: translateX(4px);
+}
+
+.nav-link.active {
+    background: linear-gradient(135deg, var(--primary-color), #40b968);
+    color: white;
+    border-color: var(--primary-color);
+    font-weight: 500;
+}
+
+.nav-link.active:hover {
+    background: linear-gradient(135deg, #1e8a47, var(--primary-color));
+    color: white;
+    transform: translateX(4px);
+}
+
+.nav-link i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.nav-link span {
+    flex: 1;
+}
+
+/* Responsive para navegación */
+@media (max-width: 768px) {
+    .nav-section {
+        padding: 0.75rem;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .nav-link i {
+        width: 14px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ===================== */
 /* Gestión de Roles */
 /* ===================== */
+
+/* Estilos para la nueva estructura de roles en el perfil */
+.perfil-roles {
+    margin-top: 1rem;
+}
+
+/* Switches de Roles */
+.roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* ====== Mejora visual Gestión de Roles ====== */
+.roles-card h2 { margin-bottom: 14px; }
+
+/* Contenedor de Modo de navegación */
+#modo-navegacion {
+    background: var(--bg-white);
+    border: 2px solid var(--border-light);
+    border-radius: var(--border-radius);
+    padding: 16px 18px;
+}
+#modo-navegacion h3 {
+    color: var(--text-dark);
+    font-size: 1.05rem;
+}
+.modo-opciones { display: flex; gap: 12px; }
+.modo-opciones label {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.modo-opciones label:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(43, 166, 86, 0.08);
+}
+.modo-opciones input[type="radio"] { accent-color: var(--primary-color); }
+
+.role-switch-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: var(--bg-white);
+    border: 2px solid var(--border-light);
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+}
+
+.role-switch-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(43, 166, 86, 0.1);
+}
+
+/* Realce de tarjeta cuando el switch está activo (browsers modernos) */
+.role-switch-item:has(input:checked) {
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 16px rgba(43, 166, 86, 0.12);
+}
+
+.role-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.role-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2em;
+}
+
+.role-icon.comprador {
+    background: linear-gradient(135deg, #2ba656 0%, #40b968 100%);
+}
+
+.role-icon.vendedor {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.role-details h4 {
+    margin: 0 0 5px 0;
+    color: var(--text-dark);
+    font-size: 1.1em;
+}
+
+.role-details p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.role-switch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Etiqueta de estado del switch */
+.role-switch .switch-label {
+    background: #eef6f0;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+.role-switch input:checked ~ .switch-label {
+    color: var(--primary-dark);
+    background: #e6f6ea;
+    font-weight: 600;
+}
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider:hover {
+    box-shadow: 0 0 8px rgba(43, 166, 86, 0.3);
+}
+
+.switch-label {
+    font-size: 0.8em;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Estilos para roles deshabilitados */
+.role-disabled {
+    opacity: 0.6;
+    background: #f5f5f5;
+}
+
+.role-disabled:hover {
+    border-color: var(--border-light) !important;
+    box-shadow: none !important;
+}
+
+/* Botón agregar rol */
+.btn-add-role {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(43, 166, 86, 0.2);
+}
+
+.btn-add-role:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(43, 166, 86, 0.3);
+}
+
+.btn-add-role i {
+    font-size: 0.9em;
+}
+
+/* Responsive para switches */
+@media (max-width: 768px) {
+    .role-switch-item {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .role-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .role-switch {
+        order: -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .role-switch-item {
+        padding: 15px;
+    }
+    
+    .role-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1em;
+    }
+    
+    .switch {
+        width: 50px;
+        height: 28px;
+    }
+    
+    .slider:before {
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(22px);
+    }
+}
+
+.perfil-roles .rol-item {
+    margin-bottom: 0.75rem;
+    padding: 1rem;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.perfil-roles .rol-item:hover {
+    background: var(--bg-white);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.perfil-roles .rol-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.perfil-roles .rol-info i {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.perfil-roles .rol-nombre {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.perfil-roles .rol-estado {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: auto;
+}
+
+.perfil-roles .rol-estado.activo {
+    background: #d4edda;
+    color: #155724;
+}
+
+.perfil-roles .rol-estado.inactivo {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.perfil-roles .rol-actions {
+    margin-top: 0.5rem;
+}
+
+.perfil-roles .rol-description {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+/* Estilo para el rol actual en el perfil */
+.perfil-rol {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.perfil-rol i {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.perfil-rol span {
+    font-weight: 600;
+    color: var(--text-dark);
+}
 .rol-activo-section {
     margin-bottom: 2rem;
     padding: 1.5rem;
@@ -652,12 +1221,12 @@ body {
 }
 
 .rol-card.rol-vendedor:hover {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+    background: linear-gradient(135deg, #4CAF50, #4CAF50);
     color: white;
 }
 
 .rol-card.rol-comprador:hover {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #4CAF50, #4CAF50);
     color: white;
 }
 
@@ -675,11 +1244,11 @@ body {
 }
 
 .rol-vendedor .rol-card-icon {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
+    background: linear-gradient(135deg, #4CAF50, #4CAF50);
 }
 
 .rol-comprador .rol-card-icon {
-    background: linear-gradient(135deg, #3498db, #2980b9);
+    background: linear-gradient(135deg, #4CAF50, #4CAF50);
 }
 
 .rol-card-content {
@@ -699,10 +1268,10 @@ body {
 }
 
 .rol-description {
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    margin-bottom: 1rem;
-    line-height: 1.5;
+    font-style: italic;
+    margin: 0;
 }
 
 .rol-card:hover .rol-description {
@@ -806,12 +1375,13 @@ body {
         padding: 0 1rem;
     }
 
-    .perfil-layout {
+    .container {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        padding: 0 1rem;
     }
 
-    .perfil-info {
+    .sidebar {
         position: static;
     }
 
@@ -885,5 +1455,742 @@ body {
         width: 60px;
         height: 60px;
         font-size: 1.5rem;
+    }
+}
+
+/* ===================== */
+/* Estados de Error y Loading */
+/* ===================== */
+.loading-roles {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.loading-roles i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.loading-roles p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.no-roles, .error-roles {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    background: #fff5f5;
+    border: 2px dashed #fed7d7;
+    border-radius: var(--border-radius);
+    color: #c53030;
+}
+
+.no-roles i, .error-roles i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #e53e3e;
+}
+
+.no-roles p, .error-roles p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+}
+
+.btn-retry {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-retry:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-retry i {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ===================== */
+/* Mensajes Flash */
+/* ===================== */
+.flash {
+    padding: 12px 20px;
+    margin: 0 0 20px 0;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out;
+}
+
+.flash.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.flash.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.flash.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.flash.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.flash i {
+    font-size: 1.1em;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================== */
+/* Estilos para Roles */
+/* ===================== */
+.rol-activo-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.rol-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 10px;
+    transition: var(--transition);
+    background: var(--bg-white);
+}
+
+.rol-item.activo {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+    box-shadow: 0 2px 8px rgba(43, 166, 86, 0.1);
+}
+
+.rol-item:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+}
+
+.rol-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.rol-info i {
+    font-size: 1.2em;
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.rol-nombre {
+    font-weight: 600;
+    color: var(--text-dark);
+    flex: 1;
+}
+
+.rol-estado {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.rol-estado.activo {
+    background: var(--primary-color);
+    color: white;
+}
+
+.rol-estado.inactivo {
+    background: var(--bg-light);
+    color: var(--text-muted);
+}
+
+.rol-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.rol-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    flex: 1;
+}
+
+.btn-rol-cambiar {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-rol-cambiar:hover {
+    background: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.btn-rol-cambiar i {
+    font-size: 0.8em;
+}
+
+#roles-info {
+    margin-bottom: 15px;
+}
+
+#roles-info p {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+#roles-actions {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-light);
+}
+
+#btn-cambiar-rol {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#btn-cambiar-rol:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* ===================== */
+/* Indicador de Rol */
+/* ===================== */
+.perfil-rol-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.rol-activo-principal {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+    text-transform: capitalize;
+}
+
+.rol-indicador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    width: fit-content;
+    transition: var(--transition);
+}
+
+.rol-indicador.comprador {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    color: #1976d2;
+    border: 1px solid #90caf9;
+}
+
+.rol-indicador.vendedor {
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+    color: #7b1fa2;
+    border: 1px solid #ce93d8;
+}
+
+.rol-indicador i {
+    font-size: 0.7em;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.perfil-rol {
+    margin: 0;
+    font-size: 1em;
+    color: var(--text-dark);
+}
+
+.perfil-rol i {
+    color: var(--primary-color);
+    margin-right: 8px;
+}
+
+/* ===================== */
+/* Estilos para Estadísticas de Vendedor */
+/* ===================== */
+.stat-icon.vendedor {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-icon.activos {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.stat-icon.ventas {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.stat-icon.ingresos {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    color: white;
+}
+
+.stat-icon.mes {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+}
+
+.stat-icon.carrito {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #333;
+}
+
+/* Animaciones para estadísticas */
+.stat-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.stat-card:hover::before {
+    left: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Indicadores de estado para productos */
+.producto-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.producto-status.activo {
+    background: #d4edda;
+    color: #155724;
+}
+
+.producto-status.inactivo {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Mejoras para el grid de estadísticas */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===================== */
+/* Gestión de Roles */
+/* ===================== */
+.roles-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.roles-buttons .btn {
+    min-width: 150px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Modal para eliminar roles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px 20px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+    margin: 0 0 15px 0;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-header i {
+    color: #f39c12;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-body p {
+    margin: 0 0 15px 0;
+    color: var(--text-muted);
+}
+
+.roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rol-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--bg-white);
+}
+
+.rol-option:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(43, 166, 86, 0.15);
+}
+
+.rol-option i {
+    font-size: 1.2em;
+    color: var(--primary-color);
+    width: 20px;
+    text-align: center;
+}
+
+.rol-option span {
+    font-weight: 500;
+    color: var(--text-dark);
+    text-transform: capitalize;
+}
+
+.rol-option.activo {
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    border-color: var(--primary-color);
+}
+
+.rol-actual {
+    font-size: 0.8em;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.modal-footer {
+    padding: 0 20px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Responsive para modal */
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .roles-buttons {
+        flex-direction: column;
+    }
+    
+    .roles-buttons .btn {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* ===================== */
+/* Estadísticas Múltiples */
+/* ===================== */
+.stats-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.stats-header h4 {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 1.2em;
+}
+
+.stats-header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.9em;
+}
+
+.role-stats-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.role-stats-section.combined {
+    background: linear-gradient(135deg, #fff8e1 0%, #f3e5f5 100%);
+    border-color: #e1bee7;
+}
+
+.role-stats-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.role-stats-header h5 {
+    color: var(--text-dark);
+    margin: 0;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.role-stats-header i {
+    color: var(--primary-color);
+    font-size: 1em;
+}
+
+.role-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+/* Iconos adicionales para estadísticas múltiples */
+.stat-icon.positivo {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    color: white;
+}
+
+.stat-icon.negativo {
+    background: linear-gradient(135deg, #f44336 0%, #ff9800 100%);
+    color: white;
+}
+
+.stat-icon.total-actividad {
+    background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
+    color: white;
+}
+
+/* Estilos para números positivos/negativos */
+.stat-number.positivo {
+    color: #4caf50;
+    font-weight: 700;
+}
+
+.stat-number.negativo {
+    color: #f44336;
+    font-weight: 700;
+}
+
+/* Tarjetas combinadas */
+.combined-stat {
+    border: 2px solid var(--primary-color);
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e8 100%);
+}
+
+.combined-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(43, 166, 86, 0.2);
+}
+
+/* Responsive para estadísticas múltiples */
+@media (max-width: 768px) {
+    .role-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .role-stats-section {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .role-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-header {
+        padding: 15px;
+    }
+    
+    .stats-header h4 {
+        font-size: 1.1em;
+    }
+    
+    .stats-header p {
+        font-size: 0.85em;
+    }
+}
+
+/* Animaciones para secciones de roles */
+.role-stats-section {
+    animation: slideInUp 0.5s ease-out;
+}
+
+.role-stats-section:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.role-stats-section:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.role-stats-section:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

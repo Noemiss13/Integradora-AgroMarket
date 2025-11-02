@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Pedido | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_pedido.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+</head>
+<body>
+    <!-- ===== Menú superior ===== -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="/comprador/panel">Inicio</a>
+            <a href="/comprador/productos">Productos</a>
+            <a href="/comprador/carrito">Carrito</a>
+            <a href="/auth/perfil">Mi Perfil</a>
+            <a href="/auth/logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="detalle-pedido-container">
+            <!-- Navigation Header -->
+            <div class="navigation-header">
+                <a href="/comprador/mis_pedidos" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a mis pedidos
+                </a>
+                <div class="breadcrumbs">
+                    <a href="/comprador/panel">Inicio</a>
+                    <span>/</span>
+                    <a href="/auth/perfil">Mi cuenta</a>
+                    <span>/</span>
+                    <a href="/comprador/mis_pedidos">Mis pedidos</a>
+                    <span>/</span>
+                    <span>Detalle del pedido</span>
+                </div>
+            </div>
+
+            <!-- Título -->
+            <div class="detalle-pedido-header">
+                <div>
+                    <h1>Mis pedidos</h1>
+                    <h2>Detalle del pedido</h2>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div id="loading-detalle" class="loading-detalle">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando detalles del pedido...</p>
+            </div>
+
+            <!-- Error state -->
+            <div id="error-detalle" class="error-detalle" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error al cargar el pedido</h3>
+                <p>No se pudo cargar la información del pedido.</p>
+                <a href="/comprador/mis_pedidos" class="btn-volver-lista">Volver a mis pedidos</a>
+            </div>
+
+            <!-- Contenido del pedido -->
+            <div id="contenido-pedido" class="contenido-pedido" style="display: none;">
+                <!-- Información del pedido -->
+                <div class="card-detalle">
+                    <div class="info-pedido-item">
+                        <label>Número de pedido:</label>
+                        <div class="info-pedido-value">
+                            <span id="pedido-numero" class="pedido-numero-text"></span>
+                            <button class="btn-copiar" onclick="copiarNumeroPedido()" title="Copiar número de pedido">
+                                <i class="fas fa-clipboard"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="info-pedido-item">
+                        <label>Fecha de compra:</label>
+                        <span id="pedido-fecha" class="info-pedido-value-text"></span>
+                    </div>
+                </div>
+
+                <!-- Detalles de pago -->
+                <div class="card-detalle">
+                    <h3 class="card-titulo">Detalles de tu pago</h3>
+                    <div class="pago-info">
+                        <div class="pago-method">
+                            <label>Forma de pago</label>
+                            <div class="pago-method-value">
+                                <i id="pago-icono" class="fas"></i>
+                                <span id="pago-metodo"></span>
+                            </div>
+                        </div>
+                        <div class="pago-amount">
+                            <span id="pago-total" class="pago-total-text"></span>
+                        </div>
+                    </div>
+                    <a href="#" class="link-ver-detalles" onclick="event.preventDefault(); alert('Función próximamente')">
+                        Ver detalles de pago
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+                </div>
+
+                <!-- Estado de entrega -->
+                <div class="card-estado-entrega">
+                    <div class="estado-header">
+                        <div class="estado-mensaje">
+                            <i id="estado-icono" class="fas"></i>
+                            <span id="estado-mensaje-texto"></span>
+                        </div>
+                        <button class="btn-generar-factura" onclick="alert('Función próximamente')">
+                            Generar factura
+                        </button>
+                    </div>
+                    <div class="estado-progreso">
+                        <div class="progreso-item" id="progreso-confirmando">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Confirmando</span>
+                        </div>
+                        <div class="progreso-linea" id="linea-confirmando-preparando"></div>
+                        <div class="progreso-item" id="progreso-preparando">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Preparando</span>
+                        </div>
+                        <div class="progreso-linea" id="linea-preparando-enviado"></div>
+                        <div class="progreso-item" id="progreso-enviado">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Enviado</span>
+                        </div>
+                        <div class="progreso-linea" id="linea-enviado-recibido"></div>
+                        <div class="progreso-item" id="progreso-recibido">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Recibido</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Envío a domicilio -->
+                <div class="card-detalle">
+                    <h3 class="card-titulo">
+                        <i class="fas fa-truck"></i>
+                        Envío a domicilio
+                    </h3>
+                    <div class="envio-info-grid">
+                        <div class="envio-info-item">
+                            <label>Envió</label>
+                            <span id="envio-metodo" class="envio-value">AgroMarket Express</span>
+                        </div>
+                        <div class="envio-info-item">
+                            <label>Recibe</label>
+                            <span id="envio-recibe" class="envio-value"></span>
+                        </div>
+                        <div class="envio-info-item">
+                            <label>Ciudad de entrega</label>
+                            <span id="envio-ciudad" class="envio-value"></span>
+                        </div>
+                        <div class="envio-info-item">
+                            <label>Teléfono de contacto</label>
+                            <span id="envio-telefono" class="envio-value"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tus productos -->
+                <div class="card-detalle">
+                    <h3 class="card-titulo">
+                        <i class="fas fa-box"></i>
+                        Tus productos
+                    </h3>
+                    <div id="productos-lista-detalle" class="productos-lista-detalle">
+                        <!-- Productos se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let db, auth, currentUser;
+        const pedidoId = '{{ pedido_id }}';
+
+        // Inicializar Firebase
+        function inicializarFirebase() {
+            try {
+                auth = firebase.auth();
+                db = firebase.firestore();
+
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUser = user;
+                        cargarDetallePedido();
+                    } else {
+                        window.location.href = '/auth/login';
+                    }
+                });
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                mostrarError();
+            }
+        }
+
+        // Cargar detalle del pedido
+        async function cargarDetallePedido() {
+            try {
+                if (!db || !currentUser || !pedidoId) {
+                    console.error('Datos faltantes');
+                    mostrarError();
+                    return;
+                }
+
+                const loadingEl = document.getElementById('loading-detalle');
+                const contenidoEl = document.getElementById('contenido-pedido');
+                const errorEl = document.getElementById('error-detalle');
+
+                // Configurar listener en tiempo real para el pedido
+                const pedidoRef = db.collection('compras').doc(pedidoId);
+                
+                // Verificar inicialmente que existe y pertenece al usuario
+                const pedidoDoc = await pedidoRef.get();
+                
+                if (!pedidoDoc.exists) {
+                    mostrarError();
+                    return;
+                }
+
+                const pedidoDataInicial = pedidoDoc.data();
+
+                // Verificar que el pedido pertenece al usuario
+                if (pedidoDataInicial.usuario_id !== currentUser.uid) {
+                    mostrarError();
+                    return;
+                }
+
+                // Configurar listener en tiempo real
+                pedidoRef.onSnapshot((snapshot) => {
+                    if (!snapshot.exists) {
+                        mostrarError();
+                        return;
+                    }
+
+                    const pedidoData = snapshot.data();
+                    
+                    // Verificar que sigue perteneciendo al usuario
+                    if (pedidoData.usuario_id !== currentUser.uid) {
+                        mostrarError();
+                        return;
+                    }
+
+                    // Actualizar solo los elementos que cambian
+                    actualizarEstadoPedido(pedidoData);
+                }, (error) => {
+                    console.error('Error en listener del pedido:', error);
+                });
+
+                // Cargar datos iniciales
+                const pedidoData = pedidoDataInicial;
+
+                // Manejar fecha
+                let fechaCompra = null;
+                if (pedidoData.fecha_compra) {
+                    fechaCompra = pedidoData.fecha_compra.toDate ? pedidoData.fecha_compra.toDate() : new Date(pedidoData.fecha_compra);
+                } else if (pedidoData.fecha_creacion) {
+                    fechaCompra = new Date(pedidoData.fecha_creacion);
+                } else {
+                    fechaCompra = new Date();
+                }
+
+                // Obtener nombres de vendedores
+                const productos = pedidoData.productos || [];
+                const productosConVendedor = await Promise.all(productos.map(async (producto) => {
+                    let vendedorNombre = producto.vendedor_nombre || 'Vendedor';
+                    
+                    if (!producto.vendedor_nombre && producto.vendedor_id) {
+                        try {
+                            const vendedorDoc = await db.collection('usuarios').doc(producto.vendedor_id).get();
+                            if (vendedorDoc.exists) {
+                                const vendedorData = vendedorDoc.data();
+                                vendedorNombre = vendedorData.nombre || 
+                                               vendedorData.nombre_tienda || 
+                                               vendedorData.email?.split('@')[0] || 
+                                               'Vendedor';
+                            }
+                        } catch (error) {
+                            console.warn('Error obteniendo nombre del vendedor:', error);
+                        }
+                    }
+                    
+                    return {
+                        ...producto,
+                        vendedor_nombre: vendedorNombre
+                    };
+                }));
+
+                // Actualizar UI
+                document.getElementById('pedido-numero').textContent = pedidoId.substring(0, 9).toUpperCase();
+                document.getElementById('pedido-fecha').textContent = fechaCompra.toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Detalles de pago
+                const metodoPago = pedidoData.metodo_pago || 'N/A';
+                const metodoLabels = {
+                    'tarjeta': 'Tarjeta de débito / crédito',
+                    'efectivo': 'Efectivo',
+                    'transferencia': 'Transferencia bancaria'
+                };
+                const metodoIconos = {
+                    'tarjeta': 'fa-credit-card',
+                    'efectivo': 'fa-money-bill',
+                    'transferencia': 'fa-university'
+                };
+
+                document.getElementById('pago-metodo').textContent = metodoLabels[metodoPago] || metodoPago;
+                document.getElementById('pago-icono').className = `fas ${metodoIconos[metodoPago] || 'fa-credit-card'}`;
+                document.getElementById('pago-total').textContent = `$${pedidoData.total?.toFixed(2) || '0.00'}`;
+
+                // Estado de entrega - usar función auxiliar
+                actualizarEstadoPedido(pedidoData);
+
+                // Información de envío
+                document.getElementById('envio-recibe').textContent = pedidoData.usuario_nombre || currentUser.displayName || 'Usuario';
+                const direccionEntrega = pedidoData.direccion_entrega || {};
+                const ciudad = direccionEntrega.ciudad || direccionEntrega.formatted || 'No especificada';
+                const telefono = direccionEntrega.telefono || 'No especificado';
+                document.getElementById('envio-ciudad').textContent = ciudad;
+                document.getElementById('envio-telefono').textContent = telefono;
+
+                // Mostrar productos
+                mostrarProductos(productosConVendedor);
+
+                // Ocultar loading y mostrar contenido
+                loadingEl.style.display = 'none';
+                contenidoEl.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error cargando detalle del pedido:', error);
+                mostrarError();
+            }
+        }
+
+        // Actualizar estado del pedido (mensaje, icono y progreso)
+        function actualizarEstadoPedido(pedidoData) {
+            const estadoPedido = pedidoData.estado_pedido || 'preparando';
+            const estadoInfo = {
+                'preparando': {
+                    mensaje: 'Se está preparando tu pedido',
+                    icono: 'fa-clock'
+                },
+                'enviado': {
+                    mensaje: 'Tu pedido está en camino',
+                    icono: 'fa-truck'
+                },
+                'recibido': {
+                    mensaje: 'Se entregó en tu domicilio',
+                    icono: 'fa-check-circle'
+                }
+            };
+
+            const estadoActual = estadoInfo[estadoPedido] || estadoInfo['preparando'];
+            document.getElementById('estado-mensaje-texto').textContent = estadoActual.mensaje;
+            document.getElementById('estado-icono').className = `fas ${estadoActual.icono}`;
+
+            // Actualizar barra de progreso
+            actualizarProgreso(estadoPedido);
+        }
+
+        // Actualizar barra de progreso
+        function actualizarProgreso(estado) {
+            // Resetear todas las clases
+            const confirmando = document.getElementById('progreso-confirmando');
+            const preparando = document.getElementById('progreso-preparando');
+            const enviado = document.getElementById('progreso-enviado');
+            const recibido = document.getElementById('progreso-recibido');
+            
+            // Resetear líneas
+            const linea1 = document.getElementById('linea-confirmando-preparando');
+            const linea2 = document.getElementById('linea-preparando-enviado');
+            const linea3 = document.getElementById('linea-enviado-recibido');
+            
+            // Resetear estados
+            confirmando.classList.remove('completado');
+            preparando.classList.remove('completado');
+            enviado.classList.remove('completado');
+            recibido.classList.remove('completado');
+            
+            // Resetear líneas
+            if (linea1) linea1.style.background = '#ddd';
+            if (linea2) linea2.style.background = '#ddd';
+            if (linea3) linea3.style.background = '#ddd';
+
+            // Confirmando siempre está completado (pedido creado)
+            confirmando.classList.add('completado');
+            if (linea1) linea1.style.background = '#28a745';
+
+            // Preparando está completado cuando el estado es al menos 'preparando'
+            if (estado === 'preparando' || estado === 'enviado' || estado === 'recibido') {
+                preparando.classList.add('completado');
+                if (linea2) linea2.style.background = '#28a745';
+            }
+
+            // Enviado está completado cuando el estado es 'enviado' o 'recibido'
+            if (estado === 'enviado' || estado === 'recibido') {
+                enviado.classList.add('completado');
+                if (linea3) linea3.style.background = '#28a745';
+            }
+
+            // Recibido solo está completado cuando el estado es 'recibido'
+            if (estado === 'recibido') {
+                recibido.classList.add('completado');
+            }
+        }
+
+        // Mostrar productos
+        function mostrarProductos(productos) {
+            const container = document.getElementById('productos-lista-detalle');
+            if (!container) return;
+
+            container.innerHTML = productos.map(producto => `
+                <div class="producto-item-detalle" onclick="window.location.href='/comprador/detalle_producto/${producto.producto_id}'">
+                    <img src="${producto.imagen || '/static/images/product-placeholder.png'}" 
+                         alt="${producto.nombre}"
+                         onerror="this.src='/static/images/product-placeholder.png'">
+                    <div class="producto-item-info-detalle">
+                        <h4 class="producto-nombre-detalle">${producto.nombre}</h4>
+                        <span class="producto-vendedor-detalle">Vendido por ${producto.vendedor_nombre}</span>
+                        <span class="producto-precio-detalle">$${producto.precio_unitario?.toFixed(2) || '0.00'} × ${producto.cantidad} ${producto.unidad}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Copiar número de pedido
+        function copiarNumeroPedido() {
+            const numero = document.getElementById('pedido-numero').textContent;
+            navigator.clipboard.writeText(numero).then(() => {
+                const btn = event.target.closest('.btn-copiar');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '#2e8b57';
+                }, 2000);
+            }).catch(err => {
+                console.error('Error copiando:', err);
+                alert('No se pudo copiar el número de pedido');
+            });
+        }
+
+        // Mostrar error
+        function mostrarError() {
+            document.getElementById('loading-detalle').style.display = 'none';
+            document.getElementById('error-detalle').style.display = 'block';
+        }
+
+        // Inicializar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarFirebase);
+        } else {
+            inicializarFirebase();
+        }
+    </script>
+</body>
+</html>
+

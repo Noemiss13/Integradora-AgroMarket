@@ -81,6 +81,7 @@ async function cargarProducto() {
         
         productoData = { id: productoDoc.id, ...productoDoc.data() };
         console.log('✅ Producto cargado:', productoData);
+        console.log('🔍 vendedor_id del producto:', productoData.vendedor_id);
         
         // Cargar imágenes (si hay múltiples)
         imagenes = [];
@@ -220,9 +221,42 @@ async function cargarInformacionVendedor() {
                 avatar.textContent = nombreVendedor.charAt(0).toUpperCase();
             }
             
-            // Ubicación
-            if (vendedorData.ubicacion) {
-                document.getElementById('sellerLocation').textContent = vendedorData.ubicacion;
+            // Ubicación - hacer clickeable para Google Maps
+            const sellerLocationEl = document.getElementById('sellerLocation');
+            
+            // Limpiar evento anterior si existe
+            const newLocationEl = sellerLocationEl.cloneNode(true);
+            sellerLocationEl.parentNode.replaceChild(newLocationEl, sellerLocationEl);
+            
+            if (vendedorData.ubicacion || vendedorData.ubicacion_formatted) {
+                const ubicacionTexto = vendedorData.ubicacion_formatted || vendedorData.ubicacion;
+                newLocationEl.textContent = ubicacionTexto;
+                
+                // Guardar coordenadas para usar en Google Maps
+                newLocationEl.dataset.lat = vendedorData.ubicacion_lat || '';
+                newLocationEl.dataset.lng = vendedorData.ubicacion_lng || '';
+                newLocationEl.dataset.formatted = ubicacionTexto;
+                
+                // Hacer clickeable con estilos y funcionalidad
+                newLocationEl.classList.add('clickeable');
+                newLocationEl.title = 'Click para ver en Google Maps';
+                newLocationEl.style.cursor = 'pointer';
+                
+                // Event listener para abrir Google Maps
+                newLocationEl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    abrirGoogleMaps(
+                        this.dataset.lat,
+                        this.dataset.lng,
+                        this.dataset.formatted
+                    );
+                });
+            } else {
+                newLocationEl.textContent = 'Ubicación no disponible';
+                newLocationEl.classList.remove('clickeable');
+                newLocationEl.removeAttribute('title');
+                newLocationEl.style.cursor = 'default';
             }
             
             // Fecha de registro
@@ -478,6 +512,13 @@ async function agregarAlCarrito() {
             mostrarNotificacion(`✅ ${quantity} más agregado al carrito`, 'success');
         } else {
             // Crear nuevo item
+            const vendedorId = productoData.vendedor_id || productoData.vendedorId || '';
+            console.log('🛒 Agregando al carrito:', {
+                producto_nombre: productoData.nombre,
+                vendedor_id: vendedorId,
+                producto_data_completo: productoData
+            });
+            
             const itemCarrito = {
                 producto_id: productoId,
                 nombre: productoData.nombre,
@@ -486,12 +527,13 @@ async function agregarAlCarrito() {
                 unidad: productoData.unidad || 'kg',
                 imagen: imagenes[0] || '/static/images/product-placeholder.png',
                 vendedor_nombre: productoData.vendedor_nombre || 'N/A',
-                vendedor_id: productoData.vendedor_id,
+                vendedor_id: vendedorId,
                 fecha_agregado: firebase.firestore.FieldValue.serverTimestamp(),
                 usuario_id: user.uid,
                 categoria: productoData.categoria
             };
             
+            console.log('📦 Item carrito a guardar:', itemCarrito);
             await db.collection('carrito').add(itemCarrito);
             mostrarNotificacion('✅ Producto agregado al carrito', 'success');
         }
@@ -548,6 +590,25 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         notificacion.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notificacion.remove(), 300);
     }, 3000);
+}
+
+// Abrir Google Maps con la ubicación del vendedor
+function abrirGoogleMaps(lat, lng, formattedAddress) {
+    let mapsUrl;
+    
+    // Si tenemos coordenadas, usarlas para mejor precisión
+    if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+        mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    } else if (formattedAddress) {
+        // Si no hay coordenadas, usar la dirección formateada
+        mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formattedAddress)}`;
+    } else {
+        mostrarNotificacion('❌ Ubicación no disponible', 'error');
+        return;
+    }
+    
+    // Abrir en una nueva pestaña
+    window.open(mapsUrl, '_blank');
 }
 
 // Actualizar saludo del usuario

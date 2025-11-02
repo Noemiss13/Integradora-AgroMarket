@@ -6,6 +6,8 @@
     <title>Panel Vendedor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
 
     <!-- PWA: Manifest y theme color -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -27,13 +29,20 @@
         <a href="/vendedor/panel" class="activo" id="nav-inicio-vendedor">Home</a>
         <a href="/vendedor/agregar_producto" id="nav-agregar-vendedor">Agregar Productos</a>
         <a href="/vendedor/mis_productos" id="nav-mis-productos-vendedor">Mis Productos</a>
-        <a href="#" onclick="alert('Función próximamente')" id="nav-ventas-vendedor">Ventas</a>
+        <a href="/vendedor/ventas" id="nav-ventas-vendedor">Ventas</a>
         <a href="/auth/perfil">Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
 <main>
+    <!-- Navigation Header -->
+    <div class="navigation-header">
+        <div></div>
+        <div class="breadcrumbs">
+            <a href="/vendedor/panel">Inicio</a>
+        </div>
+    </div>
     <!-- Mensajes flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}

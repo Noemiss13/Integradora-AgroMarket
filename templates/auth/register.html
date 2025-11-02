@@ -101,14 +101,17 @@
                         </small>
                     </div>
 
-                    <!-- Ubicación -->
+                    <!-- Ubicación con Google Maps Autocomplete -->
                     <div class="input-group">
                         <label for="ubicacion">Ubicación</label>
-                        <input type="text" name="ubicacion" id="ubicacion" placeholder="Ej: Ciudad, Estado o Dirección" maxlength="200">
+                        <input type="text" name="ubicacion" id="ubicacion" placeholder="Empieza a escribir tu dirección..." maxlength="200" autocomplete="off">
                         <small>
                             <i class="fas fa-map-marker-alt"></i> 
-                            ¿Dónde vendes tus productos?
+                            ¿Dónde vendes tus productos? (Autocompletado con Google Maps)
                         </small>
+                        <input type="hidden" id="ubicacion_lat" name="ubicacion_lat">
+                        <input type="hidden" id="ubicacion_lng" name="ubicacion_lng">
+                        <input type="hidden" id="ubicacion_formatted" name="ubicacion_formatted">
                     </div>
                 </div>
 
@@ -126,6 +129,9 @@
         </div>
     </div>
 
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCm9SIv6WBmkejLHJ4X7WaTm8xf6DBpCo&libraries=places&language=es&region=MX" async defer></script>
+    
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -272,6 +278,18 @@
                     if (rol === 'vendedor') {
                         userData.nombre_tienda = nombreTienda;
                         userData.ubicacion = ubicacion;
+                        // Agregar coordenadas si están disponibles
+                        const ubicacionLat = document.getElementById('ubicacion_lat')?.value;
+                        const ubicacionLng = document.getElementById('ubicacion_lng')?.value;
+                        const ubicacionFormatted = document.getElementById('ubicacion_formatted')?.value;
+                        
+                        if (ubicacionLat && ubicacionLng) {
+                            userData.ubicacion_lat = parseFloat(ubicacionLat);
+                            userData.ubicacion_lng = parseFloat(ubicacionLng);
+                            userData.ubicacion_formatted = ubicacionFormatted || ubicacion;
+                        } else {
+                            userData.ubicacion_formatted = ubicacion;
+                        }
                     }
 
                     await db.collection('usuarios').doc(user.uid).set(userData, { merge: true });
@@ -300,6 +318,45 @@
         const nombreTiendaInput = document.getElementById('nombre_tienda');
         const ubicacionInput = document.getElementById('ubicacion');
         
+        // Inicializar Google Places Autocomplete
+        let autocomplete = null;
+        
+        function initGooglePlaces() {
+            if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                const ubicacionInput = document.getElementById('ubicacion');
+                if (ubicacionInput) {
+                    autocomplete = new google.maps.places.Autocomplete(ubicacionInput, {
+                        componentRestrictions: { country: 'mx' }, // Restringir a México
+                        fields: ['formatted_address', 'geometry', 'name'],
+                        types: ['establishment', 'geocode']
+                    });
+
+                    autocomplete.addListener('place_changed', function() {
+                        const place = autocomplete.getPlace();
+                        if (!place.geometry) {
+                            console.log('No se encontró información del lugar');
+                            return;
+                        }
+
+                        // Guardar datos del lugar
+                        document.getElementById('ubicacion_formatted').value = place.formatted_address || '';
+                        document.getElementById('ubicacion_lat').value = place.geometry.location.lat();
+                        document.getElementById('ubicacion_lng').value = place.geometry.location.lng();
+                    });
+                }
+            }
+        }
+
+        // Esperar a que Google Maps se cargue
+        window.addEventListener('load', function() {
+            if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                initGooglePlaces();
+            } else {
+                // Reintentar después de un momento
+                setTimeout(initGooglePlaces, 1000);
+            }
+        });
+
         if (rolSelect && vendedorFields) {
             rolSelect.addEventListener('change', function() {
                 if (this.value) {
@@ -312,6 +369,8 @@
                     // Hacer los campos requeridos
                     if (nombreTiendaInput) nombreTiendaInput.required = true;
                     if (ubicacionInput) ubicacionInput.required = true;
+                    // Reinicializar autocomplete cuando se muestren los campos
+                    setTimeout(initGooglePlaces, 100);
                 } else {
                     vendedorFields.style.display = 'none';
                     // Quitar requerido si no es vendedor
@@ -322,6 +381,9 @@
                     if (ubicacionInput) {
                         ubicacionInput.required = false;
                         ubicacionInput.value = '';
+                        document.getElementById('ubicacion_lat').value = '';
+                        document.getElementById('ubicacion_lng').value = '';
+                        document.getElementById('ubicacion_formatted').value = '';
                     }
                 }
             });

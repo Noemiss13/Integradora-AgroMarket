@@ -1,0 +1,467 @@
+/* ===== Estilos para la página de detalle de pedido ===== */
+
+.detalle-pedido-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.detalle-pedido-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.btn-volver {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #2e8b57;
+    color: white;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-volver:hover {
+    background: #228B22;
+    transform: translateX(-3px);
+}
+
+.detalle-pedido-header h1 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.detalle-pedido-header h2 {
+    margin: 0.25rem 0 0 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 500;
+}
+
+.loading-detalle, .error-detalle {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+}
+
+.loading-detalle i {
+    font-size: 3rem;
+    color: #2e8b57;
+    margin-bottom: 1rem;
+}
+
+.error-detalle i {
+    font-size: 3rem;
+    color: #e74c3c;
+    margin-bottom: 1rem;
+}
+
+.btn-volver-lista {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-volver-lista:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    color: white;
+}
+
+.contenido-pedido {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.card-detalle {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.card-titulo {
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 1.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+}
+
+.card-titulo i {
+    color: #2e8b57;
+}
+
+.info-pedido-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.info-pedido-item:last-child {
+    border-bottom: none;
+}
+
+.info-pedido-item label {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.info-pedido-value {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pedido-numero-text {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.btn-copiar {
+    background: #2e8b57;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-copiar:hover {
+    background: #228B22;
+    transform: scale(1.05);
+}
+
+.info-pedido-value-text {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.pago-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 0;
+    margin-bottom: 1.25rem;
+}
+
+.pago-method {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pago-method label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.pago-method-value {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.pago-method-value i {
+    color: #2e8b57;
+    font-size: 1.2rem;
+}
+
+.pago-amount {
+    text-align: right;
+}
+
+.pago-total-text {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.link-ver-detalles {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2e8b57;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.link-ver-detalles:hover {
+    color: #228B22;
+}
+
+.card-estado-entrega {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.estado-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.estado-mensaje {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.estado-mensaje i {
+    color: #28a745;
+    font-size: 1.3rem;
+}
+
+.btn-generar-factura {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(46, 139, 87, 0.3);
+}
+
+.btn-generar-factura:hover {
+    background: linear-gradient(135deg, #228B22 0%, #1d7a1d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(46, 139, 87, 0.4);
+}
+
+.estado-progreso {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.progreso-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    position: relative;
+}
+
+.progreso-item i {
+    font-size: 1.5rem;
+    color: #ccc;
+    transition: all 0.3s ease;
+}
+
+.progreso-item.completado i {
+    color: #28a745;
+}
+
+.progreso-item span {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.progreso-item.completado span {
+    color: #155724;
+    font-weight: 600;
+}
+
+.progreso-linea {
+    flex: 1;
+    height: 3px;
+    background: #ddd;
+    margin: 0 0.5rem;
+    position: relative;
+    transition: background 0.3s ease;
+    border-radius: 2px;
+}
+
+/* Línea se vuelve verde cuando el elemento anterior está completado */
+.progreso-item.completado + .progreso-linea {
+    background: #28a745;
+}
+
+/* Si hay dos elementos completados consecutivos, la línea entre ellos también es verde */
+.progreso-item.completado ~ .progreso-linea + .progreso-item.completado ~ .progreso-linea {
+    background: #28a745;
+}
+
+.badge-estado-final {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #28a745;
+    border: 3px solid #d4edda;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.envio-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.envio-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.envio-info-item.envio-direccion {
+    grid-column: 1 / -1;
+}
+
+.envio-info-item label {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.envio-value {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1rem;
+    word-break: break-word;
+}
+
+.productos-lista-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.producto-item-detalle {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.producto-item-detalle:hover {
+    background: #e9ecef;
+    border-color: #2e8b57;
+}
+
+.producto-item-detalle img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.producto-item-info-detalle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.producto-nombre-detalle {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.producto-vendedor-detalle {
+    color: #2e8b57;
+    font-size: 0.9rem;
+}
+
+.producto-precio-detalle {
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .detalle-pedido-container {
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+
+    .estado-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .btn-generar-factura {
+        width: 100%;
+    }
+
+    .envio-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .envio-info-item.envio-direccion {
+        grid-column: 1;
+    }
+
+    .estado-progreso {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .progreso-item {
+        min-width: 80px;
+    }
+
+    .progreso-linea {
+        display: none;
+    }
+}
+

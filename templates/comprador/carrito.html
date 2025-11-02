@@ -6,6 +6,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
 </head>
 <body>
     <!-- ====== MENÚ SUPERIOR ====== -->
@@ -27,6 +29,15 @@
 
     <!-- ====== CONTENIDO PRINCIPAL ====== -->
     <main class="carrito-main">
+        <!-- Navigation Header -->
+        <div class="navigation-header">
+            <div></div>
+            <div class="breadcrumbs">
+                <a href="/comprador/panel">Inicio</a>
+                <span>/</span>
+                <span>Carrito</span>
+            </div>
+        </div>
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -107,8 +118,22 @@
                     </div>
                     <div class="accordion-content" id="direccion-content" style="display: none;">
                         <div class="form-group">
-                            <label for="direccion">Dirección completa</label>
-                            <input type="text" id="direccion" name="direccion" placeholder="Ingresa tu dirección completa" required>
+                            <label for="ciudad">Ciudad de entrega</label>
+                            <select id="ciudad" name="ciudad" required>
+                                <option value="">Selecciona una ciudad</option>
+                                <option value="Ocosingo">Ocosingo</option>
+                                <option value="San Cristóbal de las Casas">San Cristóbal de las Casas</option>
+                                <option value="Comitán de Domínguez">Comitán de Domínguez</option>
+                                <option value="Tuxtla Gutiérrez">Tuxtla Gutiérrez</option>
+                                <option value="Yajalón">Yajalón</option>
+                                <option value="Bachajón">Bachajón</option>
+                                <option value="Palenque">Palenque</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Número de teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="Ej: 9611234567" pattern="[0-9]{10}" maxlength="10" required>
+                            <small class="form-text">Ingresa 10 dígitos sin espacios ni guiones. El conductor se comunicará contigo para coordinar la entrega.</small>
                         </div>
                     </div>
                 </div>
@@ -231,13 +256,8 @@
                 </div>
 
                 <form action="{{ url_for('comprador.finalizar_compra') }}" method="POST" class="checkout-form">
-                    <div class="form-group">
-                        <label for="nota">Nota para el vendedor</label>
-                        <textarea id="nota" name="nota" placeholder="Agrega una nota para el vendedor..." rows="3"></textarea>
-            </div>
-
                     <button type="submit" class="btn-proceder-pago" id="stripe-payment-button">Proceder al pago</button>
-            </form>
+                </form>
             </aside>
         {% else %}
             <!-- ===== CARRITO VACÍO ===== -->
@@ -256,7 +276,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
     <script src="/static/js/firebase-config.js"></script>
+    <script src="/static/js/firebase-notifications.js"></script>
 
     <script>
         // Render dinámico del carrito desde Firestore
@@ -378,6 +400,37 @@
                 </header>
                 <div class="productos-lista" id="lista-carrito-din"></div>
                 <div class="carrito-nota"><p>Nota: Las cantidades y precios son referenciales.</p></div>
+                
+                <!-- Sección de dirección de envío -->
+                <div class="direccion-envio-section accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('direccion-content-din')">
+                        <div class="accordion-title">
+                            <h3>Dirección de envío</h3>
+                            <p class="direccion-subtitle">¿Dónde quieres recibir tu pedido?</p>
+                        </div>
+                        <span class="accordion-icon" id="direccion-icon-din">▼</span>
+                    </div>
+                    <div class="accordion-content" id="direccion-content-din" style="display: none;">
+                        <div class="form-group">
+                            <label for="ciudad_din">Ciudad de entrega</label>
+                            <select id="ciudad_din" name="ciudad_din" required>
+                                <option value="">Selecciona una ciudad</option>
+                                <option value="Ocosingo">Ocosingo</option>
+                                <option value="San Cristóbal de las Casas">San Cristóbal de las Casas</option>
+                                <option value="Comitán de Domínguez">Comitán de Domínguez</option>
+                                <option value="Tuxtla Gutiérrez">Tuxtla Gutiérrez</option>
+                                <option value="Yajalón">Yajalón</option>
+                                <option value="Bachajón">Bachajón</option>
+                                <option value="Palenque">Palenque</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono_din">Número de teléfono</label>
+                            <input type="tel" id="telefono_din" name="telefono_din" placeholder="Ej: 9611234567" pattern="[0-9]{10}" maxlength="10" required>
+                            <small class="form-text">Ingresa 10 dígitos sin espacios ni guiones. El conductor se comunicará contigo para coordinar la entrega.</small>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Método de pago -->
                 <div class="metodo-pago-section accordion-section">
@@ -509,10 +562,6 @@
                 </div>
                 
                 <form class="checkout-form" id="checkout-form-din" onsubmit="event.preventDefault(); procesarPagoDin();">
-                    <div class="form-group">
-                        <label for="nota-din">Nota para el vendedor</label>
-                        <textarea id="nota-din" placeholder="Agrega una nota para el vendedor..." rows="3"></textarea>
-                    </div>
                     <button type="submit" class="btn-proceder-pago" id="stripe-payment-button-din">Proceder al pago</button>
                 </form>
             `;
@@ -524,6 +573,7 @@
             // Configurar listeners para métodos de pago dinámicos
             setTimeout(() => {
                 configurarMetodosPagoDin(total);
+                // Formulario de dirección manual - sin Google Maps
             }, 100);
 
             // Render de items
@@ -827,8 +877,54 @@
             }
         }
 
+        // Validar dirección de entrega
+        function validarDireccionEntrega() {
+            const ciudad = document.getElementById('ciudad_din');
+            const telefono = document.getElementById('telefono_din');
+
+            if (!ciudad || !ciudad.value) {
+                alert('Por favor selecciona una ciudad de entrega');
+                return false;
+            }
+
+            if (!telefono || !telefono.value.trim()) {
+                alert('Por favor ingresa tu número de teléfono');
+                return false;
+            }
+
+            // Validar que el teléfono tenga 10 dígitos
+            const telefonoValue = telefono.value.replace(/\D/g, '');
+            if (telefonoValue.length !== 10) {
+                alert('Por favor ingresa un número de teléfono válido de 10 dígitos');
+                return false;
+            }
+
+            return true;
+        }
+
+        function obtenerDireccionCompleta() {
+            const ciudad = document.getElementById('ciudad_din')?.value || '';
+            const telefono = document.getElementById('telefono_din')?.value.trim() || '';
+
+            return {
+                ciudad,
+                telefono,
+                formatted: `${ciudad} (Tel: ${telefono})`
+            };
+        }
+
         // Procesar pago del carrito dinámico
         async function procesarPagoDin() {
+            // Validar dirección de entrega primero
+            if (!validarDireccionEntrega()) {
+                // Abrir el acordeón de dirección si está cerrado
+                const direccionContent = document.getElementById('direccion-content-din');
+                if (direccionContent && direccionContent.style.display === 'none') {
+                    toggleAccordion('direccion-content-din');
+                }
+                return;
+            }
+
             const selectedPaymentMethod = document.querySelector('input[name="metodo_pago_din"]:checked');
             
             if (!selectedPaymentMethod) {
@@ -839,8 +935,8 @@
             if (selectedPaymentMethod.value === 'tarjeta') {
                 await procesarPagoStripeDin();
             } else {
-                // Para otros métodos, solo mostrar mensaje
-                alert(`Procesando pago con ${selectedPaymentMethod.value}. Total: $${totalCarritoDin.toFixed(2)}`);
+                // Para otros métodos, procesar la compra sin Stripe
+                await procesarCompraSinStripe(selectedPaymentMethod.value);
             }
         }
 
@@ -941,6 +1037,12 @@
                 if (paymentIntent.status === 'succeeded') {
                     console.log('🎉 Pago exitoso:', paymentIntent.id);
                     
+                    // Obtener datos de dirección completa
+                    const direccionData = obtenerDireccionCompleta();
+                    
+                    // Guardar compra en Firestore
+                    await guardarCompraEnFirestore('tarjeta', paymentIntent.id, direccionData);
+                    
                     // Limpiar carrito de Firestore
                     const user = firebase.auth().currentUser;
                     if (user && db) {
@@ -998,9 +1100,211 @@
             }
         }
 
+        // Procesar compra sin Stripe (efectivo, transferencia)
+        async function procesarCompraSinStripe(metodoPago) {
+            try {
+                // Obtener datos de dirección completa
+                const direccionData = obtenerDireccionCompleta();
+
+                // Guardar compra en Firestore
+                await guardarCompraEnFirestore(metodoPago, null, direccionData);
+
+                // Limpiar carrito de Firestore
+                const user = firebase.auth().currentUser;
+                if (user && db) {
+                    const carritoSnapshot = await db.collection('carrito')
+                        .where('usuario_id', '==', user.uid)
+                        .get();
+                    
+                    const deletePromises = carritoSnapshot.docs.map(doc => doc.ref.delete());
+                    await Promise.all(deletePromises);
+                    console.log('✅ Carrito limpiado de Firestore');
+                }
+
+                // Guardar información del pago
+                localStorage.setItem('totalAmount', totalCarritoDin.toFixed(2));
+                localStorage.setItem('paymentMethod', metodoPago);
+                localStorage.setItem('paymentDate', new Date().toISOString());
+
+                // Redirigir a página de éxito
+                window.location.href = '/comprador/pago_exitoso';
+            } catch (error) {
+                console.error('❌ Error procesando compra:', error);
+                alert('Error al procesar la compra. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Guardar compra en Firestore
+        async function guardarCompraEnFirestore(metodoPago, paymentIntentId, direccionData) {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user || !db) {
+                    throw new Error('Usuario no autenticado o Firestore no disponible');
+                }
+
+                // Obtener información del usuario
+                const userDoc = await db.collection('usuarios').doc(user.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : {};
+
+                // Preparar productos con vendedor_id corregido
+                const productosConVendedor = await Promise.all(carritoItems.map(async (item) => {
+                    let vendedorId = item.vendedor_id || item.vendedorId || '';
+                    
+                    // Si no hay vendedor_id en el carrito, buscarlo en el producto de Firestore
+                    if (!vendedorId && (item.producto_id || item._docId)) {
+                        try {
+                            const productoId = item.producto_id || item._docId;
+                            const productoDoc = await db.collection('productos').doc(productoId).get();
+                            if (productoDoc.exists) {
+                                const productoData = productoDoc.data();
+                                vendedorId = productoData.vendedor_id || productoData.vendedorId || '';
+                                console.log('✅ vendedor_id obtenido del producto:', {
+                                    producto_id: productoId,
+                                    vendedor_id: vendedorId,
+                                    producto_nombre: productoData.nombre
+                                });
+                            }
+                        } catch (error) {
+                            console.error('❌ Error obteniendo vendedor_id del producto:', error);
+                        }
+                    }
+                    
+                    console.log('🛒 Item del carrito procesado:', {
+                        nombre: item.nombre,
+                        producto_id: item.producto_id || item._docId,
+                        vendedor_id: vendedorId,
+                        item_completo: item
+                    });
+                    
+                    return {
+                        producto_id: item.producto_id || item._docId,
+                        nombre: item.nombre,
+                        cantidad: Number(item.cantidad),
+                        unidad: item.unidad || 'kg',
+                        precio_unitario: Number(item.precio),
+                        precio_total: Number(item.precio) * Number(item.cantidad),
+                        imagen: item.imagen || '',
+                        vendedor_id: vendedorId
+                    };
+                }));
+
+                // Preparar datos de la compra
+                const compraData = {
+                    usuario_id: user.uid,
+                    usuario_nombre: userData.nombre || user.displayName || user.email.split('@')[0],
+                    usuario_email: user.email,
+                    productos: productosConVendedor.map(p => ({
+                        ...p,
+                        estado_pedido: 'preparando' // Estado por defecto
+                    })),
+                    subtotal: carritoItems.reduce((acc, it) => acc + (Number(it.precio) * Number(it.cantidad)), 0),
+                    envio: 4.50,
+                    impuestos: carritoItems.reduce((acc, it) => acc + (Number(it.precio) * Number(it.cantidad)), 0) * 0.1,
+                    total: totalCarritoDin,
+                    metodo_pago: metodoPago,
+                    payment_intent_id: paymentIntentId || null,
+                    estado: metodoPago === 'tarjeta' ? 'pagado' : 'pendiente',
+                    estado_pedido: 'preparando', // Estado por defecto del pedido
+                    direccion_entrega: {
+                        ciudad: direccionData.ciudad,
+                        telefono: direccionData.telefono,
+                        formatted: direccionData.formatted
+                    },
+                    fecha_compra: firebase.firestore.FieldValue.serverTimestamp(),
+                    fecha_creacion: new Date().toISOString()
+                };
+
+                // Guardar en Firestore
+                const compraRef = await db.collection('compras').add(compraData);
+                console.log('✅ Compra guardada en Firestore:', compraRef.id);
+                
+                // Enviar ticket de compra por correo
+                try {
+                    const fechaCompra = new Date().toLocaleString('es-MX', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const ticketData = {
+                        compra_id: compraRef.id,
+                        email_cliente: user.email,
+                        nombre_cliente: userData.nombre || user.displayName || 'Cliente',
+                        fecha_compra: fechaCompra,
+                        productos: productosConVendedor,
+                        subtotal: compraData.subtotal,
+                        envio: compraData.envio,
+                        impuestos: compraData.impuestos,
+                        total: compraData.total,
+                        metodo_pago: metodoPago,
+                        direccion_entrega: compraData.direccion_entrega
+                    };
+                    
+                    const response = await fetch('/comprador/enviar-ticket-compra', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(ticketData),
+                        credentials: 'same-origin'
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ Ticket de compra enviado por correo');
+                    } else {
+                        console.warn('⚠️ No se pudo enviar el ticket por correo');
+                    }
+                } catch (emailError) {
+                    console.error('❌ Error enviando ticket por correo:', emailError);
+                    // No bloquear la compra si falla el envío del correo
+                }
+                
+                // Enviar notificación push (si está disponible)
+                try {
+                    if (window.enviarNotificacionCompra) {
+                        await window.enviarNotificacionCompra(
+                            compraRef.id,
+                            compraData.total,
+                            productosConVendedor
+                        );
+                        
+                        // También mostrar notificación local inmediata
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            const totalTexto = productosConVendedor.length === 1
+                                ? `${productosConVendedor[0].nombre} - $${compraData.total.toFixed(2)}`
+                                : `${productosConVendedor.length} productos - $${compraData.total.toFixed(2)}`;
+                            
+                            new Notification('🎉 ¡Compra Exitosa!', {
+                                body: `Tu pedido por ${totalTexto} ha sido confirmado. Revisa tu correo para más detalles.`,
+                                icon: '/static/images/icon-192.png',
+                                badge: '/static/images/icon-48.png',
+                                tag: 'compra-exitosa',
+                                requireInteraction: false
+                            });
+                        }
+                    }
+                } catch (notificationError) {
+                    console.error('❌ Error enviando notificación push:', notificationError);
+                    // No bloquear la compra si falla la notificación
+                }
+                
+                return compraRef.id;
+            } catch (error) {
+                console.error('❌ Error guardando compra en Firestore:', error);
+                throw error;
+            }
+        }
+
+        // Funciones de Google Maps removidas - ahora se usa formulario manual
+
         document.addEventListener('DOMContentLoaded', async function() {
             const ok = await initFirebaseCarrito();
             if (!ok) return;
+            
+            // Formulario de dirección manual - sin Google Maps
+            
             firebase.auth().onAuthStateChanged(function(user){
                 if (user) {
                     cargarCarritoDin();

@@ -6,6 +6,8 @@
     <title>Detalle del Producto - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/detalle_producto.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -48,13 +50,14 @@
                     <i class="fas fa-arrow-left"></i>
                     Volver a Productos
                 </a>
+                <!-- Breadcrumbs -->
                 <div class="breadcrumb">
                     <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-                    <i class="fas fa-chevron-right"></i>
+                    <span>/</span>
                     <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-                    <i class="fas fa-chevron-right"></i>
+                    <span>/</span>
                     <span id="breadcrumb-category"></span>
-                    <i class="fas fa-chevron-right"></i>
+                    <span>/</span>
                     <span id="breadcrumb-product"></span>
                 </div>
             </div>
@@ -136,7 +139,7 @@
                 <div class="seller-details-grid">
                     <div class="seller-detail-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span id="sellerLocation">Ubicación no disponible</span>
+                        <span id="sellerLocation" class="seller-location-link">Ubicación no disponible</span>
                     </div>
                     <div class="seller-detail-item">
                         <i class="fas fa-calendar"></i>

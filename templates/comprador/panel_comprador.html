@@ -4,23 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroMarket - Panel Principal</title>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Clase para elementos solo para lectores de pantalla */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-    </style>
 </head>
 <body>
     <!-- ===== Menú superior ===== -->
@@ -39,6 +29,13 @@
     </nav>
 
     <main class="main-content">
+        <!-- Navigation Header -->
+        <div class="navigation-header">
+            <div></div>
+            <div class="breadcrumbs">
+                <a href="/comprador/panel">Inicio</a>
+            </div>
+        </div>
         <!-- ===== Sección Explora Categorías ===== -->
         <section class="categorias-section">
             {% set titulo = 'Explora categorías' %}
@@ -103,1671 +100,313 @@
     
     <script>
         // Variables globales
-        let auth = null;
-        let db = null;
+        let db;
         let productos = [];
-        let categorias = [];
-
-
-        // Actualiza el saludo del usuario usando Firebase Auth/Firestore
-        function actualizarSaludoUsuario() {
-            try {
-                if (typeof firebase === 'undefined') return; // SDK aún no cargado
-                const strongEl = document.querySelector('.saludo-usuario strong');
-                if (!strongEl) return;
-
-                firebase.auth().onAuthStateChanged(async (user) => {
-                    try {
-                        if (!user) return;
-                        let nombre = user.displayName || null;
-
-                        // Fallback: intenta obtener nombre desde Firestore si existe
-                        if (!nombre && db) {
-                            try {
-                                const doc = await db.collection('usuarios').doc(user.uid).get();
-                                if (doc.exists) {
-                                    const data = doc.data() || {};
-                                    nombre = data.nombre || data.nombre_completo || null;
-                                }
-                            } catch (e) {
-                                console.log('⚠️ No se pudo leer nombre desde Firestore:', e.message);
-                            }
-                        }
-
-                        // Último fallback: parte local del correo
-                        if (!nombre && user.email) {
-                            nombre = user.email.split('@')[0];
-                        }
-
-                        if (nombre) strongEl.textContent = nombre;
-                    } catch (err) {
-                        console.log('⚠️ Error actualizando saludo:', err.message);
-                    }
-                });
-            } catch (e) {
-                console.log('⚠️ actualizarSaludoUsuario no disponible:', e.message);
-            }
-        }
-
-        // Función para inicializar Firebase
+        const categorias = ['frutas', 'verduras', 'semillas', 'otros'];
+        
+        // Iconos para categorías
+        const categoriaIconos = {
+            'frutas': '🍎',
+            'verduras': '🥬',
+            'semillas': '🌾',
+            'otros': '📦'
+        };
+        
+        // Inicializar Firebase
         async function inicializarFirebase() {
             try {
                 console.log('🔄 Inicializando Firebase...');
-                console.log('🔍 Estado inicial:', {
-                    firebase: typeof firebase,
-                    firebaseConfig: !!window.firebaseConfig,
-                    config: window.firebaseConfig
-                });
                 
                 // Esperar a que Firebase esté disponible
                 let intentos = 0;
                 const maxIntentos = 20;
                 
                 while (typeof firebase === 'undefined' && intentos < maxIntentos) {
-                    console.log(`⏳ Esperando Firebase... (intento ${intentos + 1}/${maxIntentos})`);
                     await new Promise(resolve => setTimeout(resolve, 250));
                     intentos++;
                 }
                 
                 if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase SDK no se cargó después de 5 segundos');
+                    throw new Error('Firebase SDK no se cargó');
                 }
                 
-                console.log('✅ Firebase SDK disponible');
-                console.log('🔍 Firebase apps:', firebase.apps.length);
-                
-                // Verificar que la configuración esté disponible
+                // Verificar configuración
                 if (!window.firebaseConfig) {
                     throw new Error('Configuración de Firebase no disponible');
                 }
                 
-                console.log('✅ Configuración de Firebase disponible:', window.firebaseConfig);
-                
                 // Inicializar Firebase si no está inicializado
                 if (firebase.apps.length === 0) {
-                    console.log('🔄 Inicializando nueva instancia de Firebase...');
                     firebase.initializeApp(window.firebaseConfig);
-                    console.log('✅ Firebase inicializado');
-                } else {
-                    console.log('✅ Firebase ya estaba inicializado');
                 }
                 
-                auth = firebase.auth();
                 db = firebase.firestore();
-                
-                console.log('🔍 Auth y DB inicializados:', { auth: !!auth, db: !!db });
-                
-                
-                // Configuraciones de rendimiento
                 db.settings({
                     cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
                     ignoreUndefinedProperties: true
                 });
                 
-                console.log('✅ Firebase configurado correctamente');
+                console.log('✅ Firebase inicializado correctamente');
                 return true;
                 
                     } catch (error) {
                 console.error('❌ Error inicializando Firebase:', error);
-                console.error('❌ Stack trace:', error.stack);
                 return false;
             }
         }
 
-        // Función para cargar categorías desde Firestore
-        async function cargarCategorias() {
+        // Contar productos por categoría
+        async function contarProductosPorCategoria() {
             try {
-                console.log('🔄 Cargando categorías desde Firestore...');
-                console.log('🔍 DB disponible:', !!db);
-                
                 if (!db) {
-                    throw new Error('Base de datos de Firestore no está disponible');
+                    return {};
                 }
                 
-                mostrarLoadingCategorias(true);
-                
-                console.log('🔍 Ejecutando consulta de categorías a Firestore...');
-                
-                // Obtener productos para extraer categorías únicas
                 const productosSnapshot = await db.collection('productos')
                     .where('activo', '==', true)
                     .get();
                 
-                console.log('📊 Productos encontrados para categorías:', productosSnapshot.size);
-                console.log('🔍 Documentos de categorías:', productosSnapshot.docs.length);
+                const conteos = {
+                    'todos': 0,
+                    'frutas': 0,
+                    'verduras': 0,
+                    'semillas': 0,
+                    'otros': 0
+                };
                 
-                if (productosSnapshot.empty) {
-                    console.log('⚠️ No hay productos en la base de datos para categorías');
-                    mostrarCategorias([{ nombre: 'Todos los productos', count: 0, icon: 'fas fa-th-large' }]);
+                productosSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Solo contar productos con stock
+                    if ((data.stock || 0) <= 0) {
                     return;
                 }
                 
-                // Extraer categorías únicas y contar productos
-                const categoriasMap = new Map();
-                productosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    const categoria = data.categoria || 'otros';
-                    console.log('📄 Categoría encontrada:', { docId: doc.id, categoria: categoria, activo: data.activo, stock: data.stock });
+                    const categoria = (data.categoria || 'otros').toLowerCase().trim();
                     
-                    // Solo contar productos activos y con stock
-                    if (data.activo === true && data.stock > 0) {
-                        if (categoriasMap.has(categoria)) {
-                            categoriasMap.set(categoria, categoriasMap.get(categoria) + 1);
+                    // Contar en categoría específica
+                    if (conteos.hasOwnProperty(categoria)) {
+                        conteos[categoria]++;
                         } else {
-                            categoriasMap.set(categoria, 1);
-                        }
+                        conteos['otros']++;
                     }
+                    
+                    // Contar en "todos"
+                    conteos['todos']++;
                 });
                 
-                console.log('📊 Categorías mapeadas:', Array.from(categoriasMap.entries()));
-                
-                // Contar total de productos activos y con stock
-                const totalProductosActivos = Array.from(categoriasMap.values()).reduce((sum, count) => sum + count, 0);
-                
-                // Convertir a array y agregar "Todos los productos"
-                categorias = [
-                    { nombre: 'Todos los productos', count: totalProductosActivos, icon: 'fas fa-th-large' },
-                    ...Array.from(categoriasMap.entries()).map(([nombre, count]) => ({
-                        nombre: nombre.charAt(0).toUpperCase() + nombre.slice(1),
-                        count: count,
-                        icon: getCategoriaIcon(nombre)
-                    }))
-                ];
-                
-                console.log(`✅ ${categorias.length} categorías cargadas:`, categorias);
-                mostrarCategorias(categorias);
+                return conteos;
                 
             } catch (error) {
-                console.error('❌ Error cargando categorías:', error);
-                console.error('❌ Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    code: error.code,
-                    stack: error.stack
-                });
-                mostrarErrorCategorias('Error al cargar categorías. Intenta recargar la página.');
+                console.error('❌ Error contando productos:', error);
+                return {};
             }
         }
-
-        // Función para obtener icono de categoría
-        function getCategoriaIcon(categoria) {
-            const iconos = {
-                'frutas': 'fas fa-apple-alt',
-                'verduras': 'fas fa-carrot',
-                'cereales': 'fas fa-seedling',
-                'legumbres': 'fas fa-peas',
-                'hortalizas': 'fas fa-leaf',
-                'tubérculos': 'fas fa-potato',
-                'otros': 'fas fa-box'
-            };
-            return iconos[categoria.toLowerCase()] || 'fas fa-box';
-        }
-
-        // Función para mostrar categorías
-        function mostrarCategorias(categoriasParaMostrar) {
-            console.log('🏷️ Mostrando categorías:', categoriasParaMostrar);
-            console.log('🔍 Cantidad de categorías:', categoriasParaMostrar ? categoriasParaMostrar.length : 0);
-            
+        
+        // Mostrar categorías con conteos
+        async function mostrarCategorias() {
             const categoriasGrid = document.getElementById('categoriasGrid');
             const loadingCategorias = document.getElementById('loadingCategorias');
             
-            console.log('🔍 Elementos DOM:', {
-                categoriasGrid: !!categoriasGrid,
-                loadingCategorias: !!loadingCategorias
-            });
+            if (!categoriasGrid) return;
             
-            if (!categoriasGrid) {
-                console.error('❌ No se encontró el elemento categoriasGrid');
-                return;
+            if (loadingCategorias) {
+                loadingCategorias.style.display = 'none';
             }
             
-            // Ocultar loading
-            mostrarLoadingCategorias(false);
+            // Obtener conteos de productos
+            const conteos = await contarProductosPorCategoria();
             
-            const categoriasHTML = categoriasParaMostrar.map(categoria => {
-                console.log(`🏷️ Procesando categoría: ${categoria.nombre} (${categoria.count} productos)`);
-                // Generar URL correcta según la categoría
-                let categoriaUrl;
-                if (categoria.nombre === 'Todos los productos') {
-                    categoriaUrl = '/comprador/productos';
-                } else {
-                    // Convertir a lowercase y reemplazar todos los espacios con guiones
-                    const categoriaSlug = categoria.nombre.toLowerCase().replace(/\s+/g, '-');
-                    categoriaUrl = `/comprador/categoria/${categoriaSlug}`;
-                }
-                
+            // Agregar card de "Todos los productos" al inicio
+            const todasLasCategorias = [
+                {
+                    nombre: 'todos',
+                    nombreLegible: 'Todos los productos',
+                    icono: '🛒',
+                    url: '/comprador/productos',
+                    conteo: conteos['todos'] || 0
+                },
+                ...categorias.map(categoria => ({
+                    nombre: categoria,
+                    nombreLegible: categoria.charAt(0).toUpperCase() + categoria.slice(1),
+                    icono: categoriaIconos[categoria] || '📦',
+                    url: `/comprador/categoria/${categoria.toLowerCase().replace(/\s+/g, '-')}`,
+                    conteo: conteos[categoria] || 0
+                }))
+            ];
+            
+            const categoriasHTML = todasLasCategorias.map(cat => {
                 return `
-                <a href="${categoriaUrl}" class="categoria-card ${categoria.nombre === 'Todos los productos' ? 'todos-productos-card' : ''}">
-                    <div class="categoria-header">
-                        <h3>${categoria.nombre}</h3>
-                        <span class="product-count">${categoria.count}</span>
+                    <div class="categoria-card" data-categoria="${cat.nombre}">
+                        <a href="${cat.url}" class="categoria-link">
+                            <div class="categoria-icon">${cat.icono}</div>
+                            <h3>${cat.nombreLegible}</h3>
+                            <p class="categoria-count">${cat.conteo} producto${cat.conteo !== 1 ? 's' : ''}</p>
+                            <span class="categoria-arrow">Ver todos →</span>
+                        </a>
                     </div>
-                    <div class="categoria-image">
-                        <div class="categoria-icon">
-                            <i class="${categoria.icon}"></i>
-                        </div>
-                        <div class="categoria-tag">${categoria.nombre === 'Todos los productos' ? 'COMPLETO' : 'DISPONIBLE'}</div>
-                    </div>
-                </a>
             `;
             }).join('');
             
-            console.log('📝 HTML de categorías generado:', categoriasHTML.substring(0, 200) + '...');
             categoriasGrid.innerHTML = categoriasHTML;
-            
-            // Verificar que se insertó correctamente
-            const cardsInsertadas = categoriasGrid.querySelectorAll('.categoria-card');
-            console.log(`✅ Categorías mostradas en el DOM: ${cardsInsertadas.length} cards`);
         }
-
-        // Función para mostrar/ocultar loading de categorías
-        function mostrarLoadingCategorias(mostrar) {
-            const loadingCategorias = document.getElementById('loadingCategorias');
-            if (mostrar) {
-                loadingCategorias.style.display = 'flex';
-            } else {
-                loadingCategorias.style.display = 'none';
-            }
-        }
-
-        // Función para mostrar error de categorías
-        function mostrarErrorCategorias(mensaje) {
-            const categoriasGrid = document.getElementById('categoriasGrid');
-            const loadingCategorias = document.getElementById('loadingCategorias');
-            
-            loadingCategorias.style.display = 'none';
-            categoriasGrid.innerHTML = `
-                <div class="error-categorias">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Error</h3>
-                    <p>${mensaje}</p>
-                    <button onclick="cargarCategorias()" class="btn-retry">
-                        <i class="fas fa-refresh"></i> Reintentar
-                    </button>
-                </div>
-            `;
-        }
-
-        // Función para cargar productos desde Firestore
-        async function cargarProductos() {
+        
+        // Cargar productos recomendados
+        async function cargarProductosRecomendados() {
             try {
-                console.log('🔄 Cargando productos desde Firestore...');
-                console.log('🔍 DB disponible:', !!db);
-                
                 if (!db) {
-                    throw new Error('Base de datos de Firestore no está disponible');
+                    throw new Error('Base de datos no disponible');
                 }
                 
-                mostrarLoading(true);
+                // Limitar a 8 productos para recomendaciones (4 columnas)
+                const productosSnapshot = await db.collection('productos')
+                    .where('activo', '==', true)
+                    .limit(8)
+                    .get();
                 
-                console.log('🔍 Ejecutando consulta a Firestore...');
+                productos = [];
                 
-                // Consulta simple sin filtros complejos
-                const productosSnapshot = await db.collection('productos').limit(6).get();
-                
-                console.log('📊 Productos encontrados:', productosSnapshot.size);
-                console.log('🔍 Documentos:', productosSnapshot.docs.length);
-                
-                if (productosSnapshot.empty) {
-                    console.log('⚠️ No hay productos en la base de datos');
-                    mostrarProductos([]);
+                productosSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Solo productos con stock
+                    if ((data.stock || 0) <= 0) {
                     return;
                 }
                 
-                productos = [];
-                productosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    console.log('📄 Producto:', { id: doc.id, nombre: data.nombre, activo: data.activo, stock: data.stock });
-                    
-                    // Solo incluir productos activos y con stock
-                    if (data.activo === true && data.stock > 0) {
-                        // Verificar si la imagen es válida
                         let imagenValida = null;
                         if (data.imagen && typeof data.imagen === 'string' && data.imagen.trim() !== '') {
+                        try {
+                            new URL(data.imagen);
                             imagenValida = data.imagen;
-                            console.log('✅ Imagen válida para', data.nombre, ':', data.imagen);
-                        } else {
-                            console.log('❌ Imagen inválida para', data.nombre, ':', data.imagen);
+                        } catch (e) {
+                            // Imagen inválida
+                        }
                         }
                         
                         productos.push({
                             id: doc.id,
                             nombre: data.nombre || 'Sin nombre',
                             precio: data.precio || 0,
-                            categoria: data.categoria || 'Sin categoría',
+                        categoria: data.categoria || 'otros',
                             stock: data.stock || 0,
                             unidad: data.unidad || 'kg',
                             imagen: imagenValida,
-                            vendedor_nombre: data.vendedor_nombre || 'N/A'
+                        vendedor_nombre: data.vendedor_nombre || 'N/A',
+                        descripcion: data.descripcion || ''
                         });
-                    }
                 });
                 
-                console.log(`✅ ${productos.length} productos válidos encontrados:`, productos);
-                mostrarProductos(productos);
+                console.log(`✅ ${productos.length} productos recomendados cargados`);
+                mostrarProductosRecomendados(productos);
                 
             } catch (error) {
                 console.error('❌ Error cargando productos:', error);
-                console.error('❌ Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    code: error.code,
-                    stack: error.stack
-                });
-                mostrarError('Error al cargar productos. Intenta recargar la página.');
+                mostrarErrorProductos();
             }
         }
-
-        // Función para mostrar productos
-        function mostrarProductos(productosParaMostrar) {
-            console.log('🛍️ Mostrando productos:', productosParaMostrar);
-            console.log('🔍 Tipo de productosParaMostrar:', typeof productosParaMostrar);
-            console.log('🔍 Es array:', Array.isArray(productosParaMostrar));
-            console.log('🔍 Longitud:', productosParaMostrar ? productosParaMostrar.length : 'undefined');
-            
+        
+        // Mostrar productos recomendados con espacios para anuncios
+        function mostrarProductosRecomendados(productosParaMostrar) {
             const productosGrid = document.getElementById('productosGrid');
             const loadingProducts = document.getElementById('loadingProducts');
             const emptyProducts = document.getElementById('emptyProducts');
             
-            console.log('🔍 Elementos del DOM:');
-            console.log('- productosGrid:', productosGrid);
-            console.log('- loadingProducts:', loadingProducts);
-            console.log('- emptyProducts:', emptyProducts);
-            
-            if (!productosGrid) {
-                console.error('❌ No se encontró el elemento productosGrid');
-                return;
-            }
-            
-            // Ocultar loading
-            mostrarLoading(false);
-            
-            if (!productosParaMostrar || productosParaMostrar.length === 0) {
-                console.log('⚠️ No hay productos para mostrar');
-                if (productosGrid) productosGrid.style.display = 'none';
-                if (emptyProducts) emptyProducts.style.display = 'flex';
-                return;
-            }
-            
-            console.log(`📊 Mostrando ${productosParaMostrar.length} productos`);
-            console.log('🔍 Primer producto:', productosParaMostrar[0]);
-            
-            // Mostrar productos
-            if (emptyProducts) emptyProducts.style.display = 'none';
-            if (productosGrid) productosGrid.style.display = 'grid';
-            
-            const productosHTML = productosParaMostrar.map(producto => {
-                console.log('🖼️ Procesando imagen para:', producto.nombre, 'URL:', producto.imagen);
-                console.log('🔍 Detalles de imagen:', {
-                    tieneImagen: !!producto.imagen,
-                    esString: typeof producto.imagen === 'string',
-                    noVacia: producto.imagen && producto.imagen.trim() !== '',
-                    longitud: producto.imagen ? producto.imagen.length : 0
-                });
-                
-                // Función para manejar errores de imagen
-                const manejarErrorImagen = (img) => {
-                    console.log('❌ Error cargando imagen:', img.src);
-                    console.log('🔄 Cambiando a placeholder...');
-                    img.src = '/static/images/product-placeholder.png';
-                    img.onerror = null; // Evitar bucle infinito
-                };
-                
-                // Función para manejar carga exitosa de imagen
-                const manejarCargaImagen = (img) => {
-                    console.log('✅ Imagen cargada exitosamente:', img.src);
-                    console.log('📏 Dimensiones:', img.naturalWidth + 'x' + img.naturalHeight);
-                };
-                
-                // Usar la misma lógica que la vista del vendedor (más simple y efectiva)
-                const imagenUrl = producto.imagen || '/static/images/product-placeholder.png';
-                
-                let contenidoImagen;
-                if (producto.imagen && typeof producto.imagen === 'string' && producto.imagen.trim() !== '') {
-                    console.log('✅ Usando imagen real para:', producto.nombre);
-                    contenidoImagen = `
-                        <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-image" 
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                             onload="console.log('✅ Imagen cargada:', '${producto.nombre}')">
-                        <div class="producto-placeholder" style="display: none;">
-                            <i class="fas fa-box"></i>
-                        </div>`;
-                } else {
-                    console.log('⚠️ Usando placeholder para:', producto.nombre);
-                    contenidoImagen = `
-                        <div class="producto-placeholder">
-                            <i class="fas fa-box"></i>
-                        </div>`;
-                }
-                
-                return `
-                <article class="producto-card-popular">
-                    <a href="/comprador/detalle_producto/${producto.id}" class="producto-link">
-                        <div class="producto-image">
-                            ${contenidoImagen}
-                        </div>
-                        
-                        <div class="producto-info">
-                            <h3>${producto.nombre || 'Sin nombre'}</h3>
-                            <p class="producto-categoria">${producto.categoria || 'Sin categoría'}</p>
-                            <div class="producto-precio">
-                                <span class="precio">$${producto.precio || 0}</span>
-                                <span class="unidad">/${producto.unidad || 'kg'}</span>
-                            </div>
-                            <div class="producto-stock">
-                                <span class="stock">Stock: ${producto.stock || 0} ${producto.unidad || 'kg'}</span>
-                            </div>
-                            <div class="producto-vendedor">
-                                <small>Vendedor: ${producto.vendedor_nombre || 'N/A'}</small>
-                            </div>
-                        </div>
-                    </a>
-                </article>
-                `;
-            }).join('');
-            
-            console.log('📝 HTML de productos generado:', productosHTML.substring(0, 200) + '...');
-            console.log('📏 Longitud del HTML:', productosHTML.length);
-            
-            // Verificar el estado del grid antes de insertar
-            console.log('🔍 Estado del grid antes de insertar:', {
-                display: productosGrid.style.display,
-                innerHTML: productosGrid.innerHTML.length,
-                children: productosGrid.children.length
-            });
-            
-            productosGrid.innerHTML = productosHTML;
-            
-            // Verificar el estado del grid después de insertar
-            console.log('🔍 Estado del grid después de insertar:', {
-                display: productosGrid.style.display,
-                innerHTML: productosGrid.innerHTML.length,
-                children: productosGrid.children.length
-            });
-            
-            // Forzar re-renderizado
-            productosGrid.style.display = 'none';
-            productosGrid.offsetHeight; // Trigger reflow
-            productosGrid.style.display = 'grid';
-            
-            console.log('✅ Productos mostrados en el DOM');
-            console.log('🎯 Cards visibles:', document.querySelectorAll('.producto-card-popular').length);
-        }
-
-        // Función para mostrar/ocultar loading
-        function mostrarLoading(mostrar) {
-            const loadingProducts = document.getElementById('loadingProducts');
-            const productosGrid = document.getElementById('productosGrid');
-            const emptyProducts = document.getElementById('emptyProducts');
-            
-            if (mostrar) {
-                loadingProducts.style.display = 'flex';
-                productosGrid.style.display = 'none';
-                emptyProducts.style.display = 'none';
-            } else {
+            if (loadingProducts) {
                 loadingProducts.style.display = 'none';
             }
-        }
-
-        // Función para mostrar error
-        function mostrarError(mensaje) {
-            console.log('❌ Mostrando error:', mensaje);
             
-            const productosGrid = document.getElementById('productosGrid');
-            const loadingProducts = document.getElementById('loadingProducts');
-            const emptyProducts = document.getElementById('emptyProducts');
-            
-            console.log('🔍 Elementos para error:');
-            console.log('- productosGrid:', productosGrid);
-            console.log('- loadingProducts:', loadingProducts);
-            console.log('- emptyProducts:', emptyProducts);
-            
-            if (loadingProducts) loadingProducts.style.display = 'none';
-            if (productosGrid) productosGrid.style.display = 'none';
-            if (emptyProducts) {
-                emptyProducts.style.display = 'flex';
-                emptyProducts.innerHTML = `
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Error</h3>
-                    <p>${mensaje}</p>
-                    <button onclick="cargarProductos()" class="btn-retry">
-                        <i class="fas fa-refresh"></i> Reintentar
-                    </button>
-                `;
+            if (!productosParaMostrar || productosParaMostrar.length === 0) {
+                if (productosGrid) productosGrid.style.display = 'none';
+                if (emptyProducts) emptyProducts.style.display = 'block';
+                return;
             }
-        }
-
-        // Función para alternar filtros
-        function toggleFilters() {
-            const filtersContainer = document.getElementById('filtersContainer');
-            filtersContainer.style.display = filtersContainer.style.display === 'none' ? 'block' : 'none';
-        }
-
-        // Función para alternar ordenamiento
-        function toggleSort() {
-            alert('Función de ordenamiento próximamente');
-        }
-
-        // Función para probar la conexión con Firestore
-        async function probarConexionFirestore() {
-            try {
-                console.log('🧪 Probando conexión con Firestore...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible');
-                    return false;
-                }
-                
-                // Intentar una consulta simple
-                const testSnapshot = await db.collection('productos').limit(1).get();
-                console.log('✅ Conexión exitosa con Firestore');
-                console.log('📊 Documentos de prueba:', testSnapshot.size);
-                
-                if (!testSnapshot.empty) {
-                    const testDoc = testSnapshot.docs[0];
-                    console.log('📄 Documento de prueba:', { id: testDoc.id, data: testDoc.data() });
-                }
-                
-                // Probar consulta con filtros
-                console.log('🔍 Probando consulta con filtros...');
-                const filteredSnapshot = await db.collection('productos')
-                    .where('activo', '==', true)
-                    .where('stock', '>', 0)
-                    .limit(3)
-                    .get();
-                
-                console.log('📊 Productos filtrados encontrados:', filteredSnapshot.size);
-                filteredSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    console.log('📄 Producto filtrado:', { 
-                        id: doc.id, 
-                        nombre: data.nombre,
-                        activo: data.activo,
-                        stock: data.stock,
-                        categoria: data.categoria
-                    });
-                });
-                
-                return true;
-                
-            } catch (error) {
-                console.error('❌ Error probando conexión con Firestore:', error);
-                console.error('❌ Error details:', {
-                    name: error.name,
-                    message: error.message,
-                    code: error.code
-                });
-                return false;
-            }
-        }
-
-        // Función de prueba simple
-        async function pruebaSimple() {
-            try {
-                console.log('🧪 PRUEBA SIMPLE - Iniciando...');
-                
-                // 1. Verificar Firebase
-                if (typeof firebase === 'undefined') {
-                    console.log('❌ Firebase no está disponible');
-                    return;
-                }
-                console.log('✅ Firebase disponible');
-                
-                // 2. Inicializar si es necesario
-                if (!db) {
-                    console.log('🔄 Inicializando Firebase...');
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                console.log('✅ Firestore disponible');
-                
-                // 3. Consulta simple sin filtros
-                console.log('🔍 Haciendo consulta simple...');
-                const snapshot = await db.collection('productos').limit(3).get();
-                console.log('📊 Documentos encontrados:', snapshot.size);
-                
-                if (snapshot.empty) {
-                    console.log('⚠️ No hay productos en la base de datos');
-                    return;
-                }
-                
-                // 4. Mostrar los primeros 3 productos directamente
-                const productos = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    console.log('📄 Procesando producto:', { 
-                        id: doc.id, 
-                        nombre: data.nombre, 
-                        imagen: data.imagen,
-                        tieneImagen: !!data.imagen,
-                        imagenVacia: data.imagen === '',
-                        imagenNull: data.imagen === null,
-                        imagenUndefined: data.imagen === undefined
-                    });
-                    
-                    // Verificar si la imagen es válida
-                    let imagenValida = null;
-                    if (data.imagen && typeof data.imagen === 'string' && data.imagen.trim() !== '') {
-                        // Verificar que sea una URL válida
-                        try {
-                            new URL(data.imagen);
-                            imagenValida = data.imagen;
-                            console.log('✅ Imagen válida para', data.nombre, ':', data.imagen);
-                        } catch (e) {
-                            console.log('❌ URL de imagen inválida para', data.nombre, ':', data.imagen);
-                        }
-                    } else {
-                        console.log('❌ Imagen vacía o nula para', data.nombre, ':', data.imagen);
-                    }
-                    
-                    productos.push({
-                        id: doc.id,
-                        nombre: data.nombre || 'Sin nombre',
-                        precio: data.precio || 0,
-                        categoria: data.categoria || 'Sin categoría',
-                        stock: data.stock || 0,
-                        unidad: data.unidad || 'kg',
-                        imagen: imagenValida,
-                        vendedor_nombre: data.vendedor_nombre || 'N/A'
-                    });
-                });
-                
-                console.log('📦 Productos procesados:', productos);
-                
-                // 5. Mostrar directamente en el DOM
-                const productosGrid = document.getElementById('productosGrid');
-                const emptyProducts = document.getElementById('emptyProducts');
-                const loadingProducts = document.getElementById('loadingProducts');
-                
-                if (loadingProducts) loadingProducts.style.display = 'none';
+            
                 if (emptyProducts) emptyProducts.style.display = 'none';
                 if (productosGrid) {
                     productosGrid.style.display = 'grid';
                     
-                    const html = productos.map(producto => {
-                        console.log('🖼️ Procesando imagen para:', producto.nombre, 'URL:', producto.imagen);
+                // Limitar a 8 productos para recomendaciones (4 filas de 4 cards)
+                const productosLimitados = productosParaMostrar.slice(0, 8);
                         
-                        // Usar la misma lógica simple que la vista del vendedor
-                        const imagenUrl = producto.imagen || '/static/images/product-placeholder.png';
-                        
+                // Crear HTML solo con productos, sin espacios publicitarios
+                const productosHTML = productosLimitados.map(producto => {
                         return `
-                        <article class="producto-card-popular">
+                        <article class="producto-card-popular" data-id="${producto.id}">
                             <a href="/comprador/detalle_producto/${producto.id}" class="producto-link">
-                                <div class="producto-image">
-                                    ${producto.imagen && producto.imagen.trim() !== '' ? 
-                                        `<img src="${producto.imagen}" alt="${producto.nombre}" class="producto-image" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                                             onload="console.log('✅ Imagen cargada:', '${producto.nombre}')">
-                                         <div class="producto-placeholder" style="display: none;">
+                                <div class="producto-image-popular">
+                                    ${producto.imagen ? 
+                                        `<img src="${producto.imagen}" alt="${producto.nombre}" 
+                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                         <div class="producto-placeholder-popular" style="display: none;">
                                              <i class="fas fa-box"></i>
                                          </div>` :
-                                        `<div class="producto-placeholder">
+                                        `<div class="producto-placeholder-popular">
                                              <i class="fas fa-box"></i>
                                          </div>`
                                     }
                                 </div>
-                                <div class="producto-info">
-                                    <h3>${producto.nombre}</h3>
-                                    <p class="producto-categoria">${producto.categoria}</p>
-                                    <div class="producto-precio">
-                                        <span class="precio">$${producto.precio}</span>
-                                        <span class="unidad">/${producto.unidad}</span>
-                                    </div>
-                                    <div class="producto-stock">
-                                        <span class="stock">Stock: ${producto.stock} ${producto.unidad}</span>
-                                    </div>
-                                    <div class="producto-vendedor">
-                                        <small>Vendedor: ${producto.vendedor_nombre}</small>
-                                    </div>
+                                <div class="producto-info-popular">
+                                    <h4>${producto.nombre}</h4>
+                                    <p class="producto-precio-popular">$${producto.precio.toFixed(2)} / ${producto.unidad}</p>
+                                    <p class="producto-vendedor-popular">${producto.vendedor_nombre}</p>
                                 </div>
                             </a>
                         </article>
                         `;
                     }).join('');
                     
-                    productosGrid.innerHTML = html;
-                    console.log('✅ Productos mostrados en el DOM');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error en prueba simple:', error);
+                productosGrid.innerHTML = productosHTML;
             }
         }
-
-        // Función para verificar imágenes de todos los productos
-        async function verificarImagenes() {
-            try {
-                console.log('🖼️ VERIFICANDO IMÁGENES - Iniciando...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible, inicializando Firebase...');
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                
-                // Obtener todos los productos
-                const snapshot = await db.collection('productos').get();
-                console.log('📊 Total de productos en la base de datos:', snapshot.size);
-                
-                let productosConImagen = 0;
-                let productosSinImagen = 0;
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const nombre = data.nombre || 'Sin nombre';
-                    const imagen = data.imagen;
-                    
-                    console.log('🔍 Producto:', nombre);
-                    console.log('  - Imagen:', imagen);
-                    console.log('  - Tipo:', typeof imagen);
-                    console.log('  - Es string:', typeof imagen === 'string');
-                    console.log('  - No es null:', imagen !== null);
-                    console.log('  - No es undefined:', imagen !== undefined);
-                    console.log('  - No está vacía:', imagen !== '');
-                    console.log('  - Trim no vacío:', imagen && imagen.trim() !== '');
-                    
-                    if (imagen && typeof imagen === 'string' && imagen.trim() !== '') {
-                        productosConImagen++;
-                        console.log('  ✅ TIENE IMAGEN VÁLIDA');
-                        
-                        // Probar si la imagen se puede cargar
-                        const img = new Image();
-                        img.onload = () => {
-                            console.log('  ✅ IMAGEN SE CARGA CORRECTAMENTE:', imagen);
-                        };
-                        img.onerror = () => {
-                            console.log('  ❌ ERROR AL CARGAR IMAGEN:', imagen);
-                        };
-                        img.src = imagen;
-                        
-                    } else {
-                        productosSinImagen++;
-                        console.log('  ❌ NO TIENE IMAGEN VÁLIDA');
-                    }
-                    console.log('---');
-                });
-                
-                console.log('📊 RESUMEN:');
-                console.log(`  - Productos con imagen: ${productosConImagen}`);
-                console.log(`  - Productos sin imagen: ${productosSinImagen}`);
-                console.log(`  - Total: ${snapshot.size}`);
-                
-            } catch (error) {
-                console.error('❌ Error verificando imágenes:', error);
-            }
-        }
-
-        // Función para probar carga de imágenes individualmente
-        function probarCargaImagenesIndividual() {
-            try {
-                console.log('🖼️ PROBANDO CARGA DE IMÁGENES INDIVIDUALMENTE...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible, inicializando Firebase...');
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                
-                // Obtener productos de Firestore
-                db.collection('productos').limit(10).get().then(snapshot => {
-                    console.log('📊 Productos obtenidos para prueba:', snapshot.size);
-                    
-                    snapshot.forEach((doc, index) => {
-                        const data = doc.data();
-                        const nombre = data.nombre || 'Sin nombre';
-                        const imagen = data.imagen;
-                        
-                        console.log(`\n🖼️ PRODUCTO ${index + 1}: ${nombre}`);
-                        console.log('  - URL de imagen:', imagen);
-                        console.log('  - Tipo:', typeof imagen);
-                        console.log('  - Longitud:', imagen ? imagen.length : 0);
-                        
-                        if (imagen && typeof imagen === 'string' && imagen.trim() !== '') {
-                            // Crear imagen de prueba
-                            const img = new Image();
-                            
-                            img.onload = () => {
-                                console.log(`  ✅ IMAGEN ${index + 1} CARGADA:`, {
-                                    src: img.src,
-                                    width: img.naturalWidth,
-                                    height: img.naturalHeight,
-                                    complete: img.complete
-                                });
-                            };
-                            
-                            img.onerror = () => {
-                                console.log(`  ❌ ERROR EN IMAGEN ${index + 1}:`, {
-                                    src: img.src,
-                                    error: 'No se pudo cargar'
-                                });
-                            };
-                            
-                            // Intentar cargar
-                            img.src = imagen;
-                            
-                        } else {
-                            console.log(`  ⚠️ PRODUCTO ${index + 1} SIN IMAGEN VÁLIDA`);
-                        }
-                    });
-                }).catch(error => {
-                    console.error('❌ Error obteniendo productos:', error);
-                });
-                
-            } catch (error) {
-                console.error('❌ Error probando carga de imágenes individual:', error);
-            }
-        }
-
-        // Función para diagnosticar problemas de imágenes
-        function diagnosticarImagenes() {
-            try {
-                console.log('🔍 DIAGNOSTICANDO PROBLEMAS DE IMÁGENES...');
-                
-                // 1. Verificar todas las imágenes en el DOM
-                const imagenes = document.querySelectorAll('.producto-image img');
-                console.log('🖼️ Imágenes encontradas en el DOM:', imagenes.length);
-                
-                imagenes.forEach((img, index) => {
-                    console.log(`\n📸 IMAGEN ${index + 1}:`);
-                    console.log('  - src:', img.src);
-                    console.log('  - alt:', img.alt);
-                    console.log('  - complete:', img.complete);
-                    console.log('  - naturalWidth:', img.naturalWidth);
-                    console.log('  - naturalHeight:', img.naturalHeight);
-                    console.log('  - display:', window.getComputedStyle(img).display);
-                    console.log('  - visibility:', window.getComputedStyle(img).visibility);
-                    console.log('  - opacity:', window.getComputedStyle(img).opacity);
-                    console.log('  - parent display:', window.getComputedStyle(img.parentElement).display);
-                    
-                    // Verificar si la imagen se cargó correctamente
-                    if (img.complete) {
-                        if (img.naturalWidth > 0) {
-                            console.log('  ✅ Imagen cargada correctamente');
-                        } else {
-                            console.log('  ❌ Imagen no se cargó (naturalWidth = 0)');
-                        }
-                    } else {
-                        console.log('  ⏳ Imagen aún cargando...');
-                    }
-                });
-                
-                // 2. Verificar placeholders
-                const placeholders = document.querySelectorAll('.producto-placeholder');
-                console.log('\n📦 Placeholders encontrados:', placeholders.length);
-                
-                placeholders.forEach((placeholder, index) => {
-                    console.log(`  📦 Placeholder ${index + 1}:`, {
-                        display: window.getComputedStyle(placeholder).display,
-                        visibility: window.getComputedStyle(placeholder).visibility,
-                        parent: placeholder.parentElement.className
-                    });
-                });
-                
-                // 3. Verificar contenedores de imágenes
-                const contenedoresImagen = document.querySelectorAll('.producto-image');
-                console.log('\n🖼️ Contenedores de imagen:', contenedoresImagen.length);
-                
-                contenedoresImagen.forEach((contenedor, index) => {
-                    console.log(`  🖼️ Contenedor ${index + 1}:`, {
-                        display: window.getComputedStyle(contenedor).display,
-                        visibility: window.getComputedStyle(contenedor).visibility,
-                        height: window.getComputedStyle(contenedor).height,
-                        width: window.getComputedStyle(contenedor).width,
-                        children: contenedor.children.length,
-                        hasImg: contenedor.querySelector('img') !== null,
-                        hasPlaceholder: contenedor.querySelector('.producto-placeholder') !== null
-                    });
-                });
-                
-                // 4. Verificar cards completas
-                const cards = document.querySelectorAll('.producto-card-popular');
-                console.log('\n📦 Cards encontradas:', cards.length);
-                
-                cards.forEach((card, index) => {
-                    const imagen = card.querySelector('.producto-image img');
-                    const placeholder = card.querySelector('.producto-placeholder');
-                    const nombre = card.querySelector('h3')?.textContent || 'Sin nombre';
-                    
-                    console.log(`  📦 Card ${index + 1} (${nombre}):`, {
-                        display: window.getComputedStyle(card).display,
-                        visibility: window.getComputedStyle(card).visibility,
-                        hasImage: !!imagen,
-                        hasPlaceholder: !!placeholder,
-                        imageSrc: imagen ? imagen.src : 'N/A',
-                        imageComplete: imagen ? imagen.complete : 'N/A'
-                    });
-                });
-                
-                console.log('\n✅ Diagnóstico completado');
-                
-            } catch (error) {
-                console.error('❌ Error en diagnóstico de imágenes:', error);
-            }
-        }
-
-        // Función para limpiar caché de imágenes específicamente
-        function limpiarCacheImagenes() {
-            try {
-                console.log('🖼️ LIMPIANDO CACHÉ DE IMÁGENES...');
-                
-                // Obtener todas las imágenes de productos
-                const imagenes = document.querySelectorAll('.producto-image img');
-                console.log('🖼️ Imágenes encontradas:', imagenes.length);
-                
-                imagenes.forEach((img, index) => {
-                    const srcOriginal = img.src;
-                    console.log(`  🖼️ Imagen ${index + 1}:`, srcOriginal);
-                    
-                    // Agregar timestamp para forzar recarga
-                    const url = new URL(srcOriginal);
-                    url.searchParams.set('t', Date.now());
-                    img.src = url.toString();
-                    
-                    console.log(`  🔄 Nueva URL:`, img.src);
-                });
-                
-                // También limpiar caché del navegador si es posible
-                if ('caches' in window) {
-                    caches.keys().then(names => {
-                        names.forEach(name => {
-                            caches.delete(name);
-                            console.log('🗑️ Caché eliminado:', name);
-                        });
-                    });
-                }
-                
-                console.log('✅ Caché de imágenes limpiado');
-                
-            } catch (error) {
-                console.error('❌ Error limpiando caché de imágenes:', error);
-            }
-        }
-
-        // Función para limpiar caché y recargar
-        function limpiarCache() {
-            try {
-                console.log('🧹 Limpiando caché y recargando...');
-                
-                // Limpiar caché del navegador
-                if ('caches' in window) {
-                    caches.keys().then(function(names) {
-                        for (let name of names) {
-                            caches.delete(name);
-                        }
-                        console.log('✅ Caché limpiado');
-                    });
-                }
-                
-                // Forzar recarga sin caché
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 1000);
-                
-            } catch (error) {
-                console.error('❌ Error limpiando caché:', error);
-                // Si falla, al menos recargar la página
-                window.location.reload(true);
-            }
-        }
-
-        // Función para probar la carga de imágenes
-        async function probarCargaImagenes() {
-            try {
-                console.log('🖼️ PROBANDO CARGA DE IMÁGENES...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible, inicializando Firebase...');
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                
-                // Obtener todos los productos
-                const snapshot = await db.collection('productos').limit(6).get();
-                console.log('📊 Productos encontrados para probar imágenes:', snapshot.size);
-                
-                let imagenesExitosas = 0;
-                let imagenesFallidas = 0;
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const nombre = data.nombre || 'Sin nombre';
-                    const imagen = data.imagen;
-                    
-                    if (imagen && typeof imagen === 'string' && imagen.trim() !== '') {
-                        console.log('🖼️ Probando imagen para:', nombre);
-                        console.log('  URL:', imagen);
-                        
-                        // Crear una imagen de prueba
-                        const img = new Image();
-                        
-                        img.onload = () => {
-                            imagenesExitosas++;
-                            console.log('  ✅ IMAGEN CARGADA EXITOSAMENTE:', nombre);
-                            console.log('  📏 Dimensiones:', img.naturalWidth + 'x' + img.naturalHeight);
-                        };
-                        
-                        img.onerror = () => {
-                            imagenesFallidas++;
-                            console.log('  ❌ ERROR AL CARGAR IMAGEN:', nombre);
-                            console.log('  🔗 URL problemática:', imagen);
-                        };
-                        
-                        // Intentar cargar la imagen
-                        img.src = imagen;
-                        
-                    } else {
-                        console.log('⚠️ Producto sin imagen:', nombre);
-                    }
-                });
-                
-                // Mostrar resumen después de un tiempo
-                setTimeout(() => {
-                    console.log('📊 RESUMEN DE CARGA DE IMÁGENES:');
-                    console.log(`  ✅ Imágenes exitosas: ${imagenesExitosas}`);
-                    console.log(`  ❌ Imágenes fallidas: ${imagenesFallidas}`);
-                    console.log(`  📊 Total productos: ${snapshot.size}`);
-                }, 3000);
-                
-            } catch (error) {
-                console.error('❌ Error probando carga de imágenes:', error);
-            }
-        }
-
-        // Función para forzar re-renderizado de cards
-        function forzarRerenderizadoCards() {
-            try {
-                console.log('🔄 FORZANDO RE-RENDERIZADO DE CARDS...');
-                
-                const productosGrid = document.getElementById('productosGrid');
-                if (!productosGrid) {
-                    console.error('❌ No se encontró productosGrid');
-                    return;
-                }
-                
-                console.log('🔍 Estado actual del grid:', {
-                    display: productosGrid.style.display,
-                    children: productosGrid.children.length,
-                    innerHTML: productosGrid.innerHTML.length
-                });
-                
-                // Obtener el HTML actual
-                const htmlActual = productosGrid.innerHTML;
-                console.log('📝 HTML actual:', htmlActual.substring(0, 300) + '...');
-                
-                // Forzar re-renderizado
-                productosGrid.style.display = 'none';
-                productosGrid.offsetHeight; // Trigger reflow
-                productosGrid.style.display = 'grid';
-                
-                // Verificar cards después del re-renderizado
-                const cards = document.querySelectorAll('.producto-card-popular');
-                console.log('🎯 Cards encontradas después del re-renderizado:', cards.length);
-                
-                cards.forEach((card, index) => {
-                    console.log(`  📦 Card ${index + 1}:`, {
-                        visible: card.offsetParent !== null,
-                        display: window.getComputedStyle(card).display,
-                        nombre: card.querySelector('h3')?.textContent || 'Sin nombre'
-                    });
-                });
-                
-                // Intentar scroll para forzar renderizado
-                productosGrid.scrollTop = 1;
-                productosGrid.scrollTop = 0;
-                
-                console.log('✅ Re-renderizado completado');
-                
-            } catch (error) {
-                console.error('❌ Error en re-renderizado:', error);
-            }
-        }
-
-        // Función para probar la consulta de productos
-        async function probarConsultaProductos() {
-            try {
-                console.log('🔍 PROBANDO CONSULTA DE PRODUCTOS...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible, inicializando Firebase...');
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                
-                // Probar consulta sin límite
-                console.log('📊 Consultando TODOS los productos...');
-                const todosLosProductos = await db.collection('productos').get();
-                console.log('📊 Total productos en la base de datos:', todosLosProductos.size);
-                
-                // Probar consulta con límite 20
-                console.log('📊 Consultando productos con límite 20...');
-                const productosLimitados = await db.collection('productos').limit(20).get();
-                console.log('📊 Productos con límite 20:', productosLimitados.size);
-                
-                // Analizar cada producto
-                let productosActivos = 0;
-                let productosInactivos = 0;
-                let productosSinStock = 0;
-                let productosConStock = 0;
-                
-                console.log('🔍 ANALIZANDO TODOS LOS PRODUCTOS:');
-                todosLosProductos.forEach(doc => {
-                    const data = doc.data();
-                    const nombre = data.nombre || 'Sin nombre';
-                    const activo = data.activo;
-                    const stock = data.stock || 0;
-                    
-                    console.log(`  📦 ${nombre}:`, {
-                        activo: activo,
-                        stock: stock,
-                        categoria: data.categoria
-                    });
-                    
-                    if (activo === true) {
-                        productosActivos++;
-                    } else {
-                        productosInactivos++;
-                    }
-                    
-                    if (stock > 0) {
-                        productosConStock++;
-                    } else {
-                        productosSinStock++;
-                    }
-                });
-                
-                console.log('📊 RESUMEN COMPLETO:');
-                console.log(`  📦 Total productos: ${todosLosProductos.size}`);
-                console.log(`  ✅ Productos activos: ${productosActivos}`);
-                console.log(`  ❌ Productos inactivos: ${productosInactivos}`);
-                console.log(`  📈 Productos con stock: ${productosConStock}`);
-                console.log(`  📉 Productos sin stock: ${productosSinStock}`);
-                console.log(`  🎯 Productos que deberían mostrarse: ${productosActivos} activos Y ${productosConStock} con stock`);
-                
-                // Calcular intersección
-                let productosValidos = 0;
-                todosLosProductos.forEach(doc => {
-                    const data = doc.data();
-                    if (data.activo === true && (data.stock || 0) > 0) {
-                        productosValidos++;
-                    }
-                });
-                
-                console.log(`  🎯 Productos válidos (activos Y con stock): ${productosValidos}`);
-                
-            } catch (error) {
-                console.error('❌ Error probando consulta de productos:', error);
-            }
-        }
-
-        // Función para cargar datos reales completos (categorías + productos)
-        async function cargarDatosRealesCompleto() {
-            try {
-                console.log('🔄 Cargando datos reales completos de Firestore...');
-                
-                // Inicializar Firebase si no está disponible
-                if (!db) {
-                    console.log('🔄 Inicializando Firebase...');
-                    if (typeof firebase === 'undefined') {
-                        console.log('❌ Firebase SDK no está disponible');
-                        return;
-                    }
-                    
-                    if (firebase.apps.length === 0) {
-                        firebase.initializeApp(window.firebaseConfig);
-                    }
-                    db = firebase.firestore();
-                }
-                
-                console.log('✅ Firebase disponible, cargando datos...');
-                
-                // Cargar categorías y productos en paralelo
-                await Promise.all([
-                    cargarCategoriasMejorado(),
-                    cargarProductosMejorado()
-                ]);
-                
-                console.log('✅ Datos reales completos cargados correctamente');
-                
-            } catch (error) {
-                console.error('❌ Error cargando datos reales completos:', error);
-            }
-        }
-
-        // Función para cargar categorías mejorada
-        async function cargarCategoriasMejorado() {
-            try {
-                console.log('🔄 Cargando categorías mejorado...');
-                mostrarLoadingCategorias(true);
-                
-                // Obtener todos los productos para extraer categorías
-                const productosSnapshot = await db.collection('productos').get();
-                
-                console.log('📊 Productos encontrados para categorías:', productosSnapshot.size);
-                
-                if (productosSnapshot.empty) {
-                    console.log('⚠️ No hay productos en la base de datos para categorías');
-                    mostrarCategorias([{ nombre: 'Todos los productos', count: 0, icon: 'fas fa-th-large' }]);
-                    return;
-                }
-                
-                // Extraer categorías únicas y contar productos
-                const categoriasMap = new Map();
-                let productosProcesados = 0;
-                let productosActivos = 0;
-                
-                productosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    const categoria = data.categoria || 'otros';
-                    productosProcesados++;
-                    
-                    console.log(`📦 Producto ${productosProcesados}: ${data.nombre}`, {
-                        categoria: categoria,
-                        activo: data.activo,
-                        stock: data.stock
-                    });
-                    
-                    // Solo contar productos activos y con stock
-                    if (data.activo === true && data.stock > 0) {
-                        productosActivos++;
-                        if (categoriasMap.has(categoria)) {
-                            categoriasMap.set(categoria, categoriasMap.get(categoria) + 1);
-                        } else {
-                            categoriasMap.set(categoria, 1);
-                        }
-                        console.log(`✅ Producto válido agregado a categoría: ${categoria}`);
-                    } else {
-                        console.log(`❌ Producto descartado: activo=${data.activo}, stock=${data.stock}`);
-                    }
-                });
-                
-                console.log(`📊 Resumen de productos: ${productosProcesados} procesados, ${productosActivos} activos`);
-                console.log('📊 Categorías encontradas:', Array.from(categoriasMap.entries()));
-                
-                // Contar total de productos activos y con stock
-                const totalProductosActivos = Array.from(categoriasMap.values()).reduce((sum, count) => sum + count, 0);
-                
-                // Convertir a array y agregar "Todos los productos" solo si hay productos
-                categorias = [];
-                
-                // Solo agregar "Todos los productos" si hay productos activos
-                if (totalProductosActivos > 0) {
-                    categorias.push({ 
-                        nombre: 'Todos los productos', 
-                        count: totalProductosActivos, 
-                        icon: 'fas fa-th-large' 
-                    });
-                }
-                
-                // Agregar solo categorías que tengan productos
-                Array.from(categoriasMap.entries()).forEach(([nombre, count]) => {
-                    if (count > 0) { // Solo agregar si tiene productos
-                        categorias.push({
-                            nombre: nombre.charAt(0).toUpperCase() + nombre.slice(1),
-                            count: count,
-                            icon: getCategoriaIcon(nombre)
-                        });
-                    }
-                });
-                
-                console.log(`✅ ${categorias.length} categorías cargadas:`, categorias);
-                mostrarCategorias(categorias);
-                
-            } catch (error) {
-                console.error('❌ Error cargando categorías mejorado:', error);
-                mostrarErrorCategorias('Error al cargar categorías. Intenta recargar la página.');
-            }
-        }
-
-        // Función para cargar productos mejorada
-        async function cargarProductosMejorado() {
-            try {
-                console.log('🔄 Cargando productos mejorado...');
-                mostrarLoading(true);
-                
-                // Consulta simple sin filtros complejos - aumentar límite para obtener más productos
-                const productosSnapshot = await db.collection('productos').limit(20).get();
-                
-                console.log('📊 Productos encontrados en consulta:', productosSnapshot.size);
-                
-                if (productosSnapshot.empty) {
-                    console.log('⚠️ No hay productos en la base de datos');
-                    mostrarProductos([]);
-                    return;
-                }
-                
-                productos = [];
-                let productosActivos = 0;
-                let productosInactivos = 0;
-                let productosSinStock = 0;
-                
-                productosSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    console.log('🔍 Analizando producto:', data.nombre, {
-                        activo: data.activo,
-                        stock: data.stock,
-                        categoria: data.categoria
-                    });
-                    
-                    // Solo incluir productos activos y con stock
-                    if (data.activo === true && data.stock > 0) {
-                        productosActivos++;
-                        console.log('✅ Producto válido:', data.nombre);
-                        // Verificar si la imagen es válida
-                        let imagenValida = null;
-                        if (data.imagen && typeof data.imagen === 'string' && data.imagen.trim() !== '') {
-                            // Verificar que sea una URL válida
-                            try {
-                                new URL(data.imagen);
-                                imagenValida = data.imagen;
-                                console.log('✅ Imagen válida para', data.nombre, ':', data.imagen);
-                            } catch (e) {
-                                console.log('❌ URL de imagen inválida para', data.nombre, ':', data.imagen);
-                            }
-                        } else {
-                            console.log('❌ Imagen vacía o nula para', data.nombre, ':', data.imagen);
-                        }
-                        
-                        productos.push({
-                            id: doc.id,
-                            nombre: data.nombre || 'Sin nombre',
-                            precio: data.precio || 0,
-                            categoria: data.categoria || 'Sin categoría',
-                            stock: data.stock || 0,
-                            unidad: data.unidad || 'kg',
-                            imagen: imagenValida,
-                            vendedor_nombre: data.vendedor_nombre || 'N/A'
-                        });
-                    } else {
-                        if (data.activo !== true) {
-                            productosInactivos++;
-                            console.log('❌ Producto inactivo:', data.nombre, 'activo:', data.activo);
-                        }
-                        if (data.stock <= 0) {
-                            productosSinStock++;
-                            console.log('❌ Producto sin stock:', data.nombre, 'stock:', data.stock);
-                        }
-                    }
-                });
-                
-                console.log('📊 RESUMEN DE FILTROS:');
-                console.log(`  ✅ Productos activos con stock: ${productosActivos}`);
-                console.log(`  ❌ Productos inactivos: ${productosInactivos}`);
-                console.log(`  ❌ Productos sin stock: ${productosSinStock}`);
-                console.log(`  📦 Total productos mostrados: ${productos.length}`);
-                console.log(`✅ ${productos.length} productos válidos encontrados:`, productos);
-                mostrarProductos(productos);
-                
-            } catch (error) {
-                console.error('❌ Error cargando productos mejorado:', error);
-                mostrarError('Error al cargar productos. Intenta recargar la página.');
-            }
-        }
-
-        // Función para cargar datos reales de Firestore
-        async function cargarDatosReales() {
-            try {
-                console.log('🔄 Cargando datos reales de Firestore...');
-                
-                if (!db) {
-                    console.log('❌ DB no está disponible, inicializando Firebase...');
-                    const firebaseOk = await inicializarFirebase();
-                    if (!firebaseOk) {
-                        console.log('❌ No se pudo inicializar Firebase');
-                        return;
-                    }
-                }
-                
-                console.log('✅ Firebase disponible, cargando datos...');
-                
-                // Cargar categorías y productos
-                await Promise.all([
-                    cargarCategorias(),
-                    cargarProductos()
-                ]);
-                
-                console.log('✅ Datos reales cargados correctamente');
-                
-            } catch (error) {
-                console.error('❌ Error cargando datos reales:', error);
-            }
-        }
-
-        // Función para mostrar datos de ejemplo como fallback
-        function mostrarDatosEjemplo() {
-            console.log('📋 Mostrando datos de ejemplo como fallback...');
-            
-            // Verificar elementos del DOM
-            const categoriasGrid = document.getElementById('categoriasGrid');
-            const productosGrid = document.getElementById('productosGrid');
+        
+        function mostrarErrorProductos() {
             const loadingProducts = document.getElementById('loadingProducts');
+            const productosGrid = document.getElementById('productosGrid');
             const emptyProducts = document.getElementById('emptyProducts');
             
-            console.log('🔍 Elementos en mostrarDatosEjemplo:');
-            console.log('- categoriasGrid:', categoriasGrid);
-            console.log('- productosGrid:', productosGrid);
-            console.log('- loadingProducts:', loadingProducts);
-            console.log('- emptyProducts:', emptyProducts);
-            
-            // NO mostrar categorías de ejemplo - solo esperar datos reales
-            console.log('⚠️ No mostrando categorías de ejemplo - esperando datos reales de Firestore');
-            
-            // Productos de ejemplo (solo para productos, no categorías)
-            const productosEjemplo = [
-                {
-                    id: 'ejemplo1',
-                    nombre: 'Manzanas Orgánicas',
-                    categoria: 'frutas',
-                    precio: 25,
-                    stock: 50,
-                    unidad: 'kg',
-                    imagen_url: null
-                },
-                {
-                    id: 'ejemplo2',
-                    nombre: 'Tomates Frescos',
-                    categoria: 'verduras',
-                    precio: 18,
-                    stock: 30,
-                    unidad: 'kg',
-                    imagen_url: null
-                },
-                {
-                    id: 'ejemplo3',
-                    nombre: 'Arroz Integral',
-                    categoria: 'cereales',
-                    precio: 35,
-                    stock: 20,
-                    unidad: 'kg',
-                    imagen_url: null
-                },
-                {
-                    id: 'ejemplo4',
-                    nombre: 'Lechuga Hidropónica',
-                    categoria: 'verduras',
-                    precio: 15,
-                    stock: 25,
-                    unidad: 'pieza',
-                    imagen_url: null
-                },
-                {
-                    id: 'ejemplo5',
-                    nombre: 'Plátanos Maduros',
-                    categoria: 'frutas',
-                    precio: 12,
-                    stock: 40,
-                    unidad: 'kg',
-                    imagen_url: null
-                },
-                {
-                    id: 'ejemplo6',
-                    nombre: 'Frijoles Negros',
-                    categoria: 'legumbres',
-                    precio: 28,
-                    stock: 15,
-                    unidad: 'kg',
-                    imagen_url: null
-                }
-            ];
-            
-            console.log('📊 Datos de ejemplo preparados:');
-            console.log('- Categorías:', categoriasEjemplo.length);
-            console.log('- Productos:', productosEjemplo.length);
-            
-            // NO mostrar categorías de ejemplo - solo productos
-            console.log('⚠️ Categorías se cargarán desde Firestore');
-            
-            // Mostrar productos de ejemplo
-            console.log('🛍️ Mostrando productos de ejemplo...');
-            mostrarProductos(productosEjemplo);
-            
-            // Mensaje de debugging removido - página limpia
-
-            console.log('✅ Datos de ejemplo mostrados correctamente');
+            if (loadingProducts) loadingProducts.style.display = 'none';
+            if (productosGrid) productosGrid.style.display = 'none';
+            if (emptyProducts) {
+                emptyProducts.style.display = 'block';
+                emptyProducts.querySelector('p').textContent = 'Error al cargar productos. Intenta recargar la página.';
+            }
         }
-
-        // Inicializar aplicación
+        
+        // Inicializar cuando se carga la página
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📄 DOM cargado, iniciando aplicación...');
-            // Intento inicial de actualizar el saludo (si Auth ya está listo)
-            actualizarSaludoUsuario();
-            
-                // Verificar que los elementos existan antes de proceder
-                const categoriasGrid = document.getElementById('categoriasGrid');
-                const productosGrid = document.getElementById('productosGrid');
-                const loadingProducts = document.getElementById('loadingProducts');
-                const emptyProducts = document.getElementById('emptyProducts');
-            
-            console.log('🔍 Verificando elementos del DOM:');
-            console.log('- categoriasGrid:', categoriasGrid);
-            console.log('- productosGrid:', productosGrid);
-            console.log('- loadingProducts:', loadingProducts);
-            console.log('- emptyProducts:', emptyProducts);
-            
-            if (!categoriasGrid || !productosGrid || !loadingProducts || !emptyProducts) {
-                console.error('❌ Elementos del DOM no encontrados');
-                return;
-            }
-            
-            // Mostrar datos de ejemplo inmediatamente
-            console.log('📋 Cargando datos de ejemplo...');
             try {
-                mostrarDatosEjemplo();
-                console.log('✅ Datos de ejemplo cargados correctamente');
-            } catch (error) {
-                console.error('❌ Error cargando datos de ejemplo:', error);
-            }
-            
-            // Intentar cargar datos reales inmediatamente también
-            setTimeout(async () => {
-                try {
-                    console.log('🔄 Intentando cargar datos reales inmediatamente...');
-                    await cargarDatosRealesCompleto();
-                    console.log('✅ Datos reales cargados inmediatamente');
-                } catch (error) {
-                    console.log('⚠️ No se pudieron cargar datos reales inmediatamente:', error);
-                }
-            }, 500); // Solo 500ms de espera
+                console.log('🚀 Iniciando panel del comprador...');
                 
-            // Intentar conectar a Firebase en segundo plano
-            setTimeout(async () => {
-                try {
-                    console.log('🔄 Intentando conectar a Firebase...');
-                    const firebaseOk = await inicializarFirebase();
+                // Inicializar Firebase primero
+                const firebaseInicializado = await inicializarFirebase();
+                
+                if (firebaseInicializado) {
+                    // Mostrar categorías con conteos (necesita Firebase)
+                    await mostrarCategorias();
                     
-                    if (firebaseOk) {
-                        console.log('✅ Firebase conectado, probando conexión con Firestore...');
-                        // Vuelve a intentar actualizar el saludo cuando Auth/DB están listos
-                        actualizarSaludoUsuario();
-                        
-                        // Probar conexión con Firestore
-                        const firestoreOk = await probarConexionFirestore();
-                        
-                        if (firestoreOk) {
-                            console.log('✅ Firestore conectado, cargando datos reales...');
-                            
-                            // Cargar datos reales usando la lógica mejorada
-                            try {
-                                await cargarDatosRealesCompleto();
-                                console.log('✅ Datos reales cargados exitosamente');
-                            } catch (error) {
-                                console.error('❌ Error cargando datos reales:', error);
-                            }
-                            
-                            // Mostrar mensaje de actualización
-                            const mensajeActualizacion = document.createElement('div');
-                            mensajeActualizacion.style.cssText = `
-                                position: fixed;
-                                top: 20px;
-                                right: 20px;
-                                background: #4CAF50;
-                                color: white;
-                                padding: 15px 20px;
-                                border-radius: 8px;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                                z-index: 1000;
-                                font-size: 14px;
-                            `;
-                            mensajeActualizacion.innerHTML = `
-                                <i class="fas fa-check-circle"></i>
-                                <span style="margin-left: 8px;">Datos actualizados desde Firebase</span>
-                            `;
-                            
-                            document.body.appendChild(mensajeActualizacion);
-                            
-                            // Remover después de 3 segundos
-                            setTimeout(() => {
-                                if (mensajeActualizacion.parentNode) {
-                                    mensajeActualizacion.parentNode.removeChild(mensajeActualizacion);
-                                }
-                            }, 3000);
-                            
+                    // Cargar productos recomendados
+                    await cargarProductosRecomendados();
+                    console.log('✅ Panel del comprador cargado completamente');
                         } else {
-                            console.log('⚠️ Firestore no disponible, manteniendo datos de ejemplo');
+                    mostrarErrorProductos();
+                    // Mostrar categorías sin conteos si Firebase falla
+                    mostrarCategorias();
                         }
-                        
-                    } else {
-                        console.log('⚠️ Firebase no disponible, manteniendo datos de ejemplo');
-                    }
-                    
                 } catch (error) {
-                    console.error('❌ Error conectando a Firebase:', error);
-                    console.log('⚠️ Manteniendo datos de ejemplo');
-                }
-            }, 1000); // Esperar 1 segundo antes de intentar conectar
-            
-            // Funcionalidad básica de filtros
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            const filtersContainer = document.querySelector('.filters-container');
-            
-            // Toggle de filtros
-            filterButtons.forEach(btn => {
-                if (btn.textContent === 'Filtrar') {
-                    btn.addEventListener('click', function() {
-                        filtersContainer.style.display = filtersContainer.style.display === 'none' ? 'block' : 'none';
-                    });
-                }
-            });
-            
-            // Botones de ordenamiento
-            const sortButtons = document.querySelectorAll('.sort-btn');
-            sortButtons.forEach(btn => {
-                if (btn.textContent === 'Ordenar') {
-                    btn.addEventListener('click', function() {
-                        alert('Función de ordenamiento próximamente');
-                    });
-                }
-            });
+                console.error('❌ Error en panel del comprador:', error);
+                mostrarErrorProductos();
+            }
         });
+    </script>
+
+    <!-- PWA Service Worker -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+        .then(reg => console.log("✅ Service Worker registrado:", reg))
+        .catch(err => console.error("❌ Error al registrar SW:", err));
+      }
     </script>
 </body>
 </html>

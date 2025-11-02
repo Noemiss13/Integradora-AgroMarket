@@ -7,6 +7,8 @@
     <title>Mi Perfil | AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil_usuario.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -16,6 +18,9 @@
     
     <!-- Firebase Config -->
     <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+    
+    <!-- Google Maps Places API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCm9SIv6WBmkejLHJ4X7WaTm8xf6DBpCo&libraries=places&language=es&region=MX" async defer></script>
     
 </head>
 
@@ -36,6 +41,13 @@
 
     <!-- ===== Contenido principal ===== -->
     <main class="main-content">
+        <!-- Navigation Header -->
+        <div class="navigation-header">
+            <div></div>
+            <div class="breadcrumbs">
+                <a href="/auth/perfil">Mi cuenta</a>
+            </div>
+        </div>
         <div class="container">
             <!-- ===== Panel lateral izquierdo ===== -->
             <aside class="sidebar">
@@ -52,6 +64,14 @@
                 <!-- Accesos rápidos a paneles (arriba de estadísticas) -->
                 <div class="quick-access" id="quick-access" style="margin-bottom: 16px;">
                     <!-- Botones de acceso se renderizan vía JS -->
+                </div>
+
+                <!-- Botón Mis Pedidos (solo para compradores) -->
+                <div class="mis-pedidos-section" id="mis-pedidos-section" style="display: none; margin-bottom: 16px;">
+                    <a href="/comprador/mis_pedidos" class="btn-mis-pedidos">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>Mis Pedidos</span>
+                    </a>
                 </div>
 
                 <!-- Estadísticas del usuario -->
@@ -98,6 +118,29 @@
                                     <i class="fas fa-lock"></i> Confirmar Contraseña
                                 </label>
                                 <input type="password" name="password_confirm" id="password_confirm" placeholder="Confirmar nueva contraseña">
+                            </div>
+
+                            <!-- Campos para vendedores -->
+                            <div id="vendedor-perfil-fields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="nombre_tienda_perfil">
+                                        <i class="fas fa-store"></i> Nombre de tu tienda o negocio
+                                    </label>
+                                    <input type="text" name="nombre_tienda" id="nombre_tienda_perfil" placeholder="Ej: La Granja de Juan" maxlength="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ubicacion_perfil">
+                                        <i class="fas fa-map-marker-alt"></i> Ubicación
+                                    </label>
+                                    <input type="text" name="ubicacion" id="ubicacion_perfil" placeholder="Empieza a escribir tu dirección..." maxlength="200" autocomplete="off">
+                                    <small style="display: block; margin-top: 5px; color: #6b7280; font-size: 0.85rem;">
+                                        <i class="fas fa-info-circle"></i> Autocompletado con Google Maps
+                                    </small>
+                                    <input type="hidden" id="ubicacion_lat_perfil" name="ubicacion_lat">
+                                    <input type="hidden" id="ubicacion_lng_perfil" name="ubicacion_lng">
+                                    <input type="hidden" id="ubicacion_formatted_perfil" name="ubicacion_formatted">
+                                </div>
                             </div>
 
                             <div class="form-buttons">
@@ -274,6 +317,55 @@
             // Actualizar formulario
             document.getElementById('form-nombre').value = userData.nombre || '';
             document.getElementById('form-email').value = userData.email || '';
+
+            // Actualizar campos de vendedor si tiene el rol
+            const tieneRolVendedor = userData.roles && userData.roles.includes('vendedor');
+            const vendedorFields = document.getElementById('vendedor-perfil-fields');
+            
+            if (vendedorFields) {
+                if (tieneRolVendedor) {
+                    vendedorFields.style.display = 'block';
+                    
+                    // Actualizar campos de vendedor
+                    const nombreTiendaInput = document.getElementById('nombre_tienda_perfil');
+                    const ubicacionInput = document.getElementById('ubicacion_perfil');
+                    
+                    if (nombreTiendaInput) {
+                        nombreTiendaInput.value = userData.nombre_tienda || '';
+                    }
+                    
+                    if (ubicacionInput) {
+                        ubicacionInput.value = userData.ubicacion || userData.ubicacion_formatted || '';
+                        
+                        // Restaurar coordenadas si existen
+                        if (userData.ubicacion_lat && userData.ubicacion_lng) {
+                            const latInput = document.getElementById('ubicacion_lat_perfil');
+                            const lngInput = document.getElementById('ubicacion_lng_perfil');
+                            const formattedInput = document.getElementById('ubicacion_formatted_perfil');
+                            
+                            if (latInput) latInput.value = userData.ubicacion_lat;
+                            if (lngInput) lngInput.value = userData.ubicacion_lng;
+                            if (formattedInput) formattedInput.value = userData.ubicacion_formatted || userData.ubicacion || '';
+                        }
+                    }
+                    
+                    // Inicializar Google Places cuando se muestren los campos
+                    setTimeout(function() {
+                        if (typeof window.initGooglePlacesPerfil === 'function') {
+                            window.initGooglePlacesPerfil();
+                        } else {
+                            // Esperar un poco más si la función aún no existe
+                            setTimeout(function() {
+                                if (typeof window.initGooglePlacesPerfil === 'function') {
+                                    window.initGooglePlacesPerfil();
+                                }
+                            }, 500);
+                        }
+                    }, 300);
+                } else {
+                    vendedorFields.style.display = 'none';
+                }
+            }
 
             // Actualizar navbar principal (no usar await aquí porque no es async)
             updateNavbarVisibility();
@@ -533,6 +625,7 @@
         // Accesos rápidos en el sidebar
         function updateQuickAccess(rolesInput) {
             const container = document.getElementById('quick-access');
+            const misPedidosSection = document.getElementById('mis-pedidos-section');
             if (!container) return;
 
             let roles = rolesInput || [];
@@ -563,6 +656,15 @@
             if (!tieneVendedor) {
                 const btn = document.getElementById('qa-vendedor');
                 if (btn) btn.addEventListener('click', (e) => { e.preventDefault(); showMessage('Activa el rol de vendedor para acceder', 'warning'); });
+            }
+
+            // Mostrar/ocultar botón "Mis Pedidos" según rol de comprador
+            if (misPedidosSection) {
+                if (tieneComprador) {
+                    misPedidosSection.style.display = 'block';
+                } else {
+                    misPedidosSection.style.display = 'none';
+                }
             }
         }
 
@@ -1522,12 +1624,48 @@
                     await currentUser.updatePassword(password);
                 }
 
-                // Actualizar datos en Firestore
-                await db.collection('usuarios').doc(currentUser.uid).update({
+                // Preparar datos de actualización
+                const updateData = {
                     nombre: nombre,
                     email: email,
                     fecha_actualizacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+
+                // Agregar datos de vendedor si tiene el rol
+                const tieneRolVendedor = userData.roles && userData.roles.includes('vendedor');
+                if (tieneRolVendedor) {
+                    const nombreTiendaInput = document.getElementById('nombre_tienda_perfil');
+                    const ubicacionInput = document.getElementById('ubicacion_perfil');
+                    const ubicacionLatInput = document.getElementById('ubicacion_lat_perfil');
+                    const ubicacionLngInput = document.getElementById('ubicacion_lng_perfil');
+                    const ubicacionFormattedInput = document.getElementById('ubicacion_formatted_perfil');
+                    
+                    const nombreTienda = nombreTiendaInput?.value?.trim();
+                    const ubicacion = ubicacionInput?.value?.trim();
+                    const ubicacionLat = ubicacionLatInput?.value;
+                    const ubicacionLng = ubicacionLngInput?.value;
+                    const ubicacionFormatted = ubicacionFormattedInput?.value;
+
+                    if (nombreTienda) {
+                        updateData.nombre_tienda = nombreTienda;
+                    }
+
+                    if (ubicacion) {
+                        updateData.ubicacion = ubicacion;
+                        
+                        // Agregar coordenadas si están disponibles
+                        if (ubicacionLat && ubicacionLng) {
+                            updateData.ubicacion_lat = parseFloat(ubicacionLat);
+                            updateData.ubicacion_lng = parseFloat(ubicacionLng);
+                            updateData.ubicacion_formatted = ubicacionFormatted || ubicacion;
+                        } else if (ubicacion) {
+                            updateData.ubicacion_formatted = ubicacion;
+                        }
+                    }
+                }
+
+                // Actualizar datos en Firestore
+                await db.collection('usuarios').doc(currentUser.uid).update(updateData);
 
                 // Recargar datos
                 await loadUserData();
@@ -1696,20 +1834,32 @@
             }
 
             // Event listeners
-            document.getElementById('btn-actualizar').addEventListener('click', (e) => {
+            const btnActualizar = document.getElementById('btn-actualizar');
+            if (btnActualizar) {
+                btnActualizar.addEventListener('click', (e) => {
                 e.preventDefault();
                 updateProfile();
             });
+            } else {
+                console.warn('⚠️ Botón btn-actualizar no encontrado');
+            }
 
-            document.getElementById('btn-cancelar').addEventListener('click', () => {
+            const btnCancelar = document.getElementById('btn-cancelar');
+            if (btnCancelar) {
+                btnCancelar.addEventListener('click', () => {
                 // Recargar datos originales
                 loadUserData();
-                document.getElementById('password').value = '';
-                document.getElementById('password_confirm').value = '';
-            });
+                    const passwordInput = document.getElementById('password');
+                    const passwordConfirmInput = document.getElementById('password_confirm');
+                    if (passwordInput) passwordInput.value = '';
+                    if (passwordConfirmInput) passwordConfirmInput.value = '';
+                });
+            }
 
             // Event listeners para gestión de roles
-            document.getElementById('btn-agregar-vendedor').addEventListener('click', () => {
+            const btnAgregarVendedor = document.getElementById('btn-agregar-vendedor');
+            if (btnAgregarVendedor) {
+                btnAgregarVendedor.addEventListener('click', () => {
                 const roles = userData.roles || [];
                 if (roles.includes('comprador')) {
                     agregarRolVendedor();
@@ -1717,10 +1867,14 @@
                     agregarRolComprador();
                 }
             });
+            }
 
-            document.getElementById('btn-eliminar-rol').addEventListener('click', () => {
+            const btnEliminarRol = document.getElementById('btn-eliminar-rol');
+            if (btnEliminarRol) {
+                btnEliminarRol.addEventListener('click', () => {
                 eliminarRol();
             });
+            }
 
             // El botón de cambiar rol ahora se configura dinámicamente en updateRolesInfo
 
@@ -1801,6 +1955,74 @@
                     showMessage('Simula roles múltiples primero con simularRolesMultiples()', 'warning');
                 }
             };
+
+            // Inicializar Google Places Autocomplete para perfil
+            let autocompletePerfil = null;
+            
+            window.initGooglePlacesPerfil = function() {
+                try {
+                    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                        console.log('⚠️ Google Maps Places API aún no está cargado');
+                        return;
+                    }
+                    
+                    const ubicacionInput = document.getElementById('ubicacion_perfil');
+                    if (!ubicacionInput) {
+                        console.log('⚠️ Campo de ubicación no encontrado');
+                        return;
+                    }
+                    
+                    if (autocompletePerfil) {
+                        console.log('✅ Google Places Autocomplete ya está inicializado');
+                        return;
+                    }
+                    
+                    autocompletePerfil = new google.maps.places.Autocomplete(ubicacionInput, {
+                        componentRestrictions: { country: 'mx' }, // Restringir a México
+                        fields: ['formatted_address', 'geometry', 'name'],
+                        types: ['establishment', 'geocode']
+                    });
+
+                    autocompletePerfil.addListener('place_changed', function() {
+                        try {
+                            const place = autocompletePerfil.getPlace();
+                            if (!place.geometry) {
+                                console.log('⚠️ No se encontró información del lugar');
+                                return;
+                            }
+
+                            // Guardar datos del lugar
+                            const latInput = document.getElementById('ubicacion_lat_perfil');
+                            const lngInput = document.getElementById('ubicacion_lng_perfil');
+                            const formattedInput = document.getElementById('ubicacion_formatted_perfil');
+                            
+                            if (formattedInput) formattedInput.value = place.formatted_address || '';
+                            if (latInput) latInput.value = place.geometry.location.lat();
+                            if (lngInput) lngInput.value = place.geometry.location.lng();
+                            
+                            console.log('✅ Ubicación seleccionada:', place.formatted_address);
+                        } catch (error) {
+                            console.error('❌ Error en place_changed:', error);
+                        }
+                    });
+                    
+                    console.log('✅ Google Places Autocomplete inicializado correctamente');
+                } catch (error) {
+                    console.error('❌ Error inicializando Google Places Autocomplete:', error);
+                }
+            };
+
+            // Esperar a que Google Maps se cargue para perfil
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    const vendedorFields = document.getElementById('vendedor-perfil-fields');
+                    if (vendedorFields && vendedorFields.style.display !== 'none') {
+                        if (typeof window.initGooglePlacesPerfil === 'function') {
+                            window.initGooglePlacesPerfil();
+                        }
+                    }
+                }, 1000);
+            });
         });
     </script>
 </body>

@@ -19,6 +19,14 @@ class Config:
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY') or 'sk_test_51S4nWTKFtQrWkPCDrCpPfYlsfL8ypkkhPfUlhMucmh1tS1afbn5QBZG4kNPI3bAyZpp8hKMS9rzRPkWGN06i0uwB00FEGEsbBX'
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET') or 'whsec_your_webhook_secret_here'
     
+    # Configuración de Flask-Mail
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'bry.hluna@gmail.com'  # ⬅️ Reemplaza con tu email de Gmail
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'jisdugphwnqraqeu'  # Contraseña de aplicación (sin espacios)
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'AgroMarket <bry.hluna@gmail.com>'  # ⬅️ Reemplaza con tu email
+    
 
 class DevelopmentConfig(Config):
     """Configuración para desarrollo"""

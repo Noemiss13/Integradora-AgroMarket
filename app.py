@@ -2,6 +2,7 @@
 # Usa Firebase Firestore como base de datos
 
 from flask import Flask, render_template
+from flask_mail import Mail
 from config.app import config
 
 # Importar blueprints de módulos
@@ -10,12 +11,18 @@ from modules.comprador.routes import comprador
 from modules.vendedor.routes import vendedor_bp
 from modules.general.routes import general_bp
 
+# Inicializar Flask-Mail
+mail = Mail()
+
 def create_app(config_name='development'):
     """Factory para crear la aplicación Flask"""
     app = Flask(__name__)
     
     # Configuración
     app.config.from_object(config[config_name])
+    
+    # Inicializar Flask-Mail
+    mail.init_app(app)
     
     # Registrar blueprints
     app.register_blueprint(general_bp)

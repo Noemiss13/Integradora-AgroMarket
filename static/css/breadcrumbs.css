@@ -1,0 +1,55 @@
+/* ===== Estilos estándar para breadcrumbs en todas las pantallas ===== */
+
+.breadcrumbs,
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem auto 2rem auto;
+    padding: 0 1.5rem;
+    font-size: 0.9rem;
+    max-width: 1200px;
+}
+
+/* Breadcrumb en página de productos - alineado a la derecha */
+.productos-main .breadcrumbs {
+    margin: 0 0 1.5rem 0;
+    padding: 0;
+    max-width: none;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 10;
+}
+
+.breadcrumbs a,
+.breadcrumb a {
+    color: #2e8b57;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.breadcrumbs a:hover,
+.breadcrumb a:hover {
+    color: #228B22;
+    text-decoration: underline;
+}
+
+.breadcrumbs span,
+.breadcrumb span {
+    color: #666;
+}
+
+.breadcrumbs span i,
+.breadcrumb span i {
+    color: #666;
+    margin-right: 0.25rem;
+}
+
+.breadcrumbs a i,
+.breadcrumb a i {
+    margin-right: 0.25rem;
+    color: #2e8b57;
+}
+

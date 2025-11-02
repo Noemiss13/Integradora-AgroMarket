@@ -31,6 +31,8 @@
   <!-- CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
 </head>
 
 <body>
@@ -43,13 +45,24 @@
         <a href="/vendedor/panel">Home</a>
         <a href="/vendedor/agregar_producto">Agregar Productos</a>
         <a href="/vendedor/mis_productos" class="activo">Mis Productos</a>
-        <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/vendedor/ventas">Ventas</a>
         <a href="/auth/perfil">Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
 <main>
+    <!-- Navigation Header -->
+    <div class="navigation-header">
+        <div></div>
+        <div class="breadcrumbs">
+            <a href="/vendedor/panel">Inicio</a>
+            <span>/</span>
+            <a href="/vendedor/mis_productos">Mis productos</a>
+            <span>/</span>
+            <span>Editar producto</span>
+        </div>
+    </div>
     <h1>Editar Producto</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

@@ -6,6 +6,7 @@
     <title>{{ categoria if categoria else "Productos" }} - AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
 </head>
 <body>
     <!-- ===== Menú superior ===== -->
@@ -26,6 +27,15 @@
     </nav>
 
     <main class="productos-main">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs" id="breadcrumbs-container">
+            <a href="/comprador/panel">Inicio</a>
+            <span>/</span>
+            <a href="/comprador/productos">Productos</a>
+            <span id="breadcrumb-categoria-separator" style="display: none;">/</span>
+            <span id="breadcrumb-categoria" style="display: none;"></span>
+        </div>
+
         <!-- ===== Header de la categoría ===== -->
         <header class="categoria-header">
             <div class="categoria-info">
@@ -122,6 +132,24 @@
             ).join(' ');
         }
         
+        // Actualizar breadcrumb con la categoría actual
+        function actualizarBreadcrumb(categoriaFiltro) {
+            const breadcrumbCategoria = document.getElementById('breadcrumb-categoria');
+            const breadcrumbSeparator = document.getElementById('breadcrumb-categoria-separator');
+            
+            if (!breadcrumbCategoria || !breadcrumbSeparator) return;
+            
+            // Si hay una categoría específica, mostrarla en el breadcrumb
+            if (categoriaFiltro && categoriaFiltro !== 'todos los productos') {
+                breadcrumbCategoria.textContent = obtenerNombreCategoria(categoriaFiltro);
+                breadcrumbCategoria.style.display = 'inline';
+                breadcrumbSeparator.style.display = 'inline';
+            } else {
+                breadcrumbCategoria.style.display = 'none';
+                breadcrumbSeparator.style.display = 'none';
+            }
+        }
+        
         
         // Inicializar Firebase
         async function inicializarFirebase() {
@@ -193,6 +221,9 @@
                 if (categoriaTitulo) {
                     categoriaTitulo.textContent = obtenerNombreCategoria(categoriaActual);
                 }
+                
+                // Actualizar breadcrumb
+                actualizarBreadcrumb(categoriaFiltro);
                 
                 const productosSnapshot = await db.collection('productos').get();
                 
@@ -275,41 +306,37 @@
             const productosHTML = productosParaMostrar.map(producto => {
                 return `
                     <article class="producto-card-small" 
-                             data-id="${producto.id}" 
-                             data-nombre="${producto.nombre}" 
-                             data-precio="${producto.precio}"
-                             data-categoria="${producto.categoria}"
-                             data-stock="${producto.stock}">
+                         data-id="${producto.id}" 
+                         data-nombre="${producto.nombre}" 
+                         data-precio="${producto.precio}"
+                         data-categoria="${producto.categoria}"
+                         data-stock="${producto.stock}">
                     
                         <a href="/comprador/detalle_producto/${producto.id}" class="producto-link-small" style="text-decoration: none; color: inherit;">
                             <div class="producto-image-small">
-                                ${producto.imagen && producto.imagen.trim() !== '' ? 
+                            ${producto.imagen && producto.imagen.trim() !== '' ? 
                                     `<img src="${producto.imagen}" alt="${producto.nombre}" class="producto-img-small" 
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                      <div class="producto-placeholder-small" style="display: none;">
-                                         <i class="fas fa-box"></i>
-                                     </div>` :
+                                     <i class="fas fa-box"></i>
+                                 </div>` :
                                     `<div class="producto-placeholder-small">
-                                         <i class="fas fa-box"></i>
-                                     </div>`
-                                }
+                                     <i class="fas fa-box"></i>
+                                 </div>`
+                            }
                             </div>
                             
                             <div class="producto-info-small">
                                 <h4 class="producto-nombre-small">${producto.nombre}</h4>
                             
                                 <div class="producto-precio-small">
-                                    $${producto.precio.toFixed(2)} / ${producto.unidad}
-                                </div>
-                                
+                                $${producto.precio.toFixed(2)} / ${producto.unidad}
+                            </div>
+                            
                                 <div class="producto-stock-small">
-                                    <span class="stock-icon">📦</span>
-                                    <span>${producto.stock} ${producto.unidad}</span>
-                                </div>
-                                
-                                <div class="producto-vendedor-small">
-                                    <span>${producto.vendedor_nombre}</span>
-                                </div>
+                                    <span class="stock-label">Stock:</span>
+                                    <span class="stock-value">${producto.stock} ${producto.unidad}</span>
+                            </div>
                             </a>
                             
                             <div class="producto-controls-small" onclick="event.stopPropagation();">
@@ -324,7 +351,7 @@
                                     Agregar
                                 </button>
                             </div>
-                    </article>
+                </article>
                 `;
             }).join('');
             

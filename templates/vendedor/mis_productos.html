@@ -6,6 +6,8 @@
     <title>Mis Productos - AgroMarket</title>
     <link rel="stylesheet" href="/static/css/navbar.css">
     <link rel="stylesheet" href="/static/css/estilos_vendedor.css">
+    <link rel="stylesheet" href="/static/css/breadcrumbs.css">
+    <link rel="stylesheet" href="/static/css/navigation-header.css">
     <link rel="stylesheet" href="/static/css/mis_productos.css?v=6">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
@@ -28,13 +30,22 @@
         <a href="/vendedor/panel">Home</a>
         <a href="/vendedor/agregar_producto">Agregar Productos</a>
         <a href="/vendedor/mis_productos" class="activo">Mis Productos</a>
-        <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/vendedor/ventas">Ventas</a>
         <a href="/auth/perfil">Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
 <main>
+    <!-- Navigation Header -->
+    <div class="navigation-header">
+        <div></div>
+        <div class="breadcrumbs">
+            <a href="/vendedor/panel">Inicio</a>
+            <span>/</span>
+            <span>Mis productos</span>
+        </div>
+    </div>
     <div class="container">
         <div class="header">
             <h1>Mis productos</h1>

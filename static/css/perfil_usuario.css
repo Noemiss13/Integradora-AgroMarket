@@ -20,6 +20,39 @@
 }
 
 /* ===================== */
+/* Botón Mis Pedidos */
+/* ===================== */
+.mis-pedidos-section {
+    margin-bottom: 16px;
+}
+
+.btn-mis-pedidos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-mis-pedidos:hover {
+    background: linear-gradient(135deg, #228B22 0%, #1d7a1d 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-mis-pedidos i {
+    font-size: 1.1rem;
+}
+
+/* ===================== */
 /* Reset y tipografía */
 /* ===================== */
 * {

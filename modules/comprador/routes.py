@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, session, redirect, url_for, request, flash, jsonify, current_app
+from flask_mail import Message, Mail
 from modules.auth.decorators import login_required, role_required
 import stripe
 import os
+from datetime import datetime
 
 # Blueprint del comprador
 comprador = Blueprint('comprador', __name__, template_folder="templates")
@@ -247,3 +249,203 @@ def pago_exitoso():
     return render_template("comprador/pago_exitoso.html", 
                          nombre=session.get("nombre", "Usuario"),
                          page='carrito')
+
+
+# ===== Ver mis pedidos =====
+@comprador.route("/mis_pedidos")
+@login_required
+@role_required("comprador")
+def mis_pedidos():
+    # Página de pedidos del comprador - datos cargados desde Firebase en el frontend
+    return render_template("comprador/mis_pedidos.html", 
+                         nombre=session.get("nombre", "Usuario"),
+                         page='pedidos')
+
+
+# ===== Ver detalle de pedido =====
+@comprador.route("/detalle_pedido/<string:pedido_id>")
+@login_required
+@role_required("comprador")
+def detalle_pedido(pedido_id):
+    # Página de detalle del pedido - datos cargados desde Firebase en el frontend
+    return render_template("comprador/detalle_pedido.html", 
+                         nombre=session.get("nombre", "Usuario"),
+                         pedido_id=pedido_id,
+                         page='pedidos')
+
+
+# ===== Enviar ticket de compra por correo =====
+@comprador.route("/enviar-ticket-compra", methods=["POST"])
+def enviar_ticket_compra():
+    """Endpoint para enviar el ticket de compra por correo electrónico"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        # Datos de la compra
+        compra_id = data.get('compra_id', 'N/A')
+        email_cliente = data.get('email_cliente', '')
+        nombre_cliente = data.get('nombre_cliente', 'Cliente')
+        fecha_compra = data.get('fecha_compra', datetime.now().strftime('%d/%m/%Y %H:%M'))
+        productos = data.get('productos', [])
+        subtotal = float(data.get('subtotal', 0))
+        envio = float(data.get('envio', 4.50))
+        impuestos = float(data.get('impuestos', 0))
+        total = float(data.get('total', 0))
+        metodo_pago = data.get('metodo_pago', 'N/A')
+        direccion_entrega = data.get('direccion_entrega', {})
+        
+        if not email_cliente:
+            return jsonify({'error': 'No se proporcionó el email del cliente'}), 400
+        
+        # Configurar método de pago
+        metodo_pago_labels = {
+            'tarjeta': 'Tarjeta de débito/crédito',
+            'efectivo': 'Efectivo contra entrega',
+            'transferencia': 'Transferencia bancaria'
+        }
+        metodo_pago_texto = metodo_pago_labels.get(metodo_pago, metodo_pago)
+        
+        # Construir HTML del ticket
+        productos_html = ''
+        for idx, producto in enumerate(productos, 1):
+            productos_html += f'''
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align:center;">{idx}</td>
+                    <td style="padding: 12px; border-bottom:1px solid #eee;">{producto.get('nombre', 'Producto')}</td>
+                    <td style="padding: 12px; border-bottom:1px solid #eee; text-align:center;">{producto.get('cantidad', 0)} {producto.get('unidad', 'kg')}</td>
+                    <td style="padding: 12px; border-bottom:1px solid #eee; text-align:right;">${float(producto.get('precio_unitario', 0)):.2f}</td>
+                    <td style="padding: 12px; border-bottom:1px solid #eee; text-align:right;">${float(producto.get('precio_total', 0)):.2f}</td>
+                </tr>
+            '''
+        
+        ciudad = direccion_entrega.get('ciudad', 'No especificada')
+        telefono = direccion_entrega.get('telefono', 'No especificado')
+        
+        html_body = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .section {{ background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .section h2 {{ color: #2e8b57; margin-top: 0; font-size: 20px; border-bottom: 2px solid #2e8b57; padding-bottom: 10px; }}
+                table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
+                th {{ background: #2e8b57; color: white; padding: 12px; text-align: left; }}
+                td {{ padding: 12px; border-bottom: 1px solid #eee; }}
+                .total-section {{ background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px; }}
+                .total-row {{ display: flex; justify-content: space-between; padding: 8px 0; }}
+                .total-final {{ font-size: 20px; font-weight: bold; color: #2e8b57; border-top: 2px solid #2e8b57; padding-top: 10px; margin-top: 10px; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🍃 AgroMarket</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 18px;">Ticket de Compra</p>
+                </div>
+                
+                <div class="content">
+                    <div class="section">
+                        <h2>📋 Información del Pedido</h2>
+                        <p><strong>Número de pedido:</strong> {compra_id}</p>
+                        <p><strong>Fecha:</strong> {fecha_compra}</p>
+                        <p><strong>Método de pago:</strong> {metodo_pago_texto}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>👤 Información del Cliente</h2>
+                        <p><strong>Nombre:</strong> {nombre_cliente}</p>
+                        <p><strong>Email:</strong> {email_cliente}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>📦 Productos Comprados</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center; width:50px;">#</th>
+                                    <th>Producto</th>
+                                    <th style="text-align:center;">Cantidad</th>
+                                    <th style="text-align:right;">Precio Unit.</th>
+                                    <th style="text-align:right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {productos_html}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>📍 Información de Entrega</h2>
+                        <p><strong>Ciudad de entrega:</strong> {ciudad}</p>
+                        <p><strong>Teléfono de contacto:</strong> {telefono}</p>
+                        <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                            <strong>ℹ️ Importante:</strong> El conductor se comunicará contigo en el número proporcionado para coordinar la entrega.
+                        </p>
+                    </div>
+                    
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>${subtotal:.2f}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Envío:</span>
+                            <span>${envio:.2f}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Impuestos:</span>
+                            <span>${impuestos:.2f}</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>TOTAL:</span>
+                            <span>${total:.2f}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Gracias por tu compra en AgroMarket 🍃</p>
+                        <p>Este es un comprobante automático, por favor guárdalo.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        # Crear y enviar el correo
+        msg = Message(
+            subject=f'🎉 Confirmación de Compra - Pedido #{compra_id[:9].upper()}',
+            recipients=[email_cliente],
+            html=html_body
+        )
+        
+        # Obtener la instancia de Mail desde la extensión de Flask
+        mail = current_app.extensions.get('mail')
+        if not mail:
+            # Si no está en extensions, intentar crear una nueva instancia
+            # Esto solo debería pasar si Flask-Mail no está configurado
+            current_app.logger.warning('Flask-Mail no está configurado correctamente')
+            return jsonify({'error': 'Servicio de correo no disponible'}), 503
+        
+        mail.send(msg)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Ticket de compra enviado correctamente'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f'Error enviando ticket de compra: {str(e)}')
+        return jsonify({
+            'error': f'Error al enviar el ticket: {str(e)}'
+        }), 500

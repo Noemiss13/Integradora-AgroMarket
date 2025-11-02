@@ -6,8 +6,18 @@
     <title>Agregar Producto - AgroMarket</title>
     <link rel="stylesheet" href="/static/css/navbar.css">
     <link rel="stylesheet" href="/static/css/estilos_vendedor.css">
+    <link rel="stylesheet" href="/static/css/breadcrumbs.css">
+    <link rel="stylesheet" href="/static/css/navigation-header.css">
     <link rel="stylesheet" href="/static/css/formulario_productos.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- PWA: Manifest y theme color -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#2e8b57">
+
+    <!-- Iconos -->
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icons-192.png') }}">
+    <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
 </head>
 <body>
 <nav>
@@ -19,13 +29,22 @@
         <a href="/vendedor/panel">Home</a>
         <a href="/vendedor/agregar_producto" class="activo">Agregar Productos</a>
         <a href="/vendedor/mis_productos">Mis Productos</a>
-        <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/vendedor/ventas">Ventas</a>
         <a href="/auth/perfil">Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
 
 <main>
+    <!-- Navigation Header -->
+    <div class="navigation-header">
+        <div></div>
+        <div class="breadcrumbs">
+            <a href="/vendedor/panel">Inicio</a>
+            <span>/</span>
+            <span>Agregar producto</span>
+        </div>
+    </div>
     <h1>Agregar Producto</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

@@ -554,6 +554,51 @@ body::before {
 }
 
 /* ===========================================
+   CAMPOS ADICIONALES PARA VENDEDORES
+   =========================================== */
+
+.vendedor-fields {
+    animation: slideDown 0.3s ease-out;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid #e2e8f0;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
+.vendedor-fields .input-group {
+    margin-bottom: 20px;
+}
+
+.vendedor-fields .input-group label {
+    color: #2ba656;
+    font-weight: 600;
+}
+
+.vendedor-fields .input-group small {
+    display: block;
+    margin-top: 5px;
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+.vendedor-fields .input-group small i {
+    margin-right: 5px;
+    color: #2ba656;
+}
+
+/* ===========================================
    RESPONSIVE
    =========================================== */
 

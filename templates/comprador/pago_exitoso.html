@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Exitoso - AgroMarket</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar del comprador -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong id="success-user-name">{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
+            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+<main class="main-content">
+    <!-- Navigation Header -->
+    <div class="navigation-header">
+        <div></div>
+        <div class="breadcrumbs">
+            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
+            <span>/</span>
+            <a href="{{ url_for('comprador.ver_carrito') }}">Carrito</a>
+            <span>/</span>
+            <span>Pago exitoso</span>
+        </div>
+    </div>
+
+    <!-- Success Content -->
+    <div class="success-page-content">
+        <!-- Header Section -->
+        <div class="success-header-section">
+            <div class="success-icon-section">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 class="success-title-page">Pago Completado</h1>
+            <p class="success-message-page">
+                Tu pago ha sido procesado exitosamente. Hemos recibido tu pedido y comenzaremos a prepararlo inmediatamente.
+            </p>
+        </div>
+
+        <!-- Transaction Details -->
+        <div class="success-transaction-section">
+            <h2 class="section-title-success">Detalles de la Transacción</h2>
+            <div class="transaction-info-grid">
+                <div class="transaction-info-item">
+                    <span class="info-label">Número de transacción</span>
+                    <span class="info-value" id="transaction-id">Cargando...</span>
+                </div>
+                <div class="transaction-info-item">
+                    <span class="info-label">Fecha de pago</span>
+                    <span class="info-value" id="payment-date">Cargando...</span>
+                </div>
+                <div class="transaction-info-item">
+                    <span class="info-label">Monto pagado</span>
+                    <span class="info-value info-amount" id="payment-amount">Cargando...</span>
+                </div>
+                <div class="transaction-info-item">
+                    <span class="info-label">Estado</span>
+                    <span class="info-status">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Completado</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="success-buttons-section">
+            <a href="{{ url_for('comprador.ver_productos') }}" class="btn-primary-success">
+                <i class="fas fa-shopping-cart"></i>
+                Continuar Comprando
+            </a>
+            <div class="secondary-buttons-group">
+                <a href="{{ url_for('comprador.mis_pedidos') }}" class="btn-secondary-success">
+                    <i class="fas fa-box"></i>
+                    Ver Mis Pedidos
+                </a>
+                <a href="{{ url_for('comprador.panel_comprador') }}" class="btn-secondary-success">
+                    <i class="fas fa-home"></i>
+                    Ir al Inicio
+                </a>
+            </div>
+        </div>
+
+        <!-- Email Notification -->
+        <div class="success-email-section">
+            <div class="email-icon-wrapper">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="email-content-wrapper">
+                <h3>Confirmación por correo</h3>
+                <p>Hemos enviado un correo electrónico con los detalles de tu compra a tu dirección registrada. Revisa tu bandeja de entrada.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fondo limpio para esta página
+    document.body.classList.add('success-page');
+    
+    // Cargar detalles del pago
+    loadPaymentDetails();
+    
+    // Limpiar carrito
+    clearCart();
+});
+
+function loadPaymentDetails() {
+    // Cargar datos reales del pago
+    const paymentIntentId = localStorage.getItem('paymentIntentId');
+    const paymentDate = localStorage.getItem('paymentDate');
+    const totalAmount = localStorage.getItem('totalAmount');
+    
+    // Mostrar ID de transacción real
+    const transactionIdEl = document.getElementById('transaction-id');
+    if (transactionIdEl) {
+        transactionIdEl.textContent = paymentIntentId || 'TXN-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    }
+    
+    // Mostrar fecha real del pago
+    const paymentDateEl = document.getElementById('payment-date');
+    if (paymentDateEl) {
+        if (paymentDate) {
+            const date = new Date(paymentDate);
+            paymentDateEl.textContent = date.toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            paymentDateEl.textContent = new Date().toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    }
+    
+    // Mostrar monto real
+    const paymentAmountEl = document.getElementById('payment-amount');
+    if (paymentAmountEl) {
+        paymentAmountEl.textContent = '$' + (parseFloat(totalAmount || '0.00').toFixed(2));
+    }
+}
+
+function clearCart() {
+    // Limpiar carrito del localStorage
+    localStorage.removeItem('carrito');
+    sessionStorage.removeItem('carrito');
+    
+    console.log('🛒 Carrito limpiado exitosamente');
+}
+
+// Limpiar datos de pago después de 30 segundos
+setTimeout(() => {
+    localStorage.removeItem('totalAmount');
+    localStorage.removeItem('paymentIntentId');
+    localStorage.removeItem('paymentDate');
+    console.log('🧹 Datos de pago limpiados');
+}, 30000);
+
+// No redirigir automáticamente - dejar que el usuario navegue a su ritmo
+
+// Intentar personalizar saludo de navbar
+try {
+    if (window.firebaseConfig && window.firebase) {
+        if (firebase.apps.length === 0) firebase.initializeApp(window.firebaseConfig);
+        const auth = firebase.auth();
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                const strong = document.getElementById('success-user-name');
+                if (strong) strong.textContent = user.displayName || (user.email || '').split('@')[0];
+            }
+        });
+    }
+} catch(_) {}
+</script>
+</body>
+</html>

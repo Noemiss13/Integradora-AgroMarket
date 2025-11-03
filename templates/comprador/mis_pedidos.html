@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Pedidos | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mis_pedidos.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+</head>
+<body>
+    <!-- ===== Menú superior ===== -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="/comprador/panel">Inicio</a>
+            <a href="/comprador/productos">Productos</a>
+            <a href="/comprador/carrito">Carrito</a>
+            <a href="/auth/perfil">Mi Perfil</a>
+            <a href="/auth/logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Navigation Header -->
+        <div class="navigation-header">
+            <div></div>
+            <div class="breadcrumbs">
+                <a href="/comprador/panel"><i class="fas fa-home"></i> Inicio</a>
+                <span>/</span>
+                <a href="/auth/perfil">Mi cuenta</a>
+                <span>/</span>
+                <span><i class="fas fa-shopping-bag"></i> Mis pedidos</span>
+            </div>
+        </div>
+        <div class="pedidos-container">
+            <div class="pedidos-header">
+                <h1><i class="fas fa-shopping-bag"></i> Mis Pedidos</h1>
+                <p>Historial de todas tus compras realizadas</p>
+            </div>
+
+            <!-- Botones de filtros desplegables -->
+            <div class="pedidos-filters">
+                <div class="filter-dropdown">
+                    <button class="filter-dropdown-btn" id="filter-estado-btn">
+                        <i class="fas fa-filter"></i>
+                        <span id="filter-estado-text">Todos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="filter-dropdown-menu" id="filter-estado-menu">
+                        <button class="filter-option active" data-filter="todos">
+                            <i class="fas fa-list"></i> Todos
+                        </button>
+                        <button class="filter-option" data-filter="preparando">
+                            <i class="fas fa-clock"></i> Preparando
+                        </button>
+                        <button class="filter-option" data-filter="enviado">
+                            <i class="fas fa-shipping-fast"></i> Enviado
+                        </button>
+                        <button class="filter-option" data-filter="recibido">
+                            <i class="fas fa-check-circle"></i> Recibido
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-dropdown">
+                    <button class="filter-dropdown-btn" id="filter-sort-btn">
+                        <i class="fas fa-sort"></i>
+                        <span id="filter-sort-text">Más reciente</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="filter-dropdown-menu" id="filter-sort-menu">
+                        <button class="filter-option active" data-sort="reciente">
+                            <i class="fas fa-calendar-alt"></i> Más reciente
+                        </button>
+                        <button class="filter-option" data-sort="antiguo">
+                            <i class="fas fa-calendar"></i> Más antiguo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div id="loading-pedidos" class="loading-pedidos">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando pedidos...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-pedidos" class="empty-pedidos" style="display: none;">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>No tienes pedidos aún</h3>
+                <p>Realiza tu primera compra para ver tus pedidos aquí</p>
+                <a href="/comprador/productos" class="btn-ir-productos">Ir a Productos</a>
+            </div>
+
+            <!-- Container de pedidos -->
+            <div id="pedidos-container" class="pedidos-list" style="display: none;">
+                <!-- Los pedidos se cargarán dinámicamente -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let db, auth, currentUser;
+        let pedidosData = [];
+        let filtroEstado = 'todos';
+        let ordenFechas = 'reciente';
+
+        // Inicializar Firebase
+        function inicializarFirebase() {
+            try {
+                auth = firebase.auth();
+                db = firebase.firestore();
+
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUser = user;
+                        cargarPedidos();
+                    } else {
+                        window.location.href = '/auth/login';
+                    }
+                });
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                document.getElementById('loading-pedidos').style.display = 'none';
+                document.getElementById('empty-pedidos').innerHTML = '<i class="fas fa-exclamation-triangle"></i><h3>Error al cargar</h3><p>Por favor, recarga la página.</p>';
+                document.getElementById('empty-pedidos').style.display = 'block';
+            }
+        }
+
+        // Cargar pedidos del usuario
+        async function cargarPedidos() {
+            try {
+                if (!db || !currentUser) {
+                    console.error('Firebase no inicializado');
+                    return;
+                }
+
+                const loadingEl = document.getElementById('loading-pedidos');
+                const emptyEl = document.getElementById('empty-pedidos');
+                const containerEl = document.getElementById('pedidos-container');
+
+                // Obtener todas las compras del usuario
+                // Nota: Usamos solo where() y ordenamos en JavaScript para evitar problemas con índices compuestos
+                const comprasSnapshot = await db.collection('compras')
+                    .where('usuario_id', '==', currentUser.uid)
+                    .get();
+
+                if (comprasSnapshot.empty) {
+                    loadingEl.style.display = 'none';
+                    emptyEl.style.display = 'block';
+                    return;
+                }
+
+                pedidosData = [];
+                for (const compraDoc of comprasSnapshot.docs) {
+                    const compraData = compraDoc.data();
+                    
+                    // Manejar diferentes formatos de fecha
+                    let fechaCompra = null;
+                    if (compraData.fecha_compra) {
+                        fechaCompra = compraData.fecha_compra.toDate ? compraData.fecha_compra.toDate() : new Date(compraData.fecha_compra);
+                    } else if (compraData.fecha_creacion) {
+                        fechaCompra = new Date(compraData.fecha_creacion);
+                    } else {
+                        fechaCompra = new Date();
+                    }
+                    
+                    // Obtener nombres de vendedores para cada producto
+                    const productos = compraData.productos || [];
+                    const productosConVendedor = await Promise.all(productos.map(async (producto) => {
+                        let vendedorNombre = producto.vendedor_nombre || 'Vendedor';
+                        
+                        // Si no hay nombre del vendedor pero hay vendedor_id, buscarlo en Firestore
+                        if (!producto.vendedor_nombre && producto.vendedor_id) {
+                            try {
+                                const vendedorDoc = await db.collection('usuarios').doc(producto.vendedor_id).get();
+                                if (vendedorDoc.exists) {
+                                    const vendedorData = vendedorDoc.data();
+                                    vendedorNombre = vendedorData.nombre || 
+                                                   vendedorData.nombre_tienda || 
+                                                   vendedorData.email?.split('@')[0] || 
+                                                   'Vendedor';
+                                }
+                            } catch (error) {
+                                console.warn('Error obteniendo nombre del vendedor:', error);
+                            }
+                        }
+                        
+                        return {
+                            ...producto,
+                            vendedor_nombre: vendedorNombre
+                        };
+                    }));
+                    
+                    pedidosData.push({
+                        id: compraDoc.id,
+                        fecha_compra: fechaCompra,
+                        fecha_creacion: compraData.fecha_creacion || fechaCompra.toISOString(),
+                        productos: productosConVendedor,
+                        totales: compraData.totales || compraData,
+                        total: compraData.total || 0,
+                        metodo_pago: compraData.metodo_pago || 'N/A',
+                        estado: compraData.estado || 'pendiente',
+                        estado_pedido: compraData.estado_pedido || 'preparando',
+                        direccion_entrega: compraData.direccion_entrega || {}
+                    });
+                }
+
+                // Ordenar por fecha de creación (más recientes primero)
+                pedidosData.sort((a, b) => {
+                    const fechaA = a.fecha_compra instanceof Date ? a.fecha_compra.getTime() : new Date(a.fecha_creacion).getTime();
+                    const fechaB = b.fecha_compra instanceof Date ? b.fecha_compra.getTime() : new Date(b.fecha_creacion).getTime();
+                    return fechaB - fechaA;
+                });
+
+                loadingEl.style.display = 'none';
+                containerEl.style.display = 'block';
+                aplicarFiltros();
+                setupFilterButtons();
+
+            } catch (error) {
+                console.error('Error cargando pedidos:', error);
+                console.error('Detalles del error:', {
+                    message: error.message,
+                    code: error.code,
+                    stack: error.stack
+                });
+                
+                const loadingEl = document.getElementById('loading-pedidos');
+                const emptyEl = document.getElementById('empty-pedidos');
+                loadingEl.style.display = 'none';
+                
+                let errorMessage = 'Error al cargar pedidos';
+                if (error.message) {
+                    errorMessage += ': ' + error.message;
+                }
+                
+                emptyEl.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>${errorMessage}</h3>
+                    <p>Por favor, recarga la página.</p>
+                    <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">
+                        Si el problema persiste, verifica tu conexión y que estés autenticado.
+                    </p>
+                `;
+                emptyEl.style.display = 'block';
+            }
+        }
+
+        // Aplicar filtros y ordenamiento
+        function aplicarFiltros() {
+            let pedidosFiltrados = [...pedidosData];
+            
+            // Filtrar por estado
+            if (filtroEstado !== 'todos') {
+                pedidosFiltrados = pedidosFiltrados.filter(pedido => {
+                    const estado = pedido.estado_pedido || 'preparando';
+                    return estado.toLowerCase() === filtroEstado.toLowerCase();
+                });
+            }
+            
+            // Ordenar por fecha
+            pedidosFiltrados.sort((a, b) => {
+                const fechaA = a.fecha_compra instanceof Date ? a.fecha_compra.getTime() : new Date(a.fecha_creacion).getTime();
+                const fechaB = b.fecha_compra instanceof Date ? b.fecha_compra.getTime() : new Date(b.fecha_creacion).getTime();
+                return ordenFechas === 'reciente' ? fechaB - fechaA : fechaA - fechaB;
+            });
+            
+            // Mostrar pedidos filtrados
+            const container = document.getElementById('pedidos-container');
+            if (!container) return;
+            
+            if (pedidosFiltrados.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-pedidos">
+                        <i class="fas fa-filter"></i>
+                        <h3>No hay pedidos con este filtro</h3>
+                        <p>No se encontraron pedidos con el estado seleccionado.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = pedidosFiltrados.map((pedido, index) => {
+                const fecha = pedido.fecha_compra instanceof Date 
+                    ? pedido.fecha_compra 
+                    : new Date(pedido.fecha_creacion);
+                
+                const fechaFormateada = fecha.toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const estadoPedido = pedido.estado_pedido || 'preparando';
+                const estadoLabels = {
+                    'preparando': 'Preparando',
+                    'enviado': 'Enviado',
+                    'recibido': 'Recibido'
+                };
+
+                const fechaSimple = fecha.toLocaleDateString('es-MX', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Generar lista de todos los productos
+                const productosHTML = pedido.productos && pedido.productos.length > 0 
+                    ? pedido.productos.map((producto, idx) => {
+                        const productoEstado = producto.estado_pedido || estadoPedido;
+                        const vendedorNombre = producto.vendedor_nombre || 'Vendedor';
+                        return `
+                            <div class="pedido-producto-row">
+                                <div class="pedido-left-content">
+                                    <img src="${producto.imagen || '/static/images/product-placeholder.png'}" 
+                                         alt="${producto.nombre}"
+                                         class="pedido-producto-img-small"
+                                         onerror="this.src='/static/images/product-placeholder.png'">
+                                    <div class="pedido-info-producto">
+                                        <div class="pedido-estado-top ${productoEstado}">
+                                            ${estadoLabels[productoEstado]}
+                                        </div>
+                                        <h3 class="pedido-nombre-producto">${producto.nombre}</h3>
+                                        <span class="pedido-cantidad-producto">${producto.cantidad} ${producto.unidad}</span>
+                                    </div>
+                                </div>
+                                <div class="pedido-center-content">
+                                    <div class="pedido-vendedor-info">
+                                        <strong class="vendedor-nombre">${vendedorNombre}</strong>
+                                        <button class="btn-enviar-mensaje" onclick="alert('Función de mensajería próximamente')">
+                                            Enviar mensaje
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="pedido-right-content">
+                                    <div class="pedido-acciones-buttons">
+                                        <a href="/comprador/detalle_pedido/${pedido.id}" class="btn-ver-compra">
+                                            Ver compra
+                                        </a>
+                                        <button class="btn-volver-comprar" onclick="alert('Función próximamente')">
+                                            Volver a comprar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')
+                    : '<p>Sin productos</p>';
+
+                return `
+                    <div class="pedido-card-ref">
+                        <div class="pedido-fecha-top">
+                            ${fechaSimple}
+                        </div>
+                        <div class="pedido-productos-container">
+                            ${productosHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Configurar botones de filtros desplegables
+        function setupFilterButtons() {
+            const filterEstadoBtn = document.getElementById('filter-estado-btn');
+            const filterEstadoMenu = document.getElementById('filter-estado-menu');
+            const filterEstadoText = document.getElementById('filter-estado-text');
+            const filterSortBtn = document.getElementById('filter-sort-btn');
+            const filterSortMenu = document.getElementById('filter-sort-menu');
+            const filterSortText = document.getElementById('filter-sort-text');
+
+            // Toggle menú de estado
+            if (filterEstadoBtn && filterEstadoMenu) {
+                filterEstadoBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    filterEstadoMenu.classList.toggle('show');
+                    filterEstadoBtn.classList.toggle('active');
+                    filterSortMenu.classList.remove('show');
+                    filterSortBtn.classList.remove('active');
+                });
+
+                // Opciones del menú de estado
+                filterEstadoMenu.querySelectorAll('.filter-option[data-filter]').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Remover active de todas las opciones
+                        filterEstadoMenu.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                        // Agregar active a la opción seleccionada
+                        this.classList.add('active');
+                        filtroEstado = this.getAttribute('data-filter');
+                        
+                        // Actualizar texto del botón
+                        const texto = this.textContent.trim();
+                        filterEstadoText.textContent = texto;
+                        
+                        // Cerrar menú
+                        filterEstadoMenu.classList.remove('show');
+                        filterEstadoBtn.classList.remove('active');
+                        
+                        // Aplicar filtros
+                        aplicarFiltros();
+                    });
+                });
+            }
+
+            // Toggle menú de ordenamiento
+            if (filterSortBtn && filterSortMenu) {
+                filterSortBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    filterSortMenu.classList.toggle('show');
+                    filterSortBtn.classList.toggle('active');
+                    filterEstadoMenu.classList.remove('show');
+                    filterEstadoBtn.classList.remove('active');
+                });
+
+                // Opciones del menú de ordenamiento
+                filterSortMenu.querySelectorAll('.filter-option[data-sort]').forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Remover active de todas las opciones
+                        filterSortMenu.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+                        // Agregar active a la opción seleccionada
+                        this.classList.add('active');
+                        ordenFechas = this.getAttribute('data-sort');
+                        
+                        // Actualizar texto del botón
+                        const texto = this.textContent.trim();
+                        filterSortText.textContent = texto;
+                        
+                        // Cerrar menú
+                        filterSortMenu.classList.remove('show');
+                        filterSortBtn.classList.remove('active');
+                        
+                        // Aplicar filtros
+                        aplicarFiltros();
+                    });
+                });
+            }
+
+            // Cerrar menús al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!filterEstadoBtn.contains(e.target) && !filterEstadoMenu.contains(e.target)) {
+                    filterEstadoMenu.classList.remove('show');
+                    filterEstadoBtn.classList.remove('active');
+                }
+                if (!filterSortBtn.contains(e.target) && !filterSortMenu.contains(e.target)) {
+                    filterSortMenu.classList.remove('show');
+                    filterSortBtn.classList.remove('active');
+                }
+            });
+        }
+
+        // Ver detalle del pedido (similar al modal del vendedor)
+        function verDetallePedido(index) {
+            const pedido = pedidosData[index];
+            if (!pedido) return;
+
+            const direccionEntrega = pedido.direccion_entrega || {};
+            const ciudad = direccionEntrega.ciudad || direccionEntrega.formatted || 'No especificada';
+            const telefono = direccionEntrega.telefono || 'No especificado';
+            
+            const estadoPedido = pedido.estado_pedido || 'preparando';
+            const estadoLabels = {
+                'preparando': 'Preparando',
+                'enviado': 'Enviado',
+                'recibido': 'Recibido'
+            };
+            
+            const metodoPagoLabels = {
+                'tarjeta': '💳 Tarjeta',
+                'efectivo': '💵 Efectivo',
+                'transferencia': '🏦 Transferencia'
+            };
+
+            const modalContent = `
+                <div class="modal-detalles-header">
+                    <h2><i class="fas fa-file-invoice"></i> Detalles del Pedido</h2>
+                    <button class="btn-cerrar-modal" onclick="cerrarModalDetalles()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="modal-detalles-body">
+                    <div class="detalle-section">
+                        <h3><i class="fas fa-calendar-alt"></i> Información General</h3>
+                        <div class="detalle-grid">
+                            <div class="detalle-item">
+                                <label>Fecha de Compra:</label>
+                                <span>${new Date(pedido.fecha_compra).toLocaleString('es-MX', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <label>Estado del Pedido:</label>
+                                <span class="estado-badge-detalle estado-${estadoPedido}">
+                                    ${estadoLabels[estadoPedido]}
+                                </span>
+                            </div>
+                            <div class="detalle-item">
+                                <label>Método de Pago:</label>
+                                <span>${metodoPagoLabels[pedido.metodo_pago] || pedido.metodo_pago}</span>
+                            </div>
+                            <div class="detalle-item">
+                                <label>Estado de Pago:</label>
+                                <span class="${pedido.estado === 'pagado' ? 'text-success' : 'text-warning'}">
+                                    ${pedido.estado === 'pagado' ? '✅ Pagado' : '⏳ Pendiente'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detalle-section">
+                        <h3><i class="fas fa-shopping-bag"></i> Productos (${pedido.productos.length})</h3>
+                        <div class="productos-detalle-completo">
+                            ${pedido.productos.map(p => `
+                                <div class="producto-detalle-completo">
+                                    <img src="${p.imagen || '/static/images/product-placeholder.png'}" 
+                                         alt="${p.nombre}"
+                                         onerror="this.src='/static/images/product-placeholder.png'">
+                                    <div class="producto-detalle-info-completo">
+                                        <h4>${p.nombre}</h4>
+                                        <div class="producto-detalle-meta">
+                                            <span><i class="fas fa-weight"></i> ${p.cantidad} ${p.unidad}</span>
+                                            <span><i class="fas fa-dollar-sign"></i> $${p.precio_unitario?.toFixed(2) || '0.00'} c/u</span>
+                                            <span class="producto-total-detalle"><strong>Total: $${p.precio_total?.toFixed(2) || '0.00'}</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="total-pedido">
+                            <strong>Total del Pedido: $${pedido.total.toFixed(2)}</strong>
+                        </div>
+                    </div>
+
+                    <div class="detalle-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Información de Entrega</h3>
+                        <div class="direccion-completa">
+                            <div class="detalle-grid">
+                                <div class="detalle-item">
+                                    <label>Ciudad de entrega:</label>
+                                    <span>${ciudad}</span>
+                                </div>
+                                <div class="detalle-item">
+                                    <label>Teléfono de contacto:</label>
+                                    <span>${telefono}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Crear o actualizar modal
+            let modal = document.getElementById('modal-detalles-pedido');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'modal-detalles-pedido';
+                modal.className = 'modal-detalles-overlay';
+                modal.innerHTML = '<div class="modal-detalles-content">' + modalContent + '</div>';
+                document.body.appendChild(modal);
+            } else {
+                modal.querySelector('.modal-detalles-content').innerHTML = modalContent;
+            }
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModalDetalles() {
+            const modal = document.getElementById('modal-detalles-pedido');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('modal-detalles-pedido');
+            if (modal && event.target === modal) {
+                cerrarModalDetalles();
+            }
+        });
+
+        // Inicializar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', inicializarFirebase);
+        } else {
+            inicializarFirebase();
+        }
+    </script>
+
+</body>
+</html>
+

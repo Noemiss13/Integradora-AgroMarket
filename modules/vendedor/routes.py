@@ -1,7 +1,6 @@
 import os
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
-from models.database import get_db_connection
 from modules.auth.decorators import login_required, role_required
 
 vendedor_bp = Blueprint('vendedor', __name__, template_folder='templates')
@@ -23,138 +22,67 @@ def panel_vendedor():
 
 # ===== Agregar Producto =====
 @vendedor_bp.route("/agregar", methods=["GET", "POST"])
+@vendedor_bp.route("/agregar_producto", methods=["GET", "POST"])
 @login_required
 @role_required("vendedor")
 def agregar_producto():
     if request.method == "POST":
-        nombre = request.form.get("nombre")
-        descripcion = request.form.get("descripcion")
-        categoria = request.form.get("categoria")
-        unidad = request.form.get("unidad")
-
-        try:
-            stock = int(request.form.get("stock"))
-            if stock < 0:
-                raise ValueError
-        except (ValueError, TypeError):
-            flash("Stock inválido", "danger")
-            return redirect(request.url)
-
-        try:
-            precio = float(request.form.get("precio"))
-        except (ValueError, TypeError):
-            flash("Precio inválido", "danger")
-            return redirect(request.url)
-
-        file = request.files.get("imagen")
-        if not file or file.filename == '':
-            flash("No se seleccionó ningún archivo.", "danger")
-            return redirect(request.url)
-
-        if not allowed_file(file.filename):
-            flash(f"Formato no permitido. Solo: {', '.join(ALLOWED_EXTENSIONS)}", "danger")
-            return redirect(request.url)
-
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO productos (nombre, descripcion, categoria, precio, unidad, stock, imagen, vendedor_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (nombre, descripcion, categoria, precio, unidad, stock, filename, session["usuario_id"]))
-            conn.commit()
-            conn.close()
-            flash("Producto publicado correctamente", "success")
-        except Exception as e:
-            flash(f"Error al guardar el producto: {e}", "danger")
-            return redirect(request.url)
-
-        return redirect(url_for("vendedor.agregar_producto"))
-
+        # Nota: Los productos ahora se guardan en Firebase en el frontend
+        flash("Producto agregado correctamente", "success")
+        return redirect(url_for("vendedor.mis_productos"))
+    
     return render_template("vendedor/agregar_producto.html", nombre=session.get("nombre"), page='agregar')
 
-# ===== Ver Productos =====
+# ===== Mis Productos =====
 @vendedor_bp.route("/productos")
+@vendedor_bp.route("/mis_productos")
 @login_required
 @role_required("vendedor")
-def productos():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT id, nombre, descripcion, categoria, precio, unidad, stock, imagen
-        FROM productos
-        WHERE vendedor_id = %s
-    """, (session["usuario_id"],))
-    productos = cursor.fetchall()
-    conn.close()
-    return render_template("vendedor/productos.html", productos=productos, nombre=session.get("nombre"), page='productos')
+def mis_productos():
+    return render_template("vendedor/mis_productos.html", 
+                         nombre=session.get("nombre"), 
+                         page='productos',
+                         productos=[])
 
-# ===== Ventas =====
-@vendedor_bp.route("/ventas")
+# ===== Editar Producto =====
+@vendedor_bp.route("/editar/<producto_id>", methods=["GET", "POST"])
 @login_required
 @role_required("vendedor")
-def ventas():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT p.nombre AS producto, v.cantidad, v.total, v.fecha_venta
-        FROM ventas v
-        JOIN productos p ON v.producto_id = p.id
-        WHERE p.vendedor_id = %s
-        ORDER BY v.fecha_venta DESC
-    """, (session["usuario_id"],))
-    ventas = cursor.fetchall()
-    conn.close()
-    return render_template("vendedor/ventas.html", ventas=ventas, nombre=session.get("nombre"), page='ventas')
-
-# ===== Editar producto =====
-@vendedor_bp.route("/producto/editar/<int:id>", methods=["GET", "POST"])
-@login_required
-@role_required("vendedor")
-def editar_producto(id):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM productos WHERE id = %s AND vendedor_id = %s", (id, session["usuario_id"]))
-    producto = cursor.fetchone()
-
-    if not producto:
-        flash("Producto no encontrado", "danger")
-        conn.close()
-        return redirect(url_for("vendedor.productos"))
-
+def editar_producto(producto_id):
     if request.method == "POST":
-        nombre = request.form["nombre"]
-        precio = float(request.form["precio"])
-        stock = int(request.form["stock"])
-        categoria = request.form["categoria"]
-        descripcion = request.form["descripcion"]
-
-        cursor.execute("""
-            UPDATE productos
-            SET nombre=%s, precio=%s, stock=%s, categoria=%s, descripcion=%s
-            WHERE id=%s
-        """, (nombre, precio, stock, categoria, descripcion, id))
-
-        conn.commit()
-        conn.close()
         flash("Producto actualizado correctamente", "success")
-        return redirect(url_for("vendedor.productos"))
+        return redirect(url_for("vendedor.mis_productos"))
+    
+    return render_template("vendedor/editar_producto.html", 
+                         nombre=session.get("nombre"), 
+                         page='productos',
+                         producto_id=producto_id)
 
-    conn.close()
-    return render_template("vendedor/editar_producto.html", producto=producto, nombre=session.get("nombre"))
-
-# ===== Eliminar producto =====
-@vendedor_bp.route("/producto/eliminar/<int:id>", methods=["POST"])
+# ===== Eliminar Producto =====
+@vendedor_bp.route("/eliminar/<int:id>")
 @login_required
 @role_required("vendedor")
 def eliminar_producto(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM productos WHERE id = %s AND vendedor_id = %s", (id, session["usuario_id"]))
-    conn.commit()
-    conn.close()
     flash("Producto eliminado correctamente", "success")
-    return redirect(url_for("vendedor.productos"))
+    return redirect(url_for("vendedor.mis_productos"))
+
+# ===== Ver Ventas =====
+@vendedor_bp.route("/ventas")
+@login_required
+@role_required("vendedor")
+def ver_ventas():
+    return render_template("vendedor/ventas.html", 
+                         nombre=session.get("nombre"), 
+                         page='ventas',
+                         ventas=[])
+
+# ===== Ver Productos (Catálogo) =====
+@vendedor_bp.route("/catalogo")
+@login_required
+@role_required("vendedor")
+def ver_catalogo():
+    # Nota: Los productos ahora se obtienen de Firebase en el frontend
+    return render_template("vendedor/productos.html", 
+                         nombre=session.get("nombre"), 
+                         page='catalogo',
+                         productos=[])

@@ -1,13 +1,3 @@
-# Conexión a base de datos para AgroMarket
-
-import mysql.connector
-from flask_sqlalchemy import SQLAlchemy
-from config.database import DB_CONFIG
-
-def get_db_connection():
-    """Obtiene una conexión directa a MySQL"""
-    conn = mysql.connector.connect(**DB_CONFIG)
-    return conn
-
-# Instancia de SQLAlchemy para ORM
-db = SQLAlchemy()
+# Modelos de base de datos para AgroMarket
+# Esta aplicación usa Firebase Firestore como base de datos
+# Los modelos se manejan directamente con Firebase en el frontend

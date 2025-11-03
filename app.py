@@ -1,16 +1,9 @@
 # Aplicación principal de AgroMarket
+# Usa Firebase Firestore como base de datos
 
-from flask import Flask
-from flask_bcrypt import Bcrypt
+from flask import Flask, render_template
 from flask_mail import Mail
-
-# Importar configuraciones
-from config.database import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS
-from config.mail import MAIL_CONFIG
 from config.app import config
-
-# Importar base de datos
-from models.database import db
 
 # Importar blueprints de módulos
 from modules.auth.routes import auth_bp
@@ -18,32 +11,35 @@ from modules.comprador.routes import comprador
 from modules.vendedor.routes import vendedor_bp
 from modules.general.routes import general_bp
 
+# Inicializar Flask-Mail
+mail = Mail()
+
 def create_app(config_name='development'):
     """Factory para crear la aplicación Flask"""
     app = Flask(__name__)
     
     # Configuración
     app.config.from_object(config[config_name])
-    app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = SQLALCHEMY_TRACK_MODIFICATIONS
     
-    # Configuración de correo
-    app.config.update(MAIL_CONFIG)
-    
-    # Inicializar extensiones
-    bcrypt = Bcrypt(app)
-    mail = Mail(app)
-    db.init_app(app)
-    
-    # Hacer bcrypt y mail disponibles globalmente
-    app.bcrypt = bcrypt
-    app.mail = mail
+    # Inicializar Flask-Mail
+    mail.init_app(app)
     
     # Registrar blueprints
     app.register_blueprint(general_bp)
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(vendedor_bp, url_prefix="/vendedor")
     app.register_blueprint(comprador, url_prefix="/comprador")
+    
+    # Ruta adicional para registro sin prefijo
+    @app.route("/register", methods=["GET", "POST"])
+    def register():
+        """Página de registro - Firebase maneja el registro en el frontend"""
+        return render_template("auth/register.html")
+    
+    # Ruta para manejar errores 404
+    @app.errorhandler(404)
+    def not_found(error):
+        return render_template("general/informacion.html"), 404
     
     return app
 
@@ -54,4 +50,4 @@ app = create_app()
 # EJECUTAR LA APP
 # ---------------------------
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=3000)
+    app.run(debug=True, host="127.0.0.1", port=8000)

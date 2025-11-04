@@ -5,7 +5,7 @@ import pytest
 # Asegura que Python encuentre app.py
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app import app  # importa la instancia de Flask
+from app import app # importa la instancia de Flask
 
 @pytest.fixture
 def cliente():

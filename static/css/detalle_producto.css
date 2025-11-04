@@ -340,6 +340,15 @@
     margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.comment-form-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
 }
 
 .comments-header h2 {
@@ -745,15 +754,284 @@
     gap: 20px;
 }
 
+.comment-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid var(--green);
+    transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+    background: #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.comment-author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1rem;
+}
+
+.comment-author i {
+    color: var(--green);
+    font-size: 0.9rem;
+}
+
+.comment-calificacion-numero {
+    background: var(--green);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.comment-date {
+    color: #666;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.comment-date i {
+    font-size: 0.85rem;
+}
+
 .comment-rating {
     color: #ffc107;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
 }
 
 .comment-text {
-    color: #666;
+    color: #333;
     line-height: 1.6;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Comments Container - Horizontal Layout */
+.comments-container {
+    display: flex;
+    gap: 25px;
+    margin-top: 25px;
+    align-items: flex-start;
+}
+
+/* Rating Summary Sidebar (Left - Smaller) */
+.rating-summary-sidebar {
+    flex: 0 0 280px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 20px;
+}
+
+.rating-score-compact {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.rating-number-compact {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.rating-stars-compact {
+    font-size: 1.1rem;
+    color: #ffc107;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+
+.rating-count-compact {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.rating-distribution-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.distribution-item-compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-label-compact {
+    width: 35px;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.star-label-compact i {
+    color: #ffc107;
+    font-size: 0.7rem;
+}
+
+.distribution-bar-compact {
+    flex: 1;
+    height: 16px;
+    background: #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.distribution-fill-compact {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green) 0%, #2ba656 100%);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    min-width: 2px;
+}
+
+.distribution-percent-compact {
+    width: 35px;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+/* Comments Content (Right Side - Takes more space) */
+.comments-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Comments List Header */
+.comments-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px 0 20px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.comments-list-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.comment-sort {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-select {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sort-select:hover {
+    border-color: var(--green);
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.1);
+}
+
+@media (max-width: 968px) {
+    .comments-container {
+        flex-direction: column;
+    }
+    
+    .rating-summary-sidebar {
+        flex: 1;
+        position: static;
+        width: 100%;
+    }
+    
+    .rating-score-compact {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        gap: 15px;
+    }
+    
+    .rating-number-compact {
+        margin-bottom: 0;
+    }
+    
+    .rating-stars-compact {
+        margin-bottom: 0;
+    }
+    
+    .rating-distribution-compact {
+        margin-top: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .comments-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .sort-select {
+        width: 100%;
+    }
+    
+    .rating-number-compact {
+        font-size: 1.8rem;
+    }
+    
+    .rating-stars-compact {
+        font-size: 0.9rem;
+    }
 }
 
 /* Seller Card Additional Styles */

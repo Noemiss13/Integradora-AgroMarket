@@ -1,3 +1,8 @@
 Flask==2.3.2
 Werkzeug==2.3.6
 Flask-Mail==0.9.1
+stripe
+email_validator
+firebase-admin
+itsdangerous
+requests

@@ -280,6 +280,19 @@
     </style>
 </head>
 <body>
+
+    <!-- Registro del Service Worker -->
+   <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker
+      .register("{{ url_for('static', filename='service-worker.js') }}")
+      .then((reg) => console.log("✅ Service Worker registrado:", reg.scope))
+      .catch((err) => console.error("❌ Error al registrar el Service Worker:", err));
+  }
+</script>
+
+</html>
+
     <header class="header">
         <nav class="navbar">
             <div class="container">
@@ -392,3 +405,4 @@
     </footer>
 </body>
 </html>
+

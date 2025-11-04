@@ -177,6 +177,108 @@
 
 <!-- Script unificado para toda la funcionalidad -->
 <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")
+    .then(reg => console.log("✅ Service Worker registrado:", reg))
+    .catch(err => console.error("❌ Error al registrar SW:", err));
+  }
+</script>
+
+<!-- IndexedDB y sincronización offline -->
+<script>
+let db;
+const request = indexedDB.open("AgroMarketDB", 1);
+
+request.onerror = () => console.error("❌ Error abriendo IndexedDB");
+request.onsuccess = () => { 
+  db = request.result; 
+  console.log("✅ IndexedDB lista");
+  syncPendingProducts();
+};
+
+request.onupgradeneeded = (e) => {
+  db = e.target.result;
+  if (!db.objectStoreNames.contains("productos")) {
+    db.createObjectStore("productos", { keyPath: "id", autoIncrement: true });
+  }
+};
+
+const form = document.getElementById("productForm");
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(form);
+  const producto = {
+    nombre: formData.get("nombre"),
+    descripcion: formData.get("descripcion"),
+    categoria: formData.get("categoria"),
+    unidad: formData.get("unidad"),
+    precio: formData.get("precio"),
+    stock: formData.get("stock"),
+    imagen: null
+  };
+
+  const file = formData.get("imagen");
+  const reader = new FileReader();
+  reader.onload = () => {
+    producto.imagen = reader.result;
+
+    if (navigator.onLine) {
+      enviarProducto(producto);
+    } else {
+      guardarOffline(producto);
+      alert("⚠️ Producto guardado offline. Se enviará cuando tengas internet.");
+      form.reset();
+    }
+  };
+  if (file) reader.readAsDataURL(file);
+});
+
+function guardarOffline(producto) {
+  const tx = db.transaction("productos", "readwrite");
+  const store = tx.objectStore("productos");
+  store.add(producto);
+}
+
+function syncPendingProducts() {
+  if (!navigator.onLine) return;
+
+  const tx = db.transaction("productos", "readonly");
+  const store = tx.objectStore("productos");
+  const getAll = store.getAll();
+
+  getAll.onsuccess = async () => {
+    const productos = getAll.result;
+    for (const p of productos) {
+      await enviarProducto(p);
+      const delTx = db.transaction("productos", "readwrite");
+      delTx.objectStore("productos").delete(p.id);
+    }
+  };
+}
+
+window.addEventListener("online", syncPendingProducts);
+
+async function enviarProducto(producto) {
+  try {
+    const formData = new FormData();
+    for (const key in producto) {
+      if (key === "imagen") {
+        const blob = await (await fetch(producto.imagen)).blob();
+        formData.append("imagen", blob, "producto.jpg");
+      } else {
+        formData.append(key, producto[key]);
+      }
+    }
+    const res = await fetch("/vendedor/agregar_producto", {
+      method: "POST",
+      body: formData
+    });
+    if (res.ok) console.log("✅ Producto enviado:", producto.nombre);
+  } catch (err) {
+    console.error("❌ Error enviando producto:", err);
+  }
+}
     console.log('🚀 Iniciando script unificado...');
     
     // Variables globales

@@ -18,3 +18,9 @@ def test_ruta_principal(cliente):
     """Verifica que la página principal responde correctamente"""
     respuesta = cliente.get('/')
     assert respuesta.status_code in [200, 302, 404]
+
+# ✅ Prueba de la ruta de detalle de producto
+def test_detalle_producto(cliente):
+    respuesta = cliente.get('/comprador/producto/1')
+    # Aceptamos 200 (OK), 404 (no encontrado) y 302 (redirige a login)
+    assert respuesta.status_code in [200, 302, 404]

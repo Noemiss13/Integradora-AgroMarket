@@ -229,11 +229,14 @@ def create_payment_intent():
             'payment_intent_id': payment_intent.id
         })
         
-    except stripe.error.StripeError as e:
-        return jsonify({'error': f'Error de Stripe: {str(e)}'}), 400
     except Exception as e:
-        current_app.logger.error(f'Error al crear payment intent: {str(e)}')
-        return jsonify({'error': 'Error al crear payment intent: ' + str(e)}), 500
+        # Manejar errores de Stripe de forma más segura
+        error_type = type(e).__name__
+        error_msg = str(e)
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower() or 'payment_intent' in error_msg.lower():
+            return jsonify({'error': f'Error de Stripe: {error_msg}'}), 400
+        current_app.logger.error(f'Error al crear payment intent: {error_msg}')
+        return jsonify({'error': 'Error al crear payment intent: ' + error_msg}), 500
 
 
 # ===== Pago exitoso (Stripe) =====
@@ -502,8 +505,11 @@ def procesar_devolucion():
         # Verificar que el payment intent existe y está completo
         try:
             payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
-        except stripe.error.StripeError as e:
-            return jsonify({'error': f'Error al recuperar el pago: {str(e)}'}), 400
+        except Exception as e:
+            error_msg = str(e)
+            if 'Stripe' in type(e).__name__ or 'stripe' in str(type(e)).lower():
+                return jsonify({'error': f'Error al recuperar el pago: {error_msg}'}), 400
+            raise
         
         # Verificar que el pago fue exitoso
         if payment_intent.status != 'succeeded':
@@ -580,15 +586,17 @@ def procesar_devolucion():
             'moneda': payment_intent.currency.upper()
         })
         
-    except stripe.error.StripeError as e:
-        current_app.logger.error(f'Error de Stripe al procesar devolución: {str(e)}')
-        return jsonify({
-            'error': f'Error al procesar la devolución: {str(e)}'
-        }), 400
     except Exception as e:
-        current_app.logger.error(f'Error procesando devolución: {str(e)}')
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            current_app.logger.error(f'Error de Stripe al procesar devolución: {error_msg}')
+            return jsonify({
+                'error': f'Error al procesar la devolución: {error_msg}'
+            }), 400
+        current_app.logger.error(f'Error procesando devolución: {error_msg}')
         return jsonify({
-            'error': f'Error al procesar la devolución: {str(e)}'
+            'error': f'Error al procesar la devolución: {error_msg}'
         }), 500
 
 
@@ -635,8 +643,12 @@ def obtener_detalles_pago(payment_intent_id):
                         'exp_year': card.exp_year,
                         'funding': card.funding  # credit, debit, prepaid, unknown
                     }
-            except stripe.error.StripeError as e:
-                current_app.logger.warning(f'No se pudo obtener payment method: {str(e)}')
+            except Exception as e:
+                error_msg = str(e)
+                if 'Stripe' in type(e).__name__ or 'stripe' in str(type(e)).lower():
+                    current_app.logger.warning(f'No se pudo obtener payment method: {error_msg}')
+                else:
+                    raise
         
         # Si no hay payment_method directo, intentar obtener desde los charges
         if not card_info:
@@ -677,10 +689,12 @@ def obtener_detalles_pago(payment_intent_id):
             'card': card_info
         })
         
-    except stripe.error.StripeError as e:
-        return jsonify({'error': f'Error al obtener detalles del pago: {str(e)}'}), 400
     except Exception as e:
-        current_app.logger.error(f'Error obteniendo detalles del pago: {str(e)}')
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            return jsonify({'error': f'Error al obtener detalles del pago: {error_msg}'}), 400
+        current_app.logger.error(f'Error obteniendo detalles del pago: {error_msg}')
         return jsonify({'error': 'Error al obtener los detalles del pago'}), 500
 
 
@@ -713,10 +727,12 @@ def verificar_devolucion(refund_id):
             }
         })
         
-    except stripe.error.StripeError as e:
-        return jsonify({'error': f'Error al verificar devolución: {str(e)}'}), 400
     except Exception as e:
-        current_app.logger.error(f'Error verificando devolución: {str(e)}')
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            return jsonify({'error': f'Error al verificar devolución: {error_msg}'}), 400
+        current_app.logger.error(f'Error verificando devolución: {error_msg}')
         return jsonify({'error': 'Error al verificar la devolución'}), 500
 
 

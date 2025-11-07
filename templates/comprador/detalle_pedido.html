@@ -18,8 +18,11 @@
     
     <!-- Firebase Config -->
     <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
+    
+    <!-- jsPDF para generar facturas PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
+<body data-pedido-id="{{ pedido_id }}">
     <!-- ===== Menú superior ===== -->
     <nav>
         <div class="nav-left">
@@ -110,10 +113,40 @@
                             <span id="pago-total" class="pago-total-text"></span>
                         </div>
                     </div>
-                    <a href="#" class="link-ver-detalles" onclick="event.preventDefault(); alert('Función próximamente')">
+                    <a href="#" class="link-ver-detalles" id="link-ver-detalles" onclick="event.preventDefault(); toggleDetallesPago()">
                         Ver detalles de pago
-                        <i class="fas fa-chevron-down"></i>
+                        <i class="fas fa-chevron-down" id="icon-ver-detalles"></i>
                     </a>
+                    <!-- Detalles expandidos de la tarjeta -->
+                    <div id="detalles-pago-expandidos" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e9ecef;">
+                        <div id="detalles-pago-loading" style="text-align: center; padding: 1rem;">
+                            <i class="fas fa-spinner fa-spin"></i> Cargando detalles...
+                        </div>
+                        <div id="detalles-pago-content" style="display: none;">
+                            <div class="detalle-tarjeta-info">
+                                <div class="detalle-tarjeta-item">
+                                    <label>Tarjeta:</label>
+                                    <div class="tarjeta-info">
+                                        <span class="tarjeta-brand" id="tarjeta-brand"></span>
+                                        <span class="tarjeta-number" id="tarjeta-number"></span>
+                                    </div>
+                                </div>
+                                <div class="detalle-tarjeta-item">
+                                    <label>Vencimiento:</label>
+                                    <span id="tarjeta-exp"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="detalles-pago-error" style="display: none; padding: 1rem; background: #fee; color: #c33; border-radius: 8px; margin-top: 1rem;">
+                            <i class="fas fa-exclamation-triangle"></i> No se pudieron cargar los detalles del pago.
+                        </div>
+                    </div>
+                    <!-- Botón de devolución -->
+                    <div id="devolucion-section" style="display: none; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e9ecef;">
+                        <button id="btn-solicitar-devolucion-detalle" class="btn-solicitar-devolucion-detalle">
+                            <i class="fas fa-undo"></i> Solicitar Devolución
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Estado de entrega -->
@@ -123,8 +156,8 @@
                             <i id="estado-icono" class="fas"></i>
                             <span id="estado-mensaje-texto"></span>
                         </div>
-                        <button class="btn-generar-factura" onclick="alert('Función próximamente')">
-                            Generar factura
+                        <button class="btn-generar-factura" id="btn-generar-factura" onclick="generarFacturaPDF()">
+                            <i class="fas fa-file-pdf"></i> Generar factura
                         </button>
                     </div>
                     <div class="estado-progreso">
@@ -190,293 +223,50 @@
         </div>
     </main>
 
-    <script>
-        let db, auth, currentUser;
-        const pedidoId = '{{ pedido_id }}';
-
-        // Inicializar Firebase
-        function inicializarFirebase() {
-            try {
-                auth = firebase.auth();
-                db = firebase.firestore();
-
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        currentUser = user;
-                        cargarDetallePedido();
-                    } else {
-                        window.location.href = '/auth/login';
-                    }
-                });
-            } catch (error) {
-                console.error('Error inicializando Firebase:', error);
-                mostrarError();
-            }
-        }
-
-        // Cargar detalle del pedido
-        async function cargarDetallePedido() {
-            try {
-                if (!db || !currentUser || !pedidoId) {
-                    console.error('Datos faltantes');
-                    mostrarError();
-                    return;
-                }
-
-                const loadingEl = document.getElementById('loading-detalle');
-                const contenidoEl = document.getElementById('contenido-pedido');
-                const errorEl = document.getElementById('error-detalle');
-
-                // Configurar listener en tiempo real para el pedido
-                const pedidoRef = db.collection('compras').doc(pedidoId);
-                
-                // Verificar inicialmente que existe y pertenece al usuario
-                const pedidoDoc = await pedidoRef.get();
-                
-                if (!pedidoDoc.exists) {
-                    mostrarError();
-                    return;
-                }
-
-                const pedidoDataInicial = pedidoDoc.data();
-
-                // Verificar que el pedido pertenece al usuario
-                if (pedidoDataInicial.usuario_id !== currentUser.uid) {
-                    mostrarError();
-                    return;
-                }
-
-                // Configurar listener en tiempo real
-                pedidoRef.onSnapshot((snapshot) => {
-                    if (!snapshot.exists) {
-                        mostrarError();
-                        return;
-                    }
-
-                    const pedidoData = snapshot.data();
-                    
-                    // Verificar que sigue perteneciendo al usuario
-                    if (pedidoData.usuario_id !== currentUser.uid) {
-                        mostrarError();
-                        return;
-                    }
-
-                    // Actualizar solo los elementos que cambian
-                    actualizarEstadoPedido(pedidoData);
-                }, (error) => {
-                    console.error('Error en listener del pedido:', error);
-                });
-
-                // Cargar datos iniciales
-                const pedidoData = pedidoDataInicial;
-
-                // Manejar fecha
-                let fechaCompra = null;
-                if (pedidoData.fecha_compra) {
-                    fechaCompra = pedidoData.fecha_compra.toDate ? pedidoData.fecha_compra.toDate() : new Date(pedidoData.fecha_compra);
-                } else if (pedidoData.fecha_creacion) {
-                    fechaCompra = new Date(pedidoData.fecha_creacion);
-                } else {
-                    fechaCompra = new Date();
-                }
-
-                // Obtener nombres de vendedores
-                const productos = pedidoData.productos || [];
-                const productosConVendedor = await Promise.all(productos.map(async (producto) => {
-                    let vendedorNombre = producto.vendedor_nombre || 'Vendedor';
-                    
-                    if (!producto.vendedor_nombre && producto.vendedor_id) {
-                        try {
-                            const vendedorDoc = await db.collection('usuarios').doc(producto.vendedor_id).get();
-                            if (vendedorDoc.exists) {
-                                const vendedorData = vendedorDoc.data();
-                                vendedorNombre = vendedorData.nombre || 
-                                               vendedorData.nombre_tienda || 
-                                               vendedorData.email?.split('@')[0] || 
-                                               'Vendedor';
-                            }
-                        } catch (error) {
-                            console.warn('Error obteniendo nombre del vendedor:', error);
-                        }
-                    }
-                    
-                    return {
-                        ...producto,
-                        vendedor_nombre: vendedorNombre
-                    };
-                }));
-
-                // Actualizar UI
-                document.getElementById('pedido-numero').textContent = pedidoId.substring(0, 9).toUpperCase();
-                document.getElementById('pedido-fecha').textContent = fechaCompra.toLocaleDateString('es-MX', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-
-                // Detalles de pago
-                const metodoPago = pedidoData.metodo_pago || 'N/A';
-                const metodoLabels = {
-                    'tarjeta': 'Tarjeta de débito / crédito',
-                    'efectivo': 'Efectivo',
-                    'transferencia': 'Transferencia bancaria'
-                };
-                const metodoIconos = {
-                    'tarjeta': 'fa-credit-card',
-                    'efectivo': 'fa-money-bill',
-                    'transferencia': 'fa-university'
-                };
-
-                document.getElementById('pago-metodo').textContent = metodoLabels[metodoPago] || metodoPago;
-                document.getElementById('pago-icono').className = `fas ${metodoIconos[metodoPago] || 'fa-credit-card'}`;
-                document.getElementById('pago-total').textContent = `$${pedidoData.total?.toFixed(2) || '0.00'}`;
-
-                // Estado de entrega - usar función auxiliar
-                actualizarEstadoPedido(pedidoData);
-
-                // Información de envío
-                document.getElementById('envio-recibe').textContent = pedidoData.usuario_nombre || currentUser.displayName || 'Usuario';
-                const direccionEntrega = pedidoData.direccion_entrega || {};
-                const ciudad = direccionEntrega.ciudad || direccionEntrega.formatted || 'No especificada';
-                const telefono = direccionEntrega.telefono || 'No especificado';
-                document.getElementById('envio-ciudad').textContent = ciudad;
-                document.getElementById('envio-telefono').textContent = telefono;
-
-                // Mostrar productos
-                mostrarProductos(productosConVendedor);
-
-                // Ocultar loading y mostrar contenido
-                loadingEl.style.display = 'none';
-                contenidoEl.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error cargando detalle del pedido:', error);
-                mostrarError();
-            }
-        }
-
-        // Actualizar estado del pedido (mensaje, icono y progreso)
-        function actualizarEstadoPedido(pedidoData) {
-            const estadoPedido = pedidoData.estado_pedido || 'preparando';
-            const estadoInfo = {
-                'preparando': {
-                    mensaje: 'Se está preparando tu pedido',
-                    icono: 'fa-clock'
-                },
-                'enviado': {
-                    mensaje: 'Tu pedido está en camino',
-                    icono: 'fa-truck'
-                },
-                'recibido': {
-                    mensaje: 'Se entregó en tu domicilio',
-                    icono: 'fa-check-circle'
-                }
-            };
-
-            const estadoActual = estadoInfo[estadoPedido] || estadoInfo['preparando'];
-            document.getElementById('estado-mensaje-texto').textContent = estadoActual.mensaje;
-            document.getElementById('estado-icono').className = `fas ${estadoActual.icono}`;
-
-            // Actualizar barra de progreso
-            actualizarProgreso(estadoPedido);
-        }
-
-        // Actualizar barra de progreso
-        function actualizarProgreso(estado) {
-            // Resetear todas las clases
-            const confirmando = document.getElementById('progreso-confirmando');
-            const preparando = document.getElementById('progreso-preparando');
-            const enviado = document.getElementById('progreso-enviado');
-            const recibido = document.getElementById('progreso-recibido');
-            
-            // Resetear líneas
-            const linea1 = document.getElementById('linea-confirmando-preparando');
-            const linea2 = document.getElementById('linea-preparando-enviado');
-            const linea3 = document.getElementById('linea-enviado-recibido');
-            
-            // Resetear estados
-            confirmando.classList.remove('completado');
-            preparando.classList.remove('completado');
-            enviado.classList.remove('completado');
-            recibido.classList.remove('completado');
-            
-            // Resetear líneas
-            if (linea1) linea1.style.background = '#ddd';
-            if (linea2) linea2.style.background = '#ddd';
-            if (linea3) linea3.style.background = '#ddd';
-
-            // Confirmando siempre está completado (pedido creado)
-            confirmando.classList.add('completado');
-            if (linea1) linea1.style.background = '#28a745';
-
-            // Preparando está completado cuando el estado es al menos 'preparando'
-            if (estado === 'preparando' || estado === 'enviado' || estado === 'recibido') {
-                preparando.classList.add('completado');
-                if (linea2) linea2.style.background = '#28a745';
-            }
-
-            // Enviado está completado cuando el estado es 'enviado' o 'recibido'
-            if (estado === 'enviado' || estado === 'recibido') {
-                enviado.classList.add('completado');
-                if (linea3) linea3.style.background = '#28a745';
-            }
-
-            // Recibido solo está completado cuando el estado es 'recibido'
-            if (estado === 'recibido') {
-                recibido.classList.add('completado');
-            }
-        }
-
-        // Mostrar productos
-        function mostrarProductos(productos) {
-            const container = document.getElementById('productos-lista-detalle');
-            if (!container) return;
-
-            container.innerHTML = productos.map(producto => `
-                <div class="producto-item-detalle" onclick="window.location.href='/comprador/detalle_producto/${producto.producto_id}'">
-                    <img src="${producto.imagen || '/static/images/product-placeholder.png'}" 
-                         alt="${producto.nombre}"
-                         onerror="this.src='/static/images/product-placeholder.png'">
-                    <div class="producto-item-info-detalle">
-                        <h4 class="producto-nombre-detalle">${producto.nombre}</h4>
-                        <span class="producto-vendedor-detalle">Vendido por ${producto.vendedor_nombre}</span>
-                        <span class="producto-precio-detalle">$${producto.precio_unitario?.toFixed(2) || '0.00'} × ${producto.cantidad} ${producto.unidad}</span>
-                    </div>
+    <!-- Modal para comentar/calificar vendedor -->
+    <div id="modal-comentar-vendedor" class="modal-overlay" style="display: none;">
+        <div class="modal-comentar-vendedor-content">
+            <div class="modal-comentar-vendedor-header">
+                <h3><i class="fas fa-star"></i> Calificar Vendedor</h3>
+                <button class="btn-cerrar-modal" onclick="cerrarModalComentarVendedor()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-comentar-vendedor-body">
+                <div class="vendedor-info-modal">
+                    <p><strong>Vendedor:</strong> <span id="vendedor-nombre-modal"></span></p>
+                    <p><strong>Producto:</strong> <span id="producto-nombre-modal"></span></p>
                 </div>
-            `).join('');
-        }
+                <div class="form-group">
+                    <label>Calificación</label>
+                    <div class="rating-input-vendedor" id="ratingInputVendedor">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                    <span class="rating-text" id="ratingTextVendedor">Selecciona una calificación</span>
+                </div>
+                <div class="form-group">
+                    <label for="comentarioVendedorText">Tu comentario sobre el vendedor</label>
+                    <textarea id="comentarioVendedorText" 
+                              placeholder="Comparte tu experiencia con este vendedor... (opcional)"
+                              rows="4"></textarea>
+                </div>
+                <div class="alert" id="alertComentarVendedor" style="display: none;"></div>
+                <div class="form-actions">
+                    <button class="btn-cancelar" onclick="cerrarModalComentarVendedor()">Cancelar</button>
+                    <button class="btn-procesar-devolucion" onclick="guardarComentarioVendedor()">
+                        <i class="fas fa-paper-plane"></i>
+                        Publicar Comentario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        // Copiar número de pedido
-        function copiarNumeroPedido() {
-            const numero = document.getElementById('pedido-numero').textContent;
-            navigator.clipboard.writeText(numero).then(() => {
-                const btn = event.target.closest('.btn-copiar');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i>';
-                btn.style.background = '#28a745';
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.background = '#2e8b57';
-                }, 2000);
-            }).catch(err => {
-                console.error('Error copiando:', err);
-                alert('No se pudo copiar el número de pedido');
-            });
-        }
-
-        // Mostrar error
-        function mostrarError() {
-            document.getElementById('loading-detalle').style.display = 'none';
-            document.getElementById('error-detalle').style.display = 'block';
-        }
-
-        // Inicializar cuando el DOM esté listo
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', inicializarFirebase);
-        } else {
-            inicializarFirebase();
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/detalle-pedido.js') }}"></script>
 </body>
 </html>
 

@@ -12,3 +12,11 @@ __pycache__/
 
 # Logs
 *.log
+
+# Credenciales de Firebase (NO SUBIR A GIT)
+serviceAccountKey.json
+firebase-service-account.json
+config/serviceAccountKey.json
+*.json
+!package.json
+!package-lock.json

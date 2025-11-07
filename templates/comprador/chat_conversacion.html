@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con Vendedor | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="/comprador/panel">Inicio</a>
+            <a href="/comprador/productos">Productos</a>
+            <a href="/comprador/carrito">Carrito</a>
+            <a href="/comprador/chats" class="activo">Chats</a>
+            <a href="/auth/perfil">Mi Perfil</a>
+            <a href="/auth/logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="chat-main">
+        <div class="chat-layout">
+            <aside class="chat-list-panel">
+                <div class="chat-back">
+                    <a href="/comprador/chats"><i class="fas fa-arrow-left"></i> Volver</a>
+                </div>
+                <div class="chat-list" id="chatList">
+                    <a href="/comprador/chats/{{ chat_id }}" class="chat-item active">
+                        <div class="chat-avatar">{{ vendedor_iniciales }}</div>
+                        <div class="chat-info">
+                            <div class="chat-info-header">
+                                <h3>{{ vendedor_nombre }}</h3>
+                                <span class="chat-time">Pedido #{{ pedido_folio }}</span>
+                            </div>
+                            <p class="chat-preview">{{ ultimo_mensaje }}</p>
+                        </div>
+                    </a>
+                    <!-- Otros chats podrían listarse aquí -->
+                </div>
+            </aside>
+
+            <section class="chat-conversation">
+                <header class="chat-conversation-header">
+                    <div class="chat-partner">
+                        <div class="chat-avatar grande">{{ vendedor_iniciales }}</div>
+                        <div>
+                            <h2>{{ vendedor_nombre }}</h2>
+                            <p>Pedido #{{ pedido_folio }}</p>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <a href="/comprador/detalle_pedido/{{ pedido_id }}" class="chat-action-link">
+                            <i class="fas fa-file-invoice"></i> Ver pedido
+                        </a>
+                        <button class="chat-action-link" disabled>
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-day-separator">Hoy</div>
+
+                    <div class="chat-message recibido">
+                        <div class="chat-message-bubble">
+                            <p>Hola {{ nombre }}, gracias por tu compra. Estoy preparando tu pedido, te aviso cuando salga a reparto.</p>
+                            <span class="chat-message-time">10:15</span>
+                        </div>
+                    </div>
+
+                    <div class="chat-message enviado">
+                        <div class="chat-message-bubble">
+                            <p>¡Hola! Perfecto, muchas gracias. ¿Tienes idea de la hora estimada?</p>
+                            <span class="chat-message-time">10:18</span>
+                        </div>
+                    </div>
+
+                    <div class="chat-message recibido">
+                        <div class="chat-message-bubble">
+                            <p>Sale a las 11:00, debería llegarte entre 12:00 y 12:30.</p>
+                            <span class="chat-message-time">10:20</span>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="chat-input-bar">
+                    <button class="chat-attach-btn" type="button">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="text" placeholder="Escribe tu mensaje..." />
+                    <button class="chat-send-btn" type="button">
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar
+                    </button>
+                </footer>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

@@ -17,7 +17,7 @@ async function inicializarFirebase() {
         
         // Esperar a que Firebase esté disponible
         let intentos = 0;
-        const maxIntentos = 20;
+        const maxIntentos = 30; // Aumentado a 30 intentos (7.5 segundos)
         
         while (typeof firebase === 'undefined' && intentos < maxIntentos) {
             await new Promise(resolve => setTimeout(resolve, 250));
@@ -25,29 +25,74 @@ async function inicializarFirebase() {
         }
         
         if (typeof firebase === 'undefined') {
+            console.error('❌ Firebase SDK no se cargó después de', maxIntentos, 'intentos');
             throw new Error('Firebase SDK no se cargó');
         }
         
+        console.log('✅ Firebase SDK disponible');
+        
         if (!window.firebaseConfig) {
+            console.error('❌ Configuración de Firebase no disponible en window.firebaseConfig');
             throw new Error('Configuración de Firebase no disponible');
         }
         
+        console.log('✅ Configuración de Firebase encontrada');
+        
+        // Inicializar Firebase si no está inicializado
         if (firebase.apps.length === 0) {
+            console.log('🔄 Inicializando nueva instancia de Firebase...');
             firebase.initializeApp(window.firebaseConfig);
+            console.log('✅ Firebase app inicializada');
+        } else {
+            console.log('✅ Firebase ya estaba inicializado');
         }
         
         auth = firebase.auth();
         db = firebase.firestore();
         
+        console.log('✅ Auth y Firestore obtenidos');
+        
+        // Configurar settings PRIMERO (antes de enablePersistence)
         db.settings({
             cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
             ignoreUndefinedProperties: true
         });
         
-        console.log('✅ Firebase inicializado');
+        console.log('✅ Settings de Firestore configurados');
+        
+        // Intentar habilitar persistencia (no es crítico si falla)
+        try {
+            await db.enablePersistence({
+                synchronizeTabs: true
+            }).catch(err => {
+                if (err.code === 'failed-precondition') {
+                    console.warn('⚠️ Persistencia solo disponible en una pestaña');
+                } else if (err.code === 'unimplemented') {
+                    console.warn('⚠️ Persistencia no disponible en este navegador');
+                } else {
+                    console.warn('⚠️ Error habilitando persistencia:', err.code, err.message);
+                }
+            });
+            console.log('✅ Persistencia configurada (o ignorada si no está disponible)');
+        } catch (error) {
+            // Ignorar errores de persistencia, no es crítico
+            console.warn('⚠️ No se pudo habilitar persistencia:', error.message);
+        }
+        
+        // Verificar que db esté funcionando con una prueba simple
+        try {
+            await db.collection('_test_connection').limit(0).get();
+            console.log('✅ Conexión a Firestore verificada');
+        } catch (testError) {
+            console.warn('⚠️ Advertencia al verificar conexión:', testError.message);
+            // No fallar aquí, podría ser un problema de permisos pero la conexión funciona
+        }
+        
+        console.log('✅ Firebase completamente inicializado');
         return true;
     } catch (error) {
         console.error('❌ Error inicializando Firebase:', error);
+        console.error('❌ Stack:', error.stack);
         return false;
     }
 }
@@ -70,8 +115,11 @@ async function cargarProducto() {
         console.log('📦 Cargando producto:', productoId);
         
         if (!db) {
+            console.error('❌ db no está disponible');
             throw new Error('Base de datos no disponible');
         }
+        
+        console.log('✅ db disponible, procediendo a cargar producto...');
         
         const productoDoc = await db.collection('productos').doc(productoId).get();
         
@@ -96,16 +144,23 @@ async function cargarProducto() {
         imagenes = [...new Set(imagenes.filter(img => img && img.trim() !== ''))];
         
         if (imagenes.length === 0) {
-            imagenes.push('/static/images/product-placeholder.png');
+            // Usar un placeholder SVG en base64 en lugar de una imagen que no existe
+            imagenes.push('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==');
         }
         
         mostrarProducto();
-        await cargarInformacionVendedor();
-        await cargarComentarios();
         
-        // Ocultar loading y mostrar contenido
+        // Ocultar loading y mostrar contenido PRIMERO para que el usuario vea la página
         document.getElementById('loadingState').style.display = 'none';
         document.getElementById('productContent').style.display = 'block';
+        
+        // Cargar información adicional en paralelo (sin bloquear la UI)
+        Promise.all([
+            cargarInformacionVendedor(),
+            cargarComentarios()
+        ]).catch(error => {
+            console.error('Error cargando información adicional:', error);
+        });
         
     } catch (error) {
         console.error('❌ Error cargando producto:', error);
@@ -143,13 +198,20 @@ function mostrarProducto() {
     // Actualizar cantidad máxima
     const quantityInput = document.getElementById('quantity');
     quantityInput.setAttribute('max', stock);
-    quantityInput.value = Math.min(parseInt(quantityInput.value), stock);
+    quantityInput.value = Math.min(parseInt(quantityInput.value) || 1, stock);
     
     // Galería de imágenes
     mostrarGalería();
     
     // Actualizar estado de botones
     actualizarEstadoBotones();
+    
+    // Verificar stock disponible considerando lo que está en el carrito
+    if (auth && auth.currentUser && db) {
+        verificarStockDisponible().catch(error => {
+            console.warn('⚠️ Error verificando stock disponible inicial:', error);
+        });
+    }
 }
 
 // Mostrar galería de imágenes
@@ -164,9 +226,10 @@ function mostrarGalería() {
     const thumbnailGallery = document.getElementById('thumbnailGallery');
     
     if (imagenes.length > 1) {
+        const placeholderSVG = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==';
         thumbnailGallery.innerHTML = imagenes.map((img, index) => `
             <div class="thumbnail-item ${index === 0 ? 'active' : ''}" data-index="${index}">
-                <img src="${img}" alt="Vista ${index + 1}" onerror="this.src='/static/images/product-placeholder.png'">
+                <img src="${img}" alt="Vista ${index + 1}" onerror="this.src='${placeholderSVG}'">
             </div>
         `).join('');
         
@@ -265,10 +328,11 @@ async function cargarInformacionVendedor() {
                 document.getElementById('sellerSince').textContent = fecha.getFullYear();
             }
             
-            // Contar productos del vendedor
+            // Contar productos del vendedor (con límite para mejorar rendimiento)
             const productosSnapshot = await db.collection('productos')
                 .where('vendedor_id', '==', productoData.vendedor_id)
                 .where('activo', '==', true)
+                .limit(100) // Limitar consulta para mejor rendimiento
                 .get();
             document.getElementById('sellerProducts').textContent = productosSnapshot.size;
             
@@ -285,18 +349,67 @@ async function cargarInformacionVendedor() {
 // Cargar comentarios
 async function cargarComentarios() {
     try {
-        if (!productoId) return;
+        if (!productoId) {
+            console.warn('⚠️ No hay productoId para cargar comentarios');
+            return;
+        }
         
-        const comentariosSnapshot = await db.collection('comentarios')
+        if (!db) {
+            console.warn('⚠️ Base de datos no disponible');
+            return;
+        }
+        
+        console.log('📝 Cargando comentarios para producto:', productoId);
+        
+        // Consultar comentarios del producto (con límite para mejorar rendimiento)
+        let comentariosSnapshot;
+        try {
+            comentariosSnapshot = await db.collection('comentarios')
             .where('producto_id', '==', productoId)
             .where('activo', '==', true)
             .orderBy('fecha', 'desc')
+                .limit(50) // Limitar a 50 comentarios más recientes
             .get();
+        } catch (orderByError) {
+            // Si falla orderBy, intentar sin orden
+            console.warn('⚠️ Error con orderBy, cargando sin orden:', orderByError);
+            comentariosSnapshot = await db.collection('comentarios')
+                .where('producto_id', '==', productoId)
+                .where('activo', '==', true)
+                .limit(50) // Limitar a 50 comentarios
+                .get();
+        }
         
         const comentarios = [];
         comentariosSnapshot.forEach(doc => {
-            comentarios.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            comentarios.push({ 
+                id: doc.id, 
+                nombre_usuario: data.nombre_usuario || 'Usuario',
+                texto: data.texto || '',
+                calificacion: data.calificacion || 0,
+                fecha: data.fecha,
+                producto_id: data.producto_id,
+                usuario_id: data.usuario_id
+            });
         });
+        
+        // Ordenar manualmente si no se pudo ordenar en la consulta
+        if (comentarios.length > 0 && comentarios[0].fecha) {
+            comentarios.sort((a, b) => {
+                const fechaA = a.fecha?.toDate ? a.fecha.toDate().getTime() : 0;
+                const fechaB = b.fecha?.toDate ? b.fecha.toDate().getTime() : 0;
+                return fechaB - fechaA; // Más recientes primero
+            });
+        }
+        
+        console.log(`✅ ${comentarios.length} comentarios cargados`);
+        
+        // Actualizar resumen de calificaciones
+        actualizarResumenCalificaciones(comentarios);
+        
+        // Guardar comentarios para ordenamiento
+        window.comentariosGlobales = comentarios;
         
         mostrarComentarios(comentarios);
         
@@ -305,13 +418,157 @@ async function cargarComentarios() {
         
     } catch (error) {
         console.error('❌ Error cargando comentarios:', error);
+        // Mostrar mensaje de error en la UI
+        const commentsList = document.getElementById('commentsList');
+        if (commentsList) {
+            commentsList.innerHTML = `
+                <div class="no-comments">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Error al cargar los comentarios. Por favor, recarga la página.</p>
+                </div>
+            `;
+        }
     }
+}
+
+// Actualizar resumen de calificaciones
+function actualizarResumenCalificaciones(comentarios) {
+    const ratingSummary = document.getElementById('ratingSummary');
+    if (!ratingSummary) return;
+    
+    if (comentarios.length === 0) {
+        ratingSummary.style.display = 'none';
+        return;
+    }
+    
+    ratingSummary.style.display = 'block';
+    
+    // Calcular promedio
+    let sumaCalificaciones = 0;
+    let totalCalificaciones = comentarios.length;
+    const distribucion = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    comentarios.forEach(comentario => {
+        const calificacion = comentario.calificacion || 0;
+        sumaCalificaciones += calificacion;
+        if (calificacion >= 1 && calificacion <= 5) {
+            distribucion[calificacion]++;
+        }
+    });
+    
+    const promedio = totalCalificaciones > 0 ? (sumaCalificaciones / totalCalificaciones).toFixed(1) : '0.0';
+    
+    // Actualizar promedio
+    document.getElementById('ratingAverage').textContent = promedio;
+    
+    // Actualizar estrellas grandes
+    const ratingStarsLarge = document.getElementById('ratingStarsLarge');
+    const promedioNum = parseFloat(promedio);
+    const estrellasLlenas = Math.floor(promedioNum);
+    const tieneMedia = (promedioNum - estrellasLlenas) >= 0.5;
+    
+    let estrellasHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= estrellasLlenas) {
+            estrellasHTML += '<i class="fas fa-star"></i>';
+        } else if (i === estrellasLlenas + 1 && tieneMedia) {
+            estrellasHTML += '<i class="fas fa-star-half-alt"></i>';
+        } else {
+            estrellasHTML += '<i class="far fa-star"></i>';
+        }
+    }
+    ratingStarsLarge.innerHTML = estrellasHTML;
+    
+    // Actualizar total de calificaciones
+    document.getElementById('totalRatings').textContent = `${totalCalificaciones} ${totalCalificaciones === 1 ? 'calificación' : 'calificaciones'}`;
+    
+        // Actualizar distribución (usando las clases compact para el nuevo diseño)
+    for (let i = 5; i >= 1; i--) {
+        const count = distribucion[i] || 0;
+        const porcentaje = totalCalificaciones > 0 ? ((count / totalCalificaciones) * 100).toFixed(0) : 0;
+        
+        // Intentar primero con las clases compact (nuevo diseño)
+        let item = document.querySelector(`.distribution-item-compact[data-rating="${i}"]`);
+        let fill, percent;
+        
+        if (item) {
+            fill = item.querySelector('.distribution-fill-compact');
+            percent = item.querySelector('.distribution-percent-compact');
+        } else {
+            // Fallback a las clases originales por si acaso
+            item = document.querySelector(`.distribution-item[data-rating="${i}"]`);
+            if (item) {
+                fill = item.querySelector('.distribution-fill');
+                percent = item.querySelector('.distribution-percent');
+            }
+        }
+        
+        if (fill) {
+            fill.style.width = `${porcentaje}%`;
+            fill.setAttribute('data-fill', porcentaje);
+        }
+        if (percent) {
+            percent.textContent = `${porcentaje}%`;
+            percent.setAttribute('data-percent', porcentaje);
+        }
+    }
+}
+
+// Ordenar comentarios
+function ordenarComentarios(comentarios, orden) {
+    const comentariosOrdenados = [...comentarios];
+    
+    switch(orden) {
+        case 'recientes':
+            comentariosOrdenados.sort((a, b) => {
+                const fechaA = a.fecha?.toDate ? a.fecha.toDate().getTime() : 0;
+                const fechaB = b.fecha?.toDate ? b.fecha.toDate().getTime() : 0;
+                return fechaB - fechaA;
+            });
+            break;
+        case 'antiguos':
+            comentariosOrdenados.sort((a, b) => {
+                const fechaA = a.fecha?.toDate ? a.fecha.toDate().getTime() : 0;
+                const fechaB = b.fecha?.toDate ? b.fecha.toDate().getTime() : 0;
+                return fechaA - fechaB;
+            });
+            break;
+        case 'mejores':
+            comentariosOrdenados.sort((a, b) => {
+                const calA = a.calificacion || 0;
+                const calB = b.calificacion || 0;
+                if (calB !== calA) return calB - calA;
+                // Si tienen la misma calificación, ordenar por fecha
+                const fechaA = a.fecha?.toDate ? a.fecha.toDate().getTime() : 0;
+                const fechaB = b.fecha?.toDate ? b.fecha.toDate().getTime() : 0;
+                return fechaB - fechaA;
+            });
+            break;
+        case 'peores':
+            comentariosOrdenados.sort((a, b) => {
+                const calA = a.calificacion || 0;
+                const calB = b.calificacion || 0;
+                if (calA !== calB) return calA - calB;
+                // Si tienen la misma calificación, ordenar por fecha
+                const fechaA = a.fecha?.toDate ? a.fecha.toDate().getTime() : 0;
+                const fechaB = b.fecha?.toDate ? b.fecha.toDate().getTime() : 0;
+                return fechaB - fechaA;
+            });
+            break;
+    }
+    
+    return comentariosOrdenados;
 }
 
 // Mostrar comentarios en la UI
 function mostrarComentarios(comentarios) {
     const commentsList = document.getElementById('commentsList');
     const commentsCount = document.getElementById('commentsCount');
+    
+    if (!commentsList || !commentsCount) {
+        console.error('❌ Elementos de comentarios no encontrados en el DOM');
+        return;
+    }
     
     commentsCount.textContent = comentarios.length;
     
@@ -326,46 +583,120 @@ function mostrarComentarios(comentarios) {
     }
     
     commentsList.innerHTML = comentarios.map(comentario => {
-        const fecha = comentario.fecha ? new Date(comentario.fecha.toDate()).toLocaleDateString('es-MX', {
+        // Formatear fecha
+        let fecha = 'Fecha no disponible';
+        try {
+            if (comentario.fecha) {
+                const fechaObj = comentario.fecha.toDate ? comentario.fecha.toDate() : new Date(comentario.fecha);
+                fecha = fechaObj.toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
-        }) : 'Fecha no disponible';
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        } catch (error) {
+            console.warn('Error formateando fecha:', error);
+        }
         
-        const estrellas = '★'.repeat(comentario.calificacion || 0) + '☆'.repeat(5 - (comentario.calificacion || 0));
+        // Generar estrellas para la calificación
+        const calificacion = comentario.calificacion || 0;
+        const estrellasLlenas = '★'.repeat(calificacion);
+        const estrellasVacias = '☆'.repeat(5 - calificacion);
+        const estrellas = estrellasLlenas + estrellasVacias;
+        
+        // Escapar HTML para seguridad
+        const nombre = (comentario.nombre_usuario || 'Usuario').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const texto = (comentario.texto || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
         return `
             <div class="comment-item">
                 <div class="comment-header">
-                    <span class="comment-author">${comentario.nombre_usuario || 'Usuario'}</span>
-                    <span class="comment-date">${fecha}</span>
+                    <div class="comment-author-info">
+                        <span class="comment-author">
+                            <i class="fas fa-user"></i>
+                            ${nombre}
+                        </span>
+                        <span class="comment-calificacion-numero">${calificacion}/5</span>
                 </div>
-                <div class="comment-rating">${estrellas}</div>
-                <div class="comment-text">${comentario.texto || ''}</div>
+                    <span class="comment-date">
+                        <i class="fas fa-clock"></i>
+                        ${fecha}
+                    </span>
+                </div>
+                <div class="comment-rating" title="Calificación: ${calificacion} de 5 estrellas">
+                    ${estrellas}
+                </div>
+                <div class="comment-text">${texto}</div>
             </div>
         `;
     }).join('');
+    
+    console.log(`✅ ${comentarios.length} comentarios mostrados en la UI`);
 }
 
 // Verificar si el usuario puede comentar
 async function verificarPermisoComentar() {
     try {
-        const user = auth.currentUser;
-        if (user) {
-            // Verificar si ya comentó
-            const comentarioExistente = await db.collection('comentarios')
-                .where('producto_id', '==', productoId)
-                .where('usuario_id', '==', user.uid)
-                .where('activo', '==', true)
-                .get();
-            
-            if (comentarioExistente.empty) {
-                document.getElementById('commentForm').style.display = 'block';
-            }
+        const btnMostrar = document.getElementById('btn-mostrar-comentario');
+        const cancelBtn = document.getElementById('cancelCommentBtn');
+        
+        // Siempre mostrar el botón - los usuarios pueden comentar las veces que quieran
+        if (btnMostrar) {
+            btnMostrar.style.display = 'inline-flex';
+        }
+        if (cancelBtn) {
+            cancelBtn.style.display = 'inline-flex';
         }
     } catch (error) {
         console.error('❌ Error verificando permiso:', error);
+        // En caso de error, mostrar el botón de todos modos
+        const btnMostrar = document.getElementById('btn-mostrar-comentario');
+        if (btnMostrar) {
+            btnMostrar.style.display = 'inline-flex';
+        }
     }
+}
+
+// Mostrar formulario de comentarios
+function mostrarFormularioComentario() {
+    const user = auth.currentUser;
+    if (!user) {
+        mostrarNotificacion('Debes iniciar sesión para comentar', 'error');
+        return;
+    }
+    
+    const commentForm = document.getElementById('commentForm');
+    const btnMostrar = document.getElementById('btn-mostrar-comentario');
+    
+    if (commentForm) {
+        commentForm.style.display = 'block';
+    }
+    if (btnMostrar) {
+        btnMostrar.style.display = 'none';
+    }
+}
+
+// Ocultar formulario de comentarios
+function ocultarFormularioComentario() {
+    const commentForm = document.getElementById('commentForm');
+    const btnMostrar = document.getElementById('btn-mostrar-comentario');
+    const commentText = document.getElementById('commentText');
+    const cancelBtn = document.getElementById('cancelCommentBtn');
+    
+    if (commentForm) {
+        commentForm.style.display = 'none';
+    }
+    if (btnMostrar) {
+        btnMostrar.style.display = 'inline-flex';
+    }
+    if (commentText) {
+        commentText.value = '';
+    }
+    // Resetear rating
+    currentRating = 0;
+    resaltarEstrellas(0);
 }
 
 // Inicializar sistema de rating
@@ -420,31 +751,49 @@ async function publicarComentario() {
         }
         
         // Obtener nombre del usuario
+        let nombreUsuario = 'Usuario';
+        try {
         const userDoc = await db.collection('usuarios').doc(user.uid).get();
-        const nombreUsuario = userDoc.exists ? (userDoc.data().nombre || user.displayName || user.email.split('@')[0]) : (user.displayName || user.email.split('@')[0]);
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                nombreUsuario = userData.nombre || userData.nombre_tienda || user.displayName || user.email.split('@')[0] || 'Usuario';
+            } else {
+                nombreUsuario = user.displayName || user.email.split('@')[0] || 'Usuario';
+            }
+        } catch (error) {
+            console.warn('⚠️ Error obteniendo nombre del usuario:', error);
+            nombreUsuario = user.displayName || user.email.split('@')[0] || 'Usuario';
+        }
         
-        // Crear comentario
+        // Crear comentario para guardar en Firestore
         const comentario = {
             producto_id: productoId,
             usuario_id: user.uid,
             nombre_usuario: nombreUsuario,
-            texto: texto,
+            texto: texto.trim(),
             calificacion: currentRating,
             fecha: firebase.firestore.FieldValue.serverTimestamp(),
             activo: true
         };
         
+        console.log('💾 Guardando comentario en Firestore:', {
+            producto_id: productoId,
+            nombre_usuario: nombreUsuario,
+            calificacion: currentRating,
+            texto_length: texto.trim().length
+        });
+        
+        // Guardar en Firestore
         await db.collection('comentarios').add(comentario);
+        
+        console.log('✅ Comentario guardado exitosamente en Firestore');
         
         mostrarNotificacion('✅ Comentario publicado exitosamente', 'success');
         
-        // Limpiar formulario
-        document.getElementById('commentText').value = '';
-        currentRating = 0;
-        resaltarEstrellas(0);
-        document.getElementById('commentForm').style.display = 'none';
+        // Limpiar y ocultar formulario
+        ocultarFormularioComentario();
         
-        // Recargar comentarios
+        // Actualizar comentarios globales y recargar
         await cargarComentarios();
         
     } catch (error) {
@@ -458,17 +807,69 @@ function actualizarEstadoBotones() {
     const quantityInput = document.getElementById('quantity');
     const decreaseBtn = document.getElementById('decreaseBtn');
     const increaseBtn = document.getElementById('increaseBtn');
-    const stock = parseInt(quantityInput.getAttribute('max')) || 0;
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    
+    // Obtener stock actualizado de productoData (o del atributo max si está actualizado)
+    const stock = productoData ? (productoData.stock || 0) : (parseInt(quantityInput.getAttribute('max')) || 0);
     const currentValue = parseInt(quantityInput.value) || 1;
     
-    decreaseBtn.disabled = currentValue <= 1;
-    increaseBtn.disabled = currentValue >= stock;
+    // Actualizar límite máximo del input
+    quantityInput.setAttribute('max', stock);
+    
+    // Asegurar que el valor no exceda el stock
+    if (currentValue > stock) {
+        quantityInput.value = stock > 0 ? stock : 1;
+    }
+    if (currentValue < 1) {
+        quantityInput.value = 1;
+    }
+    
+    decreaseBtn.disabled = parseInt(quantityInput.value) <= 1;
+    increaseBtn.disabled = parseInt(quantityInput.value) >= stock;
     
     // Deshabilitar botones si no hay stock
-    if (stock <= 0) {
-        document.getElementById('addToCartBtn').disabled = true;
-        document.getElementById('buyNowBtn').disabled = true;
+    const hayStock = stock > 0;
+    if (addToCartBtn) addToCartBtn.disabled = !hayStock;
+    if (buyNowBtn) buyNowBtn.disabled = !hayStock;
+}
+
+// Actualizar UI del stock (mostrar stock disponible considerando lo que está en carrito)
+async function actualizarStockUI(stockTotal, unidad, cantidadEnCarrito = 0) {
+    const stockDisponible = Math.max(0, stockTotal - cantidadEnCarrito);
+    
+    // Actualizar productoData local
+    if (productoData) {
+        productoData.stock = stockTotal;
     }
+    
+    // Actualizar elementos de la UI
+    const stockElement = document.getElementById('productStock');
+    const stockInfoElement = document.getElementById('stockInfo');
+    const quantityInput = document.getElementById('quantity');
+    
+    if (stockElement) {
+        stockElement.textContent = stockTotal;
+    }
+    
+    if (stockInfoElement) {
+        if (cantidadEnCarrito > 0) {
+            stockInfoElement.textContent = `Disponible: ${stockDisponible} ${unidad} (${stockTotal} total, ${cantidadEnCarrito} en tu carrito)`;
+        } else {
+            stockInfoElement.textContent = `Disponible: ${stockTotal} ${unidad}`;
+        }
+    }
+    
+    if (quantityInput) {
+        quantityInput.setAttribute('max', stockDisponible);
+        const currentValue = parseInt(quantityInput.value) || 1;
+        if (currentValue > stockDisponible) {
+            quantityInput.value = stockDisponible > 0 ? stockDisponible : 1;
+        }
+    }
+    
+    // Actualizar estado de botones
+    actualizarEstadoBotones();
 }
 
 // Agregar al carrito
@@ -481,10 +882,26 @@ async function agregarAlCarrito() {
         }
         
         const quantity = parseInt(document.getElementById('quantity').value);
-        const stock = productoData.stock || 0;
         
-        if (quantity < 1 || quantity > stock) {
-            mostrarNotificacion('❌ Cantidad inválida', 'error');
+        // Obtener stock ACTUAL de Firestore (no usar el cacheado)
+        const productoDocActual = await db.collection('productos').doc(productoId).get();
+        if (!productoDocActual.exists) {
+            mostrarNotificacion('❌ Producto no encontrado', 'error');
+            return;
+        }
+        
+        const productoDataActual = productoDocActual.data();
+        const stockActual = productoDataActual.stock || 0;
+        
+        if (quantity < 1) {
+            mostrarNotificacion('❌ La cantidad debe ser mayor a cero', 'error');
+            return;
+        }
+        
+        if (quantity > stockActual) {
+            mostrarNotificacion(`❌ No hay suficiente stock disponible. Stock actual: ${stockActual} ${productoDataActual.unidad || 'kg'}`, 'error');
+            // Actualizar UI con stock actual
+            actualizarStockUI(stockActual, productoDataActual.unidad || 'kg');
             return;
         }
         
@@ -497,10 +914,13 @@ async function agregarAlCarrito() {
         if (!carritoSnapshot.empty) {
             // Actualizar cantidad
             const item = carritoSnapshot.docs[0];
-            const nuevaCantidad = item.data().cantidad + quantity;
+            const cantidadEnCarrito = item.data().cantidad || 0;
+            const nuevaCantidad = cantidadEnCarrito + quantity;
             
-            if (nuevaCantidad > stock) {
-                mostrarNotificacion('❌ No hay suficiente stock disponible', 'error');
+            if (nuevaCantidad > stockActual) {
+                mostrarNotificacion(`❌ No hay suficiente stock disponible. Stock actual: ${stockActual} ${productoDataActual.unidad || 'kg'}. Ya tienes ${cantidadEnCarrito} en el carrito.`, 'error');
+                // Actualizar UI con stock actual
+                actualizarStockUI(stockActual, productoDataActual.unidad || 'kg');
                 return;
             }
             
@@ -510,35 +930,45 @@ async function agregarAlCarrito() {
             });
             
             mostrarNotificacion(`✅ ${quantity} más agregado al carrito`, 'success');
+            
+            // Actualizar stock disponible mostrado (considerando lo que está en carrito)
+            const stockDisponible = stockActual - nuevaCantidad;
+            actualizarStockUI(stockActual, productoDataActual.unidad || 'kg', nuevaCantidad);
         } else {
             // Crear nuevo item
-            const vendedorId = productoData.vendedor_id || productoData.vendedorId || '';
+            const vendedorId = productoDataActual.vendedor_id || productoDataActual.vendedorId || '';
             console.log('🛒 Agregando al carrito:', {
-                producto_nombre: productoData.nombre,
+                producto_nombre: productoDataActual.nombre,
                 vendedor_id: vendedorId,
-                producto_data_completo: productoData
+                stock_actual: stockActual
             });
             
             const itemCarrito = {
                 producto_id: productoId,
-                nombre: productoData.nombre,
-                precio: productoData.precio,
+                nombre: productoDataActual.nombre,
+                precio: productoDataActual.precio,
                 cantidad: quantity,
-                unidad: productoData.unidad || 'kg',
-                imagen: imagenes[0] || '/static/images/product-placeholder.png',
-                vendedor_nombre: productoData.vendedor_nombre || 'N/A',
+                unidad: productoDataActual.unidad || 'kg',
+                imagen: imagenes[0] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==',
+                vendedor_nombre: productoDataActual.vendedor_nombre || 'N/A',
                 vendedor_id: vendedorId,
                 fecha_agregado: firebase.firestore.FieldValue.serverTimestamp(),
                 usuario_id: user.uid,
-                categoria: productoData.categoria
+                categoria: productoDataActual.categoria
             };
             
             console.log('📦 Item carrito a guardar:', itemCarrito);
             await db.collection('carrito').add(itemCarrito);
             mostrarNotificacion('✅ Producto agregado al carrito', 'success');
+            
+            // Actualizar stock disponible mostrado (considerando lo que está en carrito)
+            actualizarStockUI(stockActual, productoDataActual.unidad || 'kg', quantity);
         }
         
-        // Resetear cantidad
+        // Actualizar productoData local con datos actualizados
+        productoData = { id: productoId, ...productoDataActual };
+        
+        // Resetear cantidad y actualizar UI
         document.getElementById('quantity').value = 1;
         actualizarEstadoBotones();
         
@@ -647,7 +1077,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Inicializar Firebase
     const firebaseOk = await inicializarFirebase();
     if (!firebaseOk) {
-        mostrarError('No se pudo conectar con la base de datos');
+        console.error('❌ No se pudo inicializar Firebase');
+        // Intentar de nuevo después de un breve delay
+        setTimeout(async () => {
+            const retryOk = await inicializarFirebase();
+            if (!retryOk) {
+                mostrarError('No se pudo conectar con la base de datos. Por favor, verifica tu conexión a internet y recarga la página.');
+            } else {
+                // Si funciona en el segundo intento, cargar el producto
+                await cargarProducto();
+            }
+        }, 2000);
         return;
     }
     
@@ -693,8 +1133,72 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // Inicializar sistema de rating y comentarios
     inicializarRating();
-    document.getElementById('submitCommentBtn').addEventListener('click', publicarComentario);
+    
+    // Botón para mostrar formulario de comentarios
+    const btnMostrar = document.getElementById('btn-mostrar-comentario');
+    if (btnMostrar) {
+        btnMostrar.addEventListener('click', mostrarFormularioComentario);
+        // Asegurar que el botón esté visible inicialmente
+        btnMostrar.style.display = 'inline-flex';
+    }
+    
+    // Botón para ocultar formulario
+    const cancelBtn = document.getElementById('cancelCommentBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', ocultarFormularioComentario);
+    }
+    
+    // Botón para publicar comentario
+    const submitBtn = document.getElementById('submitCommentBtn');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', publicarComentario);
+    }
+    
+    // Selector de ordenamiento
+    const sortSelect = document.getElementById('sortComments');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            if (window.comentariosGlobales && window.comentariosGlobales.length > 0) {
+                const orden = this.value;
+                const comentariosOrdenados = ordenarComentarios(window.comentariosGlobales, orden);
+                mostrarComentarios(comentariosOrdenados);
+            }
+        });
+    }
     
     // Cargar producto
     await cargarProducto();
 });
+
+// Verificar stock disponible considerando lo que está en el carrito
+async function verificarStockDisponible() {
+    try {
+        if (!auth || !auth.currentUser || !db || !productoId) {
+            return;
+        }
+        
+        // Obtener cantidad actual en carrito
+        const carritoSnapshot = await db.collection('carrito')
+            .where('usuario_id', '==', auth.currentUser.uid)
+            .where('producto_id', '==', productoId)
+            .get();
+        
+        let cantidadEnCarrito = 0;
+        if (!carritoSnapshot.empty) {
+            cantidadEnCarrito = carritoSnapshot.docs[0].data().cantidad || 0;
+        }
+        
+        // Obtener stock actual de Firestore
+        const productoDoc = await db.collection('productos').doc(productoId).get();
+        if (productoDoc.exists) {
+            const stockTotal = productoDoc.data().stock || 0;
+            const unidad = productoDoc.data().unidad || 'kg';
+            
+            // Actualizar UI con stock disponible
+            await actualizarStockUI(stockTotal, unidad, cantidadEnCarrito);
+        }
+    } catch (error) {
+        console.warn('⚠️ Error verificando stock disponible:', error);
+        // No es crítico, continuar
+    }
+}

@@ -68,7 +68,7 @@
                 <div class="product-image-section">
                     <div class="product-gallery">
                         <div class="main-image-container">
-                            <img src="/static/images/product-placeholder.png" alt="Producto" id="mainImage">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg==" alt="Producto" id="mainImage" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5TaW4gaW1hZ2VuPC90ZXh0Pjwvc3ZnPg=='">
                         </div>
                         <div class="thumbnail-gallery" id="thumbnailGallery">
                             <!-- Thumbnails se cargarán dinámicamente -->
@@ -155,37 +155,112 @@
             <!-- Comments Section -->
             <div class="comments-section">
                 <div class="comments-header">
-                    <h2><i class="fas fa-comments"></i> Comentarios (<span id="commentsCount">0</span>)</h2>
-                </div>
-
-                <!-- Comment Form -->
-                <div class="comment-form" id="commentForm" style="display: none;">
-                    <h3>Escribe un comentario</h3>
-                    <div class="comment-input-group">
-                        <label>Calificación</label>
-                        <div class="rating-input" id="ratingInput">
-                            <i class="fas fa-star" data-rating="1"></i>
-                            <i class="fas fa-star" data-rating="2"></i>
-                            <i class="fas fa-star" data-rating="3"></i>
-                            <i class="fas fa-star" data-rating="4"></i>
-                            <i class="fas fa-star" data-rating="5"></i>
-                        </div>
-                    </div>
-                    <div class="comment-input-group">
-                        <label for="commentText">Tu comentario</label>
-                        <textarea id="commentText" placeholder="Comparte tu opinión sobre este producto..."></textarea>
-                    </div>
-                    <button class="btn btn-primary" id="submitCommentBtn">
-                        <i class="fas fa-paper-plane"></i>
-                        Publicar Comentario
+                    <h2><i class="fas fa-star"></i> Opiniones del producto</h2>
+                    <button class="btn btn-primary" id="btn-mostrar-comentario">
+                        <i class="fas fa-plus"></i>
+                        Dejar un comentario
                     </button>
                 </div>
 
-                <!-- Comments List -->
-                <div class="comment-list" id="commentsList">
-                    <div class="no-comments">
-                        <i class="fas fa-comment-slash"></i>
-                        <p>Aún no hay comentarios. Sé el primero en opinar.</p>
+                <!-- Rating Summary and Comments Container -->
+                <div class="comments-container">
+                    <!-- Rating Summary (Left Side - Smaller) -->
+                    <div class="rating-summary-sidebar" id="ratingSummary" style="display: none;">
+                        <div class="rating-score-compact">
+                            <div class="rating-number-compact" id="ratingAverage">0.0</div>
+                            <div class="rating-stars-compact" id="ratingStarsLarge"></div>
+                            <div class="rating-count-compact" id="totalRatings">0 calificaciones</div>
+                        </div>
+                        <div class="rating-distribution-compact">
+                            <div class="distribution-item-compact" data-rating="5">
+                                <span class="star-label-compact">5 <i class="fas fa-star"></i></span>
+                                <div class="distribution-bar-compact">
+                                    <div class="distribution-fill-compact" data-fill="0"></div>
+                                </div>
+                                <span class="distribution-percent-compact" data-percent="0">0%</span>
+                            </div>
+                            <div class="distribution-item-compact" data-rating="4">
+                                <span class="star-label-compact">4 <i class="fas fa-star"></i></span>
+                                <div class="distribution-bar-compact">
+                                    <div class="distribution-fill-compact" data-fill="0"></div>
+                                </div>
+                                <span class="distribution-percent-compact" data-percent="0">0%</span>
+                            </div>
+                            <div class="distribution-item-compact" data-rating="3">
+                                <span class="star-label-compact">3 <i class="fas fa-star"></i></span>
+                                <div class="distribution-bar-compact">
+                                    <div class="distribution-fill-compact" data-fill="0"></div>
+                                </div>
+                                <span class="distribution-percent-compact" data-percent="0">0%</span>
+                            </div>
+                            <div class="distribution-item-compact" data-rating="2">
+                                <span class="star-label-compact">2 <i class="fas fa-star"></i></span>
+                                <div class="distribution-bar-compact">
+                                    <div class="distribution-fill-compact" data-fill="0"></div>
+                                </div>
+                                <span class="distribution-percent-compact" data-percent="0">0%</span>
+                            </div>
+                            <div class="distribution-item-compact" data-rating="1">
+                                <span class="star-label-compact">1 <i class="fas fa-star"></i></span>
+                                <div class="distribution-bar-compact">
+                                    <div class="distribution-fill-compact" data-fill="0"></div>
+                                </div>
+                                <span class="distribution-percent-compact" data-percent="0">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Content (Right Side) -->
+                    <div class="comments-content">
+                        <!-- Comment Form -->
+                        <div class="comment-form" id="commentForm" style="display: none;">
+                            <h3>Escribe un comentario</h3>
+                            <div class="comment-input-group">
+                                <label>Calificación</label>
+                                <div class="rating-input" id="ratingInput">
+                                    <i class="fas fa-star" data-rating="1"></i>
+                                    <i class="fas fa-star" data-rating="2"></i>
+                                    <i class="fas fa-star" data-rating="3"></i>
+                                    <i class="fas fa-star" data-rating="4"></i>
+                                    <i class="fas fa-star" data-rating="5"></i>
+                                </div>
+                            </div>
+                            <div class="comment-input-group">
+                                <label for="commentText">Tu comentario</label>
+                                <textarea id="commentText" placeholder="Comparte tu opinión sobre este producto..."></textarea>
+                            </div>
+                            <div class="comment-form-actions">
+                                <button class="btn btn-primary" id="submitCommentBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Publicar Comentario
+                                </button>
+                                <button class="btn btn-secondary" id="cancelCommentBtn" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Comments List Header -->
+                        <div class="comments-list-header">
+                            <h3><span id="commentsCount">0</span> comentarios</h3>
+                            <div class="comment-sort">
+                                <select id="sortComments" class="sort-select">
+                                    <option value="recientes">Más recientes</option>
+                                    <option value="antiguos">Más antiguos</option>
+                                    <option value="mejores">Mejores calificados</option>
+                                    <option value="peores">Peores calificados</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Comments List -->
+                        <div class="comment-list" id="commentsList">
+                            <div class="no-comments">
+                                <i class="fas fa-comment-slash"></i>
+                                <p>Aún no hay comentarios. Sé el primero en opinar.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

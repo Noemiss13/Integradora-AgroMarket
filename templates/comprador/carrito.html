@@ -1218,6 +1218,36 @@
                 const compraRef = await db.collection('compras').add(compraData);
                 console.log('✅ Compra guardada en Firestore:', compraRef.id);
                 
+                // Actualizar stock de cada producto comprado
+                console.log('📦 Actualizando stock de productos...');
+                const stockUpdatePromises = productosConVendedor.map(async (producto) => {
+                    try {
+                        const productoRef = db.collection('productos').doc(producto.producto_id);
+                        const productoDoc = await productoRef.get();
+                        
+                        if (productoDoc.exists) {
+                            const productoData = productoDoc.data();
+                            const stockActual = productoData.stock || 0;
+                            const cantidadComprada = producto.cantidad || 0;
+                            const nuevoStock = Math.max(0, stockActual - cantidadComprada); // No permitir stock negativo
+                            
+                            await productoRef.update({
+                                stock: nuevoStock
+                            });
+                            
+                            console.log(`✅ Stock actualizado para ${producto.nombre}: ${stockActual} → ${nuevoStock} (comprados: ${cantidadComprada})`);
+                        } else {
+                            console.warn(`⚠️ Producto ${producto.producto_id} no encontrado para actualizar stock`);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error actualizando stock de ${producto.nombre}:`, error);
+                        // No fallar la compra si hay error actualizando stock
+                    }
+                });
+                
+                await Promise.all(stockUpdatePromises);
+                console.log('✅ Todos los stocks actualizados');
+                
                 // Enviar ticket de compra por correo
                 try {
                     const fechaCompra = new Date().toLocaleString('es-MX', {

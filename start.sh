@@ -16,7 +16,7 @@ fi
 
 # Iniciar aplicación
 echo "🌟 Iniciando aplicación Flask..."
-echo "🌐 La aplicación estará disponible en: http://127.0.0.1:3000"
+echo "🌐 La aplicación estará disponible en: http://127.0.0.1:5001"
 echo "📱 Para detener la aplicación, presiona Ctrl+C"
 echo ""
 

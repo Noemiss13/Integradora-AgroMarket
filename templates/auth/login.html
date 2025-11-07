@@ -60,7 +60,7 @@
                             <span class="checkmark"></span>
                             Recordarme
                         </label>
-                        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="forgot-password">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <button type="submit" class="btn-primary">
@@ -137,18 +137,7 @@
             }
         });
 
-        // Manejar "¿Olvidaste tu contraseña?"
-        document.querySelector('.forgot-password').addEventListener('click', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value.trim();
-            
-            if (!email) {
-                alert('Por favor, ingresa tu correo electrónico primero');
-                return;
-            }
-            
-            window.firebaseAuth.handleForgotPassword(email);
-        });
+        // El enlace "¿Olvidaste tu contraseña?" ahora redirige directamente a la página de recuperación
     </script>
 </body>
 </html>

@@ -56,7 +56,6 @@
     
 </main>
 
-<!-- PWA: Registrar Service Worker -->
 <script>
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("{{ url_for('static', filename='js/service-worker.js') }}")

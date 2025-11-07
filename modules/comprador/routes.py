@@ -44,6 +44,8 @@ def panel_comprador():
 
 # ===== Ver productos (con filtros por categoría y búsqueda) =====
 @comprador.route("/productos")
+@login_required
+@role_required("comprador")
 def ver_productos():
     return render_template(
         "comprador/productos_comprador.html",
@@ -51,6 +53,53 @@ def ver_productos():
         nombre=session.get("nombre", "Usuario"),
         page='productos'
     )
+
+# ===== Bandeja de chats =====
+@comprador.route("/chats")
+@login_required
+@role_required("comprador")
+def chats():
+    vendedor_default = request.args.get('vendedor', 'Vendedor')
+    return render_template("comprador/chats.html",
+                         nombre=session.get("nombre", "Usuario"),
+                         vendedor_nombre=vendedor_default,
+                         page='chats')
+
+
+# ===== Conversación específica =====
+@comprador.route("/chats/<string:chat_id>")
+@login_required
+@role_required("comprador")
+def chat_conversacion(chat_id):
+    vendedor_nombre = request.args.get('vendedor', 'Vendedor')
+    iniciales = ''.join([parte[0] for parte in vendedor_nombre.split() if parte])[:2].upper() or 'VD'
+    return render_template("comprador/chat_conversacion.html",
+                         nombre=session.get("nombre", "Usuario"),
+                         chat_id=chat_id,
+                         vendedor_nombre=vendedor_nombre,
+                         vendedor_iniciales=iniciales,
+                         pedido_id=chat_id,
+                         pedido_folio=f"PED-{chat_id[:4].upper()}",
+                         ultimo_mensaje='Inicia la conversación con tu vendedor',
+                         page='chats')
+
+
+# ===== Nuevo mensaje rápido =====
+@comprador.route("/chats/nuevo")
+@login_required
+@role_required("comprador")
+def chat_nuevo():
+    comprador_nombre = session.get("nombre", "Usuario")
+    return render_template("comprador/chat_conversacion.html",
+                         nombre=comprador_nombre,
+                         chat_id='nuevo',
+                         vendedor_nombre='Selecciona un vendedor',
+                         vendedor_iniciales='SV',
+                         pedido_id='-',
+                         pedido_folio='PED-0000-CHAT',
+                         ultimo_mensaje='Elige al vendedor y comienza a escribir.',
+                         page='chats')
+
 
 
 # ===== Detalle de producto =====
@@ -164,6 +213,8 @@ def procesar_pago():
 
 # ===== Crear Payment Intent (Stripe) =====
 @comprador.route("/create-payment-intent", methods=["POST"])
+@login_required
+@role_required("comprador")
 def create_payment_intent():
     """
     Endpoint para crear Payment Intent de Stripe.
@@ -225,16 +276,20 @@ def create_payment_intent():
             'payment_intent_id': payment_intent.id
         })
         
-    except stripe.error.StripeError as e:
-        return jsonify({'error': f'Error de Stripe: {str(e)}'}), 400
     except Exception as e:
-        current_app.logger.error(f'Error al crear payment intent: {str(e)}')
-        return jsonify({'error': 'Error al crear payment intent: ' + str(e)}), 500
+        # Manejar errores de Stripe de forma más segura
+        error_type = type(e).__name__
+        error_msg = str(e)
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower() or 'payment_intent' in error_msg.lower():
+            return jsonify({'error': f'Error de Stripe: {error_msg}'}), 400
+        current_app.logger.error(f'Error al crear payment intent: {error_msg}')
+        return jsonify({'error': 'Error al crear payment intent: ' + error_msg}), 500
 
 
 # ===== Pago exitoso (Stripe) =====
 @comprador.route("/stripe-success")
 @login_required
+@role_required("comprador")
 def stripe_success():
     # Página de pago exitoso
     return render_template("comprador/pago_exitoso.html", 
@@ -244,6 +299,8 @@ def stripe_success():
 
 # ===== Pago exitoso =====
 @comprador.route("/pago_exitoso")
+@login_required
+@role_required("comprador")
 def pago_exitoso():
     # Página de pago exitoso simplificada - solo diseño visual
     return render_template("comprador/pago_exitoso.html", 
@@ -276,6 +333,8 @@ def detalle_pedido(pedido_id):
 
 # ===== Enviar ticket de compra por correo =====
 @comprador.route("/enviar-ticket-compra", methods=["POST"])
+@login_required
+@role_required("comprador")
 def enviar_ticket_compra():
     """Endpoint para enviar el ticket de compra por correo electrónico"""
     try:
@@ -448,4 +507,393 @@ def enviar_ticket_compra():
         current_app.logger.error(f'Error enviando ticket de compra: {str(e)}')
         return jsonify({
             'error': f'Error al enviar el ticket: {str(e)}'
+        }), 500
+
+
+# ===== Procesar Devolución (Stripe) =====
+@comprador.route("/procesar-devolucion", methods=["POST"])
+@login_required
+@role_required("comprador")
+def procesar_devolucion():
+    """
+    Endpoint para procesar una devolución completa o parcial a través de Stripe.
+    Permite devoluciones tanto para compradores (solicitar) como vendedores (procesar).
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        compra_id = data.get('compra_id')
+        monto_devolucion = data.get('monto_devolucion')  # En centavos, opcional para devolución parcial
+        motivo = data.get('motivo', 'Devolución solicitada')
+        es_devolucion_parcial = data.get('parcial', False)
+        user_id_solicitante = session.get('user_id')
+        
+        if not compra_id:
+            return jsonify({'error': 'ID de compra no proporcionado'}), 400
+        
+        # Obtener clave secreta de Stripe
+        stripe_secret = current_app.config.get('STRIPE_SECRET_KEY')
+        if not stripe_secret:
+            return jsonify({'error': 'Stripe no está configurado en el servidor'}), 500
+        
+        stripe.api_key = stripe_secret
+        
+        # Obtener información de la compra desde Firestore (simulado, en producción usar Firebase Admin)
+        # Por ahora, requerimos que el frontend envíe el payment_intent_id
+        payment_intent_id = data.get('payment_intent_id')
+        
+        if not payment_intent_id:
+            return jsonify({
+                'error': 'ID de payment intent no proporcionado. Solo se pueden procesar devoluciones de pagos con tarjeta.'
+            }), 400
+        
+        # Verificar que el payment intent existe y está completo
+        try:
+            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        except Exception as e:
+            error_msg = str(e)
+            if 'Stripe' in type(e).__name__ or 'stripe' in str(type(e)).lower():
+                return jsonify({'error': f'Error al recuperar el pago: {error_msg}'}), 400
+            raise
+        
+        # Verificar que el pago fue exitoso
+        if payment_intent.status != 'succeeded':
+            return jsonify({
+                'error': f'El pago no está completo. Estado actual: {payment_intent.status}'
+            }), 400
+        
+        # Obtener el charge_id del payment intent
+        charges = payment_intent.charges.data
+        if not charges or len(charges) == 0:
+            return jsonify({'error': 'No se encontró información de cargo para este pago'}), 400
+        
+        charge_id = charges[0].id
+        
+        # Determinar el monto de la devolución
+        monto_total_centavos = payment_intent.amount
+        if monto_devolucion:
+            monto_refund = int(monto_devolucion)
+            if monto_refund <= 0:
+                return jsonify({'error': 'El monto de devolución debe ser mayor a cero'}), 400
+            if monto_refund > monto_total_centavos:
+                return jsonify({'error': 'El monto de devolución no puede exceder el monto original'}), 400
+        else:
+            monto_refund = monto_total_centavos  # Devolución completa
+        
+        # Crear el refund en Stripe
+        refund_params = {
+            'charge': charge_id,
+            'amount': monto_refund,
+            'metadata': {
+                'compra_id': compra_id,
+                'motivo': motivo,
+                'user_id': str(user_id_solicitante or 'unknown'),
+                'tipo': 'parcial' if (monto_refund < monto_total_centavos) else 'completa'
+            }
+        }
+        
+        # Si hay razón específica, agregarla
+        if motivo and motivo.strip():
+            refund_params['reason'] = 'requested_by_customer'
+        
+        refund = stripe.Refund.create(**refund_params)
+        
+        # Preparar datos de la devolución para guardar en Firestore
+        devolucion_data = {
+            'compra_id': compra_id,
+            'payment_intent_id': payment_intent_id,
+            'charge_id': charge_id,
+            'refund_id': refund.id,
+            'monto_original': monto_total_centavos / 100,  # Convertir a dólares
+            'monto_devolucion': monto_refund / 100,
+            'moneda': payment_intent.currency.upper(),
+            'tipo': 'parcial' if (monto_refund < monto_total_centavos) else 'completa',
+            'estado': refund.status,  # pending, succeeded, failed, canceled
+            'motivo': motivo,
+            'usuario_id': str(user_id_solicitante or 'unknown'),
+            'fecha_solicitud': datetime.now().isoformat(),
+            'fecha_procesamiento': datetime.now().isoformat(),
+            'stripe_refund_data': {
+                'id': refund.id,
+                'status': refund.status,
+                'amount': refund.amount,
+                'currency': refund.currency
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'message': 'Devolución procesada exitosamente',
+            'devolucion': devolucion_data,
+            'refund_id': refund.id,
+            'status': refund.status,
+            'monto_devolucion': monto_refund / 100,
+            'moneda': payment_intent.currency.upper()
+        })
+        
+    except Exception as e:
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            current_app.logger.error(f'Error de Stripe al procesar devolución: {error_msg}')
+            return jsonify({
+                'error': f'Error al procesar la devolución: {error_msg}'
+            }), 400
+        current_app.logger.error(f'Error procesando devolución: {error_msg}')
+        return jsonify({
+            'error': f'Error al procesar la devolución: {error_msg}'
+        }), 500
+
+
+# ===== Obtener detalles del pago (Stripe) =====
+@comprador.route("/obtener-detalles-pago/<string:payment_intent_id>", methods=["GET"])
+@login_required
+@role_required("comprador")
+def obtener_detalles_pago(payment_intent_id):
+    """
+    Endpoint para obtener los detalles de un pago desde Stripe, incluyendo información de la tarjeta.
+    """
+    try:
+        stripe_secret = current_app.config.get('STRIPE_SECRET_KEY')
+        if not stripe_secret:
+            return jsonify({'error': 'Stripe no está configurado'}), 500
+        
+        stripe.api_key = stripe_secret
+        
+        # Obtener el Payment Intent
+        payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+        
+        # Obtener información de la tarjeta desde el payment method
+        card_info = None
+        if payment_intent.payment_method:
+            try:
+                payment_method = stripe.PaymentMethod.retrieve(payment_intent.payment_method)
+                if payment_method.card:
+                    card = payment_method.card
+                    # Mapear tipos de tarjeta
+                    brand_map = {
+                        'visa': 'Visa',
+                        'mastercard': 'Mastercard',
+                        'amex': 'American Express',
+                        'discover': 'Discover',
+                        'diners': 'Diners Club',
+                        'jcb': 'JCB',
+                        'unionpay': 'UnionPay'
+                    }
+                    
+                    card_info = {
+                        'last4': card.last4,
+                        'brand': brand_map.get(card.brand.lower(), card.brand.upper()),
+                        'exp_month': card.exp_month,
+                        'exp_year': card.exp_year,
+                        'funding': card.funding  # credit, debit, prepaid, unknown
+                    }
+            except Exception as e:
+                error_msg = str(e)
+                if 'Stripe' in type(e).__name__ or 'stripe' in str(type(e)).lower():
+                    current_app.logger.warning(f'No se pudo obtener payment method: {error_msg}')
+                else:
+                    raise
+        
+        # Si no hay payment_method directo, intentar obtener desde los charges
+        if not card_info:
+            try:
+                charges = payment_intent.charges.data
+                if charges and len(charges) > 0:
+                    charge = charges[0]
+                    if hasattr(charge, 'payment_method_details') and charge.payment_method_details:
+                        if hasattr(charge.payment_method_details, 'card'):
+                            card = charge.payment_method_details.card
+                            brand_map = {
+                                'visa': 'Visa',
+                                'mastercard': 'Mastercard',
+                                'amex': 'American Express',
+                                'discover': 'Discover',
+                                'diners': 'Diners Club',
+                                'jcb': 'JCB',
+                                'unionpay': 'UnionPay'
+                            }
+                            card_info = {
+                                'last4': card.last4,
+                                'brand': brand_map.get(card.brand.lower(), card.brand.upper()),
+                                'exp_month': card.exp_month,
+                                'exp_year': card.exp_year
+                            }
+            except Exception as e:
+                current_app.logger.warning(f'No se pudo obtener info de tarjeta desde charge: {str(e)}')
+        
+        return jsonify({
+            'success': True,
+            'payment_intent': {
+                'id': payment_intent.id,
+                'amount': payment_intent.amount / 100,
+                'currency': payment_intent.currency.upper(),
+                'status': payment_intent.status,
+                'created': payment_intent.created
+            },
+            'card': card_info
+        })
+        
+    except Exception as e:
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            return jsonify({'error': f'Error al obtener detalles del pago: {error_msg}'}), 400
+        current_app.logger.error(f'Error obteniendo detalles del pago: {error_msg}')
+        return jsonify({'error': 'Error al obtener los detalles del pago'}), 500
+
+
+# ===== Verificar estado de devolución =====
+@comprador.route("/verificar-devolucion/<string:refund_id>", methods=["GET"])
+@login_required
+@role_required("comprador")
+def verificar_devolucion(refund_id):
+    """
+    Endpoint para verificar el estado de una devolución específica en Stripe.
+    """
+    try:
+        stripe_secret = current_app.config.get('STRIPE_SECRET_KEY')
+        if not stripe_secret:
+            return jsonify({'error': 'Stripe no está configurado'}), 500
+        
+        stripe.api_key = stripe_secret
+        
+        refund = stripe.Refund.retrieve(refund_id)
+        
+        return jsonify({
+            'success': True,
+            'refund': {
+                'id': refund.id,
+                'status': refund.status,
+                'amount': refund.amount / 100,  # Convertir a dólares
+                'currency': refund.currency.upper(),
+                'reason': refund.reason,
+                'created': refund.created
+            }
+        })
+        
+    except Exception as e:
+        error_msg = str(e)
+        error_type = type(e).__name__
+        if 'Stripe' in error_type or 'stripe' in str(type(e)).lower():
+            return jsonify({'error': f'Error al verificar devolución: {error_msg}'}), 400
+        current_app.logger.error(f'Error verificando devolución: {error_msg}')
+        return jsonify({'error': 'Error al verificar la devolución'}), 500
+
+
+# ===== Enviar notificación de devolución por correo =====
+@comprador.route("/enviar-notificacion-devolucion", methods=["POST"])
+@login_required
+@role_required("comprador")
+def enviar_notificacion_devolucion():
+    """
+    Endpoint para enviar correo de notificación cuando se procesa una devolución.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No se recibieron datos'}), 400
+        
+        email_cliente = data.get('email_cliente', '')
+        nombre_cliente = data.get('nombre_cliente', 'Cliente')
+        compra_id = data.get('compra_id', 'N/A')
+        monto_devolucion = float(data.get('monto_devolucion', 0))
+        moneda = data.get('moneda', 'MXN')
+        tipo_devolucion = data.get('tipo', 'completa')  # completa o parcial
+        motivo = data.get('motivo', 'Devolución solicitada')
+        refund_id = data.get('refund_id', 'N/A')
+        
+        if not email_cliente:
+            return jsonify({'error': 'No se proporcionó el email del cliente'}), 400
+        
+        # Construir HTML del correo
+        tipo_texto = 'completa' if tipo_devolucion == 'completa' else 'parcial'
+        html_body = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #2e8b57 0%, #228B22 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                .header h1 {{ margin: 0; font-size: 28px; }}
+                .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                .section {{ background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                .section h2 {{ color: #2e8b57; margin-top: 0; font-size: 20px; border-bottom: 2px solid #2e8b57; padding-bottom: 10px; }}
+                .info-box {{ background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #2e8b57; }}
+                .amount-box {{ background: #fff3cd; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; border: 2px solid #ffc107; }}
+                .amount-box .amount {{ font-size: 32px; font-weight: bold; color: #2e8b57; }}
+                .footer {{ text-align: center; margin-top: 30px; color: #666; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🍃 AgroMarket</h1>
+                    <p style="margin: 10px 0 0 0; font-size: 18px;">Confirmación de Devolución</p>
+                </div>
+                
+                <div class="content">
+                    <div class="section">
+                        <h2>✅ Devolución Procesada</h2>
+                        <p>Hola <strong>{nombre_cliente}</strong>,</p>
+                        <p>Te informamos que tu solicitud de devolución ha sido procesada exitosamente.</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h2>📋 Detalles de la Devolución</h2>
+                        <div class="info-box">
+                            <p><strong>Número de pedido:</strong> {compra_id}</p>
+                            <p><strong>ID de devolución:</strong> {refund_id}</p>
+                            <p><strong>Tipo:</strong> Devolución {tipo_texto}</p>
+                            <p><strong>Motivo:</strong> {motivo}</p>
+                        </div>
+                        
+                        <div class="amount-box">
+                            <p style="margin: 0 0 10px 0; color: #666;">Monto de devolución:</p>
+                            <div class="amount">{moneda} ${monto_devolucion:.2f}</div>
+                        </div>
+                        
+                        <p style="margin-top: 15px; padding: 10px; background: #d1ecf1; border-left: 4px solid #17a2b8; border-radius: 4px;">
+                            <strong>ℹ️ Importante:</strong> El reembolso aparecerá en tu tarjeta en 5-10 días hábiles, dependiendo de tu banco. 
+                            Si tienes alguna pregunta, por favor contáctanos.
+                        </p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Gracias por confiar en AgroMarket 🍃</p>
+                        <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+        
+        # Crear y enviar el correo
+        msg = Message(
+            subject=f'✅ Devolución Procesada - Pedido #{compra_id[:9].upper()}',
+            recipients=[email_cliente],
+            html=html_body
+        )
+        
+        mail = current_app.extensions.get('mail')
+        if not mail:
+            current_app.logger.warning('Flask-Mail no está configurado correctamente')
+            return jsonify({'error': 'Servicio de correo no disponible'}), 503
+        
+        mail.send(msg)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Notificación de devolución enviada correctamente'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f'Error enviando notificación de devolución: {str(e)}')
+        return jsonify({
+            'error': f'Error al enviar la notificación: {str(e)}'
         }), 500

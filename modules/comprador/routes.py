@@ -54,6 +54,53 @@ def ver_productos():
         page='productos'
     )
 
+# ===== Bandeja de chats =====
+@comprador.route("/chats")
+@login_required
+@role_required("comprador")
+def chats():
+    vendedor_default = request.args.get('vendedor', 'Vendedor')
+    return render_template("comprador/chats.html",
+                         nombre=session.get("nombre", "Usuario"),
+                         vendedor_nombre=vendedor_default,
+                         page='chats')
+
+
+# ===== Conversación específica =====
+@comprador.route("/chats/<string:chat_id>")
+@login_required
+@role_required("comprador")
+def chat_conversacion(chat_id):
+    vendedor_nombre = request.args.get('vendedor', 'Vendedor')
+    iniciales = ''.join([parte[0] for parte in vendedor_nombre.split() if parte])[:2].upper() or 'VD'
+    return render_template("comprador/chat_conversacion.html",
+                         nombre=session.get("nombre", "Usuario"),
+                         chat_id=chat_id,
+                         vendedor_nombre=vendedor_nombre,
+                         vendedor_iniciales=iniciales,
+                         pedido_id=chat_id,
+                         pedido_folio=f"PED-{chat_id[:4].upper()}",
+                         ultimo_mensaje='Inicia la conversación con tu vendedor',
+                         page='chats')
+
+
+# ===== Nuevo mensaje rápido =====
+@comprador.route("/chats/nuevo")
+@login_required
+@role_required("comprador")
+def chat_nuevo():
+    comprador_nombre = session.get("nombre", "Usuario")
+    return render_template("comprador/chat_conversacion.html",
+                         nombre=comprador_nombre,
+                         chat_id='nuevo',
+                         vendedor_nombre='Selecciona un vendedor',
+                         vendedor_iniciales='SV',
+                         pedido_id='-',
+                         pedido_folio='PED-0000-CHAT',
+                         ultimo_mensaje='Elige al vendedor y comienza a escribir.',
+                         page='chats')
+
+
 
 # ===== Detalle de producto =====
 @comprador.route("/producto/<string:producto_id>")

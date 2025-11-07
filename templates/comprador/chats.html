@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Chats | AgroMarket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <div class="logo"><h2>AgroMarket</h2></div>
+            <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
+        </div>
+        <div class="menu">
+            <a href="/comprador/panel">Inicio</a>
+            <a href="/comprador/productos">Productos</a>
+            <a href="/comprador/carrito">Carrito</a>
+            <a href="/comprador/chats" class="activo">Chats</a>
+            <a href="/auth/perfil">Mi Perfil</a>
+            <a href="/auth/logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="chat-main">
+        <div class="chat-header">
+            <div>
+                <h1><i class="fas fa-comments"></i> Conversaciones</h1>
+                <p>Consulta tus mensajes con vendedores y continúa la conversación.</p>
+            </div>
+            <a href="/comprador/chats/nuevo" class="btn-nuevo-chat">
+                <i class="fas fa-plus"></i>
+                Nuevo mensaje
+            </a>
+        </div>
+
+        <div class="chat-layout layout-centered">
+            <aside class="chat-list-panel">
+                <div class="chat-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar por vendedor o pedido" />
+                </div>
+                <div class="chat-list" id="chatList">
+                    <!-- Item de ejemplo -->
+                    <a href="/comprador/chats/ejemplo" class="chat-item active">
+                        <div class="chat-avatar">AG</div>
+                        <div class="chat-info">
+                            <div class="chat-info-header">
+                                <h3>AgroFresh Market</h3>
+                                <span class="chat-time">Hace 2 h</span>
+                            </div>
+                            <p class="chat-preview">Hola, tu pedido ya va en camino. ¿Necesitas algo más?</p>
+                            <span class="chat-tag">Pedido #PED-240501-ABCD</span>
+                        </div>
+                    </a>
+                    <a href="/comprador/chats/otro" class="chat-item">
+                        <div class="chat-avatar">HV</div>
+                        <div class="chat-info">
+                            <div class="chat-info-header">
+                                <h3>Huerta Verde</h3>
+                                <span class="chat-time">Ayer</span>
+                            </div>
+                            <p class="chat-preview">Recibimos tu mensaje, te confirmo el stock al rato.</p>
+                            <span class="chat-tag">Pedido #PED-240421-ZXCV</span>
+                        </div>
+                    </a>
+                </div>
+            </aside>
+
+            <section class="chat-placeholder">
+                <i class="fas fa-comment-dots"></i>
+                <h2>Selecciona una conversación</h2>
+                <p>Elige un chat de la lista para continuar la conversación o comenzar un nuevo mensaje.</p>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

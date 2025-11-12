@@ -30,10 +30,11 @@
             <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
         </div>
         <div class="menu">
-            <a href="/comprador/panel">Inicio</a>
-            <a href="/comprador/productos">Productos</a>
-            <a href="/comprador/carrito">Carrito</a>
-            <a href="/auth/perfil">Mi Perfil</a>
+            <a href="/comprador/panel" {% if page=='inicio' %}class="activo"{% endif %}>Inicio</a>
+            <a href="/comprador/productos" {% if page=='productos' %}class="activo"{% endif %}>Productos</a>
+            <a href="/comprador/carrito" {% if page=='carrito' %}class="activo"{% endif %}>Carrito</a>
+            <a href="/comprador/chats" {% if page=='chats' %}class="activo"{% endif %}>Chats</a>
+            <a href="/auth/perfil" {% if page=='perfil' %}class="activo"{% endif %}>Mi Perfil</a>
             <a href="/auth/logout">Cerrar Sesión</a>
         </div>
     </nav>

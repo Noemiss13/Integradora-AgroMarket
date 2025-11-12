@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Chats | AgroMarket</title>
+    <title>Chats con Clientes | AgroMarket</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_comprador.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
@@ -18,14 +18,15 @@
     <script src="{{ url_for('static', filename='js/firebase-config.js') }}"></script>
 </head>
 <body
-    data-user-id="{{ session.get('usuario_id', '') }}"
-    data-user-name="{{ nombre }}"
-    data-chat-role="comprador"
-    data-chat-base-url="/comprador/chats/"
-    data-partner-name-param="vendedor"
-    data-partner-id-param="vendedor_id"
-    data-empty-message="No tienes conversaciones aún."
-    data-order-link-base="/comprador/detalle_pedido/"
+    data-user-id="{{ usuario_id or '' }}"
+    data-user-name="{{ nombre or 'Vendedor' }}"
+    data-chat-role="vendedor"
+    data-partner-role="comprador"
+    data-chat-base-url="/vendedor/chats/"
+    data-partner-name-param="comprador"
+    data-partner-id-param="comprador_id"
+    data-empty-message="Aún no tienes mensajes de tus clientes."
+    data-order-link-base="/vendedor/ventas?pedido="
 >
     <nav>
         <div class="nav-left">
@@ -33,41 +34,34 @@
             <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
         </div>
         <div class="menu">
-            <a href="/comprador/panel">Inicio</a>
-            <a href="/comprador/productos">Productos</a>
-            <a href="/comprador/carrito">Carrito</a>
-            <a href="/comprador/chats" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
+            <a href="/vendedor/panel" {% if page == 'inicio' %}class="activo"{% endif %}>Home</a>
+            <a href="/vendedor/agregar_producto" {% if page == 'agregar' %}class="activo"{% endif %}>Agregar Productos</a>
+            <a href="/vendedor/mis_productos" {% if page == 'productos' %}class="activo"{% endif %}>Mis Productos</a>
+            <a href="/vendedor/ventas" {% if page == 'ventas' %}class="activo"{% endif %}>Ventas</a>
+            <a href="/vendedor/chats" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
             <a href="/auth/perfil" {% if page == 'perfil' %}class="activo"{% endif %}>Mi Perfil</a>
-            <a href="/auth/logout">Cerrar Sesión</a>
+            <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
         </div>
     </nav>
 
     <main class="chat-main">
         <div class="chat-header">
             <div>
-                <h1><i class="fas fa-comments"></i> Conversaciones</h1>
-                <p>Consulta tus mensajes con vendedores y continúa la conversación.</p>
+                <h1><i class="fas fa-comments"></i> Conversaciones con clientes</h1>
+                <p>Da seguimiento a las consultas y pedidos de tus compradores.</p>
             </div>
-            <a href="/comprador/chats/nuevo" class="btn-nuevo-chat">
-                <i class="fas fa-plus"></i>
-                Nuevo mensaje
-            </a>
         </div>
 
         <div class="chat-layout layout-centered">
             <aside class="chat-list-panel">
-                <div class="chat-search">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Buscar por vendedor o pedido" />
-                </div>
                 <div class="chat-loading" id="chatLoading" aria-live="polite">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Cargando conversaciones...</span>
-                            </div>
+                </div>
                 <div class="chat-empty-state" id="chatEmptyState" style="display: none;">
                     <i class="fas fa-comments-slash"></i>
-                    <p>No tienes conversaciones aún.</p>
-                    <small>Cuando realices una compra podrás chatear con tus vendedores.</small>
+                    <p>Aún no tienes mensajes de clientes.</p>
+                    <small>Cuando recibas una compra o consulta aparecerá aquí.</small>
                 </div>
                 <div class="chat-list" id="chatList" aria-live="polite"></div>
             </aside>
@@ -75,10 +69,12 @@
             <section class="chat-placeholder">
                 <i class="fas fa-comment-dots"></i>
                 <h2>Selecciona una conversación</h2>
-                <p>Elige un chat de la lista para continuar la conversación o comenzar un nuevo mensaje.</p>
+                <p>Elige un chat de la lista para responder a tus clientes.</p>
             </section>
         </div>
     </main>
+
     <script src="{{ url_for('static', filename='js/chat-list.js') }}"></script>
 </body>
 </html>
+

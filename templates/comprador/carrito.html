@@ -19,10 +19,11 @@
             <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
         </div>
         <div class="menu">
-            <a href="{{ url_for('comprador.panel_comprador') }}">Inicio</a>
-            <a href="{{ url_for('comprador.ver_productos') }}">Productos</a>
-            <a href="{{ url_for('comprador.ver_carrito') }}" class="activo">Carrito</a>
-            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('comprador.panel_comprador') }}" {% if page=='inicio' %}class="activo"{% endif %}>Inicio</a>
+            <a href="{{ url_for('comprador.ver_productos') }}" {% if page=='productos' %}class="activo"{% endif %}>Productos</a>
+            <a href="{{ url_for('comprador.ver_carrito') }}" {% if page=='carrito' %}class="activo"{% endif %}>Carrito</a>
+            <a href="{{ url_for('comprador.chats') }}" {% if page=='chats' %}class="activo"{% endif %}>Chats</a>
+            <a href="{{ url_for('auth.perfil') }}" {% if page=='perfil' %}class="activo"{% endif %}>Mi Perfil</a>
             <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
         </div>
     </nav>

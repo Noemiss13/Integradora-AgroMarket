@@ -18,6 +18,8 @@ class Config:
     STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY') or 'pk_test_51S4nWTKFtQrWkPCD3FRrULpKifZ43LK9m3RcNn9TFpbzYqNU36uInxGyKRuuV78HtuC5drNe0qeZWei34yKGiYeF00M9L6swJq'
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY') or 'sk_test_51S4nWTKFtQrWkPCDrCpPfYlsfL8ypkkhPfUlhMucmh1tS1afbn5QBZG4kNPI3bAyZpp8hKMS9rzRPkWGN06i0uwB00FEGEsbBX'
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET') or 'whsec_your_webhook_secret_here'
+    STRIPE_ONBOARDING_RETURN_URL = os.environ.get('STRIPE_ONBOARDING_RETURN_URL') or 'http://localhost:5001/vendedor/panel'
+    STRIPE_ONBOARDING_REFRESH_URL = os.environ.get('STRIPE_ONBOARDING_REFRESH_URL') or 'http://localhost:5001/vendedor/panel'
     
     # Configuración de Flask-Mail
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
@@ -26,6 +28,11 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'agromarket559@gmail.com'  # ⬅️ Reemplaza con tu email de Gmail
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'xnzf mxvp vjbi iioj'  # Contraseña de aplicación (sin espacios)
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or 'AgroMarket <agromarket559@gmail.com>'  # ⬅️ Reemplaza con tu email
+
+    # Firebase Admin / Firestore
+    FIREBASE_CREDENTIALS_PATH = os.environ.get('FIREBASE_CREDENTIALS_PATH')
+    FIREBASE_SERVICE_ACCOUNT_JSON = os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON')
+    FIREBASE_PROJECT_ID = os.environ.get('FIREBASE_PROJECT_ID')
     
 
 class DevelopmentConfig(Config):

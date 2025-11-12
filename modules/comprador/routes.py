@@ -72,11 +72,13 @@ def chats():
 @role_required("comprador")
 def chat_conversacion(chat_id):
     vendedor_nombre = request.args.get('vendedor', 'Vendedor')
+    vendedor_id = request.args.get('vendedor_id', '')
     iniciales = ''.join([parte[0] for parte in vendedor_nombre.split() if parte])[:2].upper() or 'VD'
     return render_template("comprador/chat_conversacion.html",
                          nombre=session.get("nombre", "Usuario"),
                          chat_id=chat_id,
                          vendedor_nombre=vendedor_nombre,
+                         vendedor_id=vendedor_id,
                          vendedor_iniciales=iniciales,
                          pedido_id=chat_id,
                          pedido_folio=f"PED-{chat_id[:4].upper()}",
@@ -94,6 +96,7 @@ def chat_nuevo():
                          nombre=comprador_nombre,
                          chat_id='nuevo',
                          vendedor_nombre='Selecciona un vendedor',
+                         vendedor_id='',
                          vendedor_iniciales='SV',
                          pedido_id='-',
                          pedido_folio='PED-0000-CHAT',

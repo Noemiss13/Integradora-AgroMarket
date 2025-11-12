@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-Yd3F2m9Uq+vR0NvKcJsteVEh9UpAJZciV06P88GJEqn3Ejj6+UeJ8V+RaH59RUW2KIiMzZljI0X58F3Rp3crJQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
 
     <!-- PWA: Manifest y theme color -->
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
@@ -18,7 +19,7 @@
 <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icons-512.png') }}">
 
 </head>
-<body>
+<body data-vendor-id="{{ usuario_id or '' }}" data-vendor-email="{{ correo or '' }}">
  <!--Menu-->
  <nav>
     <div class="nav-left">
@@ -26,11 +27,12 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="/vendedor/panel" class="activo" id="nav-inicio-vendedor">Home</a>
-        <a href="/vendedor/agregar_producto" id="nav-agregar-vendedor">Agregar Productos</a>
-        <a href="/vendedor/mis_productos" id="nav-mis-productos-vendedor">Mis Productos</a>
-        <a href="/vendedor/ventas" id="nav-ventas-vendedor">Ventas</a>
-        <a href="/auth/perfil">Mi Perfil</a>
+        <a href="/vendedor/panel" id="nav-inicio-vendedor" {% if page == 'inicio' %}class="activo"{% endif %}>Home</a>
+        <a href="/vendedor/agregar_producto" id="nav-agregar-vendedor" {% if page == 'agregar' %}class="activo"{% endif %}>Agregar Productos</a>
+        <a href="/vendedor/mis_productos" id="nav-mis-productos-vendedor" {% if page == 'productos' %}class="activo"{% endif %}>Mis Productos</a>
+        <a href="/vendedor/ventas" id="nav-ventas-vendedor" {% if page == 'ventas' %}class="activo"{% endif %}>Ventas</a>
+        <a href="/vendedor/chats" id="nav-chats-vendedor" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
+        <a href="/auth/perfil" {% if page == 'perfil' %}class="activo"{% endif %}>Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>
@@ -53,8 +55,93 @@
         </div>
       {% endif %}
     {% endwith %}
-    
+
+    <section class="stripe-connect-card" id="stripe-connect-card">
+        <div class="stripe-card-header">
+            <div>
+                <h2>Configuración de cobros</h2>
+                <p class="stripe-card-description">
+                    Conecta tu cuenta de Stripe para recibir pagos y transferencias. Debes completar este paso para publicar tus productos.
+                </p>
+            </div>
+            <span class="stripe-status-pill" id="stripe-status-pill">Pendiente</span>
+        </div>
+
+        <div class="stripe-status-grid" id="stripe-status-grid">
+            <div class="stripe-status-item pending" data-status="charges">
+                <div class="icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="details">
+                    <h3>Cobros habilitados</h3>
+                    <p>Permite recibir pagos con tarjeta en tu tienda.</p>
+                </div>
+            </div>
+            <div class="stripe-status-item pending" data-status="payouts">
+                <div class="icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="details">
+                    <h3>Transferencias</h3>
+                    <p>Activa los depósitos automáticos a tu cuenta bancaria.</p>
+                </div>
+            </div>
+            <div class="stripe-status-item pending" data-status="details">
+                <div class="icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="details">
+                    <h3>Verificación de datos</h3>
+                    <p>Completa la información fiscal y de identidad requerida.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stripe-callouts" id="stripe-callouts"></div>
+
+        <div class="stripe-card-actions">
+            <button class="btn-stripe-primary" id="stripe-onboarding-btn">
+                <i class="fas fa-play-circle"></i>
+                Completar configuración de cobros
+            </button>
+            <button class="btn-stripe-secondary" id="stripe-refresh-btn" type="button">
+                <i class="fas fa-rotate"></i>
+                Actualizar estado
+            </button>
+        </div>
+
+        <p class="stripe-last-update" id="stripe-last-update" aria-live="polite"></p>
+    </section>
 </main>
+
+<script>
+    (function () {
+        const body = document.body;
+        if (!body) {
+            return;
+        }
+        const vendorId = body.dataset.vendorId || "";
+        const vendorEmail = body.dataset.vendorEmail || "";
+
+        if (vendorId) {
+            try {
+                localStorage.setItem("firebase_uid", vendorId);
+                sessionStorage.setItem("firebase_uid", vendorId);
+            } catch (err) {
+                console.warn("Stripe Connect: no se pudo guardar firebase_uid en storage.", err);
+            }
+        }
+
+        if (vendorEmail) {
+            try {
+                localStorage.setItem("firebase_email", vendorEmail);
+                sessionStorage.setItem("firebase_email", vendorEmail);
+            } catch (err) {
+                console.warn("Stripe Connect: no se pudo guardar firebase_email en storage.", err);
+            }
+        }
+    })();
+</script>
 
 <script>
   if ("serviceWorker" in navigator) {
@@ -63,6 +150,8 @@
     .catch((err) => console.error("Error al registrar el SW:", err));
   }
 </script>
+
+<script src="{{ url_for('static', filename='js/stripe-connect.js') }}"></script>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/12.4.0/firebase-app-compat.js"></script>

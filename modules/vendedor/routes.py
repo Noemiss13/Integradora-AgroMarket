@@ -18,7 +18,13 @@ def allowed_file(filename):
 @login_required
 @role_required("vendedor")
 def panel_vendedor():
-    return render_template("vendedor/panel_vendedor.html", nombre=session.get("nombre"), page='inicio')
+    return render_template(
+        "vendedor/panel_vendedor.html",
+        nombre=session.get("nombre"),
+        correo=session.get("email"),
+        usuario_id=session.get("usuario_id"),
+        page='inicio'
+    )
 
 # ===== Agregar Producto =====
 @vendedor_bp.route("/agregar", methods=["GET", "POST"])
@@ -84,5 +90,41 @@ def ver_catalogo():
     # Nota: Los productos ahora se obtienen de Firebase en el frontend
     return render_template("vendedor/productos.html", 
                          nombre=session.get("nombre"), 
-                         page='catalogo',
+                         page='productos',
                          productos=[])
+
+
+# ===== Chats =====
+@vendedor_bp.route("/chats")
+@login_required
+@role_required("vendedor")
+def chats_vendedor():
+    return render_template(
+        "vendedor/chats.html",
+        nombre=session.get("nombre"),
+        usuario_id=session.get("usuario_id"),
+        page='chats'
+    )
+
+
+@vendedor_bp.route("/chats/<string:chat_id>")
+@login_required
+@role_required("vendedor")
+def chat_conversacion_vendedor(chat_id):
+    comprador_nombre = request.args.get("comprador", "Cliente")
+    comprador_id = request.args.get("comprador_id", "")
+    iniciales = "".join([parte[0] for parte in comprador_nombre.split() if parte]).upper()[:2] or "CL"
+
+    return render_template(
+        "vendedor/chat_conversacion.html",
+        nombre=session.get("nombre"),
+        usuario_id=session.get("usuario_id"),
+        chat_id=chat_id,
+        comprador_nombre=comprador_nombre,
+        comprador_id=comprador_id,
+        cliente_iniciales=iniciales,
+        pedido_id=chat_id,
+        pedido_folio=f"PED-{chat_id[:4].upper()}",
+        ultimo_mensaje="Inicia la conversación con tu cliente",
+        page='chats'
+    )

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/breadcrumbs.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navigation-header.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_vendedor.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -24,7 +25,7 @@
     
 </head>
 
-<body>
+<body data-vendor-id="{{ session.get('usuario_id', '') }}" data-vendor-email="{{ session.get('email', '') }}">
     <!-- ===== Menú superior ===== -->
     <nav>
         <div class="nav-left">
@@ -155,6 +156,65 @@
                     </div>
                 </div>
 
+            {% if 'vendedor' in (session.get('roles', []) or []) %}
+            <section class="stripe-connect-card" id="stripe-connect-card">
+                <div class="stripe-card-header">
+                    <div>
+                        <h2>Configura tus cobros</h2>
+                        <p class="stripe-card-description">
+                            Conecta tu cuenta de Stripe para recibir pagos y transferencias desde tu perfil.
+                        </p>
+                    </div>
+                    <span class="stripe-status-pill" id="stripe-status-pill">Pendiente</span>
+                </div>
+
+                <div class="stripe-status-grid" id="stripe-status-grid">
+                    <div class="stripe-status-item pending" data-status="charges">
+                        <div class="icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="details">
+                            <h3>Cobros habilitados</h3>
+                            <p>Permite recibir pagos con tarjeta en tu tienda.</p>
+                        </div>
+                    </div>
+                    <div class="stripe-status-item pending" data-status="payouts">
+                        <div class="icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="details">
+                            <h3>Transferencias</h3>
+                            <p>Activa los depósitos automáticos a tu cuenta bancaria.</p>
+                        </div>
+                    </div>
+                    <div class="stripe-status-item pending" data-status="details">
+                        <div class="icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="details">
+                            <h3>Verificación de datos</h3>
+                            <p>Completa la información fiscal y de identidad requerida.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stripe-callouts" id="stripe-callouts"></div>
+
+                <div class="stripe-card-actions">
+                    <button class="btn-stripe-primary" id="stripe-onboarding-btn">
+                        <i class="fas fa-play-circle"></i>
+                        Completar configuración de cobros
+                    </button>
+                    <button class="btn-stripe-secondary" id="stripe-refresh-btn" type="button">
+                        <i class="fas fa-rotate"></i>
+                        Actualizar estado
+                    </button>
+                </div>
+
+                <p class="stripe-last-update" id="stripe-last-update" aria-live="polite"></p>
+            </section>
+            {% endif %}
+
                 <!-- ===== Gestión de roles ===== -->
                 <div class="roles-section">
                     <div class="roles-card">
@@ -181,6 +241,38 @@
                     </div>
                 </div>
     </main>
+
+    {% if 'vendedor' in (session.get('roles', []) or []) %}
+    <script>
+        (function () {
+            const body = document.body;
+            if (!body) {
+                return;
+            }
+            const vendorId = body.dataset.vendorId || "";
+            const vendorEmail = body.dataset.vendorEmail || "";
+
+            if (vendorId) {
+                try {
+                    localStorage.setItem("firebase_uid", vendorId);
+                    sessionStorage.setItem("firebase_uid", vendorId);
+                } catch (err) {
+                    console.warn("Stripe Connect: no se pudo guardar firebase_uid en storage.", err);
+                }
+            }
+
+            if (vendorEmail) {
+                try {
+                    localStorage.setItem("firebase_email", vendorEmail);
+                    sessionStorage.setItem("firebase_email", vendorEmail);
+                } catch (err) {
+                    console.warn("Stripe Connect: no se pudo guardar firebase_email en storage.", err);
+                }
+            }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='js/stripe-connect.js') }}"></script>
+    {% endif %}
 
     <!-- Scripts de Firebase y funcionalidad del perfil -->
     <script>
@@ -668,6 +760,59 @@
             }
         }
 
+        async function iniciarStripeConnectOnboarding({ silent = false } = {}) {
+            try {
+                if (!currentUser) {
+                    if (!silent) showMessage('Inicia sesión para configurar tus cobros.', 'error');
+                    return;
+                }
+
+                const vendorId = currentUser.uid;
+                const correo = currentUser.email || (userData?.email);
+                if (!vendorId || !correo) {
+                    if (!silent) showMessage('No se pudo identificar tu cuenta de Stripe.', 'error');
+                    return;
+                }
+
+                if (!silent) {
+                    showMessage('Abriendo asistente de Stripe...', 'info');
+                }
+
+                const response = await fetch('/vendors/create-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        vendorId,
+                        email: correo
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.error || 'No se pudo generar el enlace de Stripe.');
+                }
+
+                const onboardingUrl = data.onboardingUrl || (data.account && data.account.onboardingUrl);
+                if (!onboardingUrl) {
+                    throw new Error('Stripe no envió un enlace de onboarding.');
+                }
+
+                if (!window.open(onboardingUrl, '_blank', 'noopener')) {
+                    window.location.href = onboardingUrl;
+                }
+
+            } catch (error) {
+                console.error('Error iniciando onboarding de Stripe:', error);
+                if (!silent) {
+                    showMessage(error.message || 'No se pudo abrir Stripe Connect. Intenta de nuevo.', 'error');
+                }
+                throw error;
+            }
+        }
+
+        window.iniciarStripeConnectOnboarding = iniciarStripeConnectOnboarding;
+
         // Toggle de rol (activar/desactivar)
         async function toggleRole(rol, activar) {
             try {
@@ -708,6 +853,14 @@
                         }
                         
                         showMessage(`Rol ${rol} activado exitosamente`, 'success');
+
+                    if (rol === 'vendedor') {
+                        try {
+                            await iniciarStripeConnectOnboarding();
+                        } catch (onboardingError) {
+                            console.warn('⚠️ No se pudo iniciar onboarding automático:', onboardingError);
+                        }
+                    }
 
                         // Sincronizar con la sesión de Flask para que el backend aplique los cambios de inmediato
                         try {
@@ -890,6 +1043,12 @@
                 updateRolesDisplay();
                 await updateNavbarVisibility(); // Actualizar navbar principal
                 loadUserStats(); // Recargar estadísticas
+
+                try {
+                    await iniciarStripeConnectOnboarding();
+                } catch (onboardingError) {
+                    console.warn('⚠️ No se pudo iniciar onboarding después de agregar rol vendedor:', onboardingError);
+                }
 
                 showMessage('Rol de vendedor agregado exitosamente', 'success');
 

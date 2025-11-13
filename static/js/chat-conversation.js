@@ -503,7 +503,13 @@
                 ultimoDia = diaEtiqueta;
             }
 
-            const esPropio = mensaje.sender_id === currentUser.uid;
+            const senderIdMensaje =
+                mensaje.sender_id ||
+                mensaje.senderId ||
+                mensaje.user_id ||
+                mensaje.userId ||
+                "";
+            const esPropio = senderIdMensaje === currentUser.uid;
             const messageEl = document.createElement("div");
             messageEl.className = `chat-message ${esPropio ? "enviado" : "recibido"}`;
 
@@ -617,46 +623,120 @@
 
         try {
             const mensajesRef = chatRef.collection("messages");
-            await mensajesRef.add({
+            const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
+            const senderName = currentUser.displayName || body.dataset.userName || "Usuario";
+
+            const messageData = {
+                chatId: chatDocId,
+                text: texto,
                 message: texto,
-                sender_id: currentUser.uid,
-                sender_name: currentUser.displayName || body.dataset.userName || "Usuario",
-                created_at: firebase.firestore.FieldValue.serverTimestamp(),
-            });
+                type: "text",
+                senderId: currentUser.uid,
+                senderName: senderName,
+                status: "sent",
+                createdAt: serverTimestamp,
+                updatedAt: serverTimestamp,
+                created_at: serverTimestamp,
+                updated_at: serverTimestamp,
+                readBy: [currentUser.uid],
+            };
+
+            if (body.dataset.userEmail) {
+                messageData.senderEmail = body.dataset.userEmail;
+            }
+
+            await mensajesRef.add(messageData);
 
             const partnerId = dataset.partnerId || "";
             const partnerName = dataset.partnerName || "";
             const currentUserName =
                 currentUser.displayName || dataset.userName || "Usuario";
 
-            const updates = {
-                last_message: texto,
-                lastMessage: texto,
-                last_message_at: firebase.firestore.FieldValue.serverTimestamp(),
-                lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
-                last_sender_id: currentUser.uid,
-                lastSenderId: currentUser.uid,
-                updated_at: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                [`unreadCounts.${currentUser.uid}`]: 0,
-                [`participantsData.${currentUser.uid}`]: {
-                    id: currentUser.uid,
-                    nombre: currentUserName,
-                    rol_activo: chatRole,
-                },
-            };
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
 
-            if (partnerId) {
-                updates[`unreadCounts.${partnerId}`] =
-                    firebase.firestore.FieldValue.increment(1);
-                updates[`participantsData.${partnerId}`] = {
-                    id: partnerId,
-                    nombre: partnerName,
-                    rol_activo: partnerRole,
+            await db.runTransaction(async (transaction) => {
+                const snapshot = await transaction.get(chatRef);
+                const previousData = snapshot.exists ? snapshot.data() || {} : {};
+
+                const updates = {
+                    updated_at: timestamp,
+                    updatedAt: timestamp,
+                    lastMessage: texto,
+                    lastMessageAt: timestamp,
+                    lastMessageSenderId: currentUser.uid,
+                    lastMessageSenderName: currentUserName,
+                    lastMessageSenderRole: chatRole,
+                    lastSenderId: currentUser.uid,
+                    lastSenderName: currentUserName,
+                    lastSenderRole: chatRole,
+                    [`unreadCounts.${currentUser.uid}`]: 0,
+                    [`participantsData.${currentUser.uid}`]: {
+                        id: currentUser.uid,
+                        nombre: currentUserName,
+                        rol_activo: chatRole,
+                    },
                 };
-            }
 
-            await chatRef.set(updates, { merge: true });
+                if (partnerId) {
+                    updates[`unreadCounts.${partnerId}`] =
+                        firebase.firestore.FieldValue.increment(1);
+                    updates[`participantsData.${partnerId}`] = {
+                        id: partnerId,
+                        nombre: partnerName,
+                        rol_activo: partnerRole,
+                    };
+                }
+
+                if (previousData && typeof previousData === "object") {
+                    if (Object.prototype.hasOwnProperty.call(previousData, "last_message")) {
+                        updates.last_message = previousData.last_message;
+                    }
+                    if (Object.prototype.hasOwnProperty.call(previousData, "last_message_at")) {
+                        updates.last_message_at = previousData.last_message_at;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            previousData,
+                            "last_message_sender_id"
+                        )
+                    ) {
+                        updates.last_message_sender_id = previousData.last_message_sender_id;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            previousData,
+                            "last_message_sender_name"
+                        )
+                    ) {
+                        updates.last_message_sender_name = previousData.last_message_sender_name;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            previousData,
+                            "last_message_sender_role"
+                        )
+                    ) {
+                        updates.last_message_sender_role = previousData.last_message_sender_role;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(previousData, "last_sender_id")
+                    ) {
+                        updates.last_sender_id = previousData.last_sender_id;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(previousData, "last_sender_name")
+                    ) {
+                        updates.last_sender_name = previousData.last_sender_name;
+                    }
+                    if (
+                        Object.prototype.hasOwnProperty.call(previousData, "last_sender_role")
+                    ) {
+                        updates.last_sender_role = previousData.last_sender_role;
+                    }
+                }
+
+                transaction.set(chatRef, updates, { merge: true });
+            });
 
             chatInputEl.value = "";
             chatInputEl.focus();

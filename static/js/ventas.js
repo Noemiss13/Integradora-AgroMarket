@@ -298,9 +298,14 @@ function renderVentas(ventasAMostrar = null) {
                                     </select>
                                 </td>
                                 <td class="venta-detalles-cell">
+                                    <div class="venta-acciones">
+                                        <a class="btn-chat-venta" href="/vendedor/chats/${venta.compra_id}?comprador=${encodeURIComponent(venta.comprador_nombre || 'Cliente')}&comprador_id=${encodeURIComponent(venta.comprador_id || '')}" title="Chatear con el cliente">
+                                            <i class="fas fa-comments"></i>
+                                        </a>
                                     <button class="btn-ver-detalles" onclick="mostrarDetallesPedido(${index})" title="Ver detalles completos">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    </div>
                                 </td>
                             </tr>
                         `;

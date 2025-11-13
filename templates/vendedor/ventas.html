@@ -27,11 +27,12 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="{{ url_for('vendedor.panel_vendedor') }}">Home</a>
-        <a href="{{ url_for('vendedor.agregar_producto') }}">Agregar Productos</a>
-            <a href="{{ url_for('vendedor.mis_productos') }}">Mis Productos</a>
-            <a href="{{ url_for('vendedor.ver_ventas') }}" class="activo">Ventas</a>
-        <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+        <a href="{{ url_for('vendedor.panel_vendedor') }}" {% if page == 'inicio' %}class="activo"{% endif %}>Home</a>
+        <a href="{{ url_for('vendedor.agregar_producto') }}" {% if page == 'agregar' %}class="activo"{% endif %}>Agregar Productos</a>
+        <a href="{{ url_for('vendedor.mis_productos') }}" {% if page == 'productos' %}class="activo"{% endif %}>Mis Productos</a>
+        <a href="{{ url_for('vendedor.ver_ventas') }}" {% if page == 'ventas' %}class="activo"{% endif %}>Ventas</a>
+        <a href="/vendedor/chats" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
+        <a href="{{ url_for('auth.perfil') }}" {% if page == 'perfil' %}class="activo"{% endif %}>Mi Perfil</a>
         <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
     </div>
 </nav>

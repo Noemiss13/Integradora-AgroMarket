@@ -27,11 +27,12 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="/vendedor/panel">Home</a>
-        <a href="/vendedor/agregar_producto">Agregar Productos</a>
-        <a href="/vendedor/mis_productos" class="activo">Mis Productos</a>
-        <a href="/vendedor/ventas">Ventas</a>
-        <a href="/auth/perfil">Mi Perfil</a>
+        <a href="/vendedor/panel" {% if page == 'inicio' %}class="activo"{% endif %}>Home</a>
+        <a href="/vendedor/agregar_producto" {% if page == 'agregar' %}class="activo"{% endif %}>Agregar Productos</a>
+        <a href="/vendedor/mis_productos" {% if page == 'productos' %}class="activo"{% endif %}>Mis Productos</a>
+        <a href="/vendedor/ventas" {% if page == 'ventas' %}class="activo"{% endif %}>Ventas</a>
+        <a href="/vendedor/chats" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
+        <a href="/auth/perfil" {% if page == 'perfil' %}class="activo"{% endif %}>Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>
 </nav>

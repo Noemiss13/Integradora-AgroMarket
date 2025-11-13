@@ -21,7 +21,8 @@
             <a href="{{ url_for('comprador.panel_comprador') }}" class="{% if page=='inicio' %}activo{% endif %}">Inicio</a>
             <a href="{{ url_for('comprador.ver_productos') }}" class="{% if page=='productos' %}activo{% endif %}">Productos</a>
             <a href="{{ url_for('comprador.ver_carrito') }}" class="{% if page=='carrito' %}activo{% endif %}">Carrito</a>
-            <a href="{{ url_for('auth.perfil') }}">Mi Perfil</a>
+            <a href="{{ url_for('comprador.chats') }}" class="{% if page=='chats' %}activo{% endif %}">Chats</a>
+            <a href="{{ url_for('auth.perfil') }}" class="{% if page=='perfil' %}activo{% endif %}">Mi Perfil</a>
             <a href="{{ url_for('auth.logout') }}">Cerrar Sesión</a>
         </div>
     </nav>

@@ -890,3 +890,261 @@ form button[type="submit"]:hover {
 /* Los estilos responsive del navbar se han movido a navbar.css */
 
 
+
+/* ===== Stripe Connect Card ===== */
+.stripe-connect-card {
+    max-width: 1040px;
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    border: 1px solid #e7f0e5;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stripe-connect-card.loading {
+    opacity: 0.6;
+}
+
+.stripe-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.stripe-card-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1b5e20;
+    text-align: left;
+}
+
+.stripe-card-description {
+    margin: 0.5rem 0 0;
+    color: #4f5d4a;
+    max-width: 640px;
+}
+
+.stripe-status-pill {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #f0f4f0;
+    color: #58755a;
+}
+
+.stripe-status-pill.success {
+    background: #e6f7ed;
+    color: #1b5e20;
+}
+
+.stripe-status-pill.warning {
+    background: #fff7e6;
+    color: #b26a00;
+}
+
+.stripe-status-pill.error {
+    background: #fdecea;
+    color: #b71c1c;
+}
+
+.stripe-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.stripe-status-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #e6ece7;
+    background: #f9fbf9;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.stripe-status-item .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #1b5e20;
+    background: #e8f5e9;
+    flex-shrink: 0;
+}
+
+.stripe-status-item .details h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #183d1f;
+}
+
+.stripe-status-item .details p {
+    margin: 0.3rem 0 0;
+    font-size: 0.9rem;
+    color: #56675a;
+}
+
+.stripe-status-item.pending {
+    opacity: 0.8;
+}
+
+.stripe-status-item.active {
+    border-color: #c8e6c9;
+    background: #f1fbf2;
+    opacity: 1;
+}
+
+.stripe-callouts {
+    margin: 1.5rem 0;
+}
+
+.stripe-callout {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f0f4f0;
+    color: #425347;
+    border: 1px solid #dde5da;
+    line-height: 1.5;
+}
+
+.stripe-callout .icon {
+    font-size: 1.25rem;
+    margin-top: 0.15rem;
+}
+
+.stripe-callout.warning {
+    background: #fff7e6;
+    border-color: #ffe0b2;
+    color: #8a5a00;
+}
+
+.stripe-callout.error {
+    background: #fdecea;
+    border-color: #f5c6cb;
+    color: #a31616;
+}
+
+.stripe-callout.success {
+    background: #e6f7ed;
+    border-color: #c1e6ce;
+    color: #1b5e20;
+}
+
+.stripe-callout ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.stripe-callout li {
+    margin-bottom: 0.25rem;
+}
+
+.stripe-card-actions {
+    margin-top: 1.5rem;
+}
+
+.btn-stripe-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.4rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-stripe-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(33, 150, 83, 0.25);
+}
+
+.btn-stripe-primary.disabled,
+.btn-stripe-primary[disabled] {
+    background: #c9d9cb;
+    color: #556357;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-stripe-secondary {
+    background: #f5faf7;
+    color: #1b5e20;
+    border: 1px solid #c8e6c9;
+}
+
+.btn-stripe-secondary:hover {
+    background: #e6f4ea;
+    transform: translateY(-1px);
+}
+
+.btn-stripe-secondary.disabled,
+.btn-stripe-secondary[disabled] {
+    color: #7a8a7b;
+    border-color: #d9e7da;
+    cursor: not-allowed;
+}
+
+.stripe-last-update {
+    margin-top: 1rem;
+    color: #6b796c;
+    font-size: 0.85rem;
+}
+
+.btn-stripe-primary .spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 768px) {
+    .stripe-connect-card {
+        padding: 1.5rem;
+        margin: 1.5rem;
+    }
+
+    .stripe-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stripe-card-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-stripe-primary,
+    .btn-stripe-secondary {
+        justify-content: center;
+        width: 100%;
+    }
+}

@@ -16,10 +16,11 @@
         <div class="saludo-usuario">Hola, <strong>{{ nombre }}</strong></div>
     </div>
     <div class="menu">
-        <a href="/vendedor/panel">Home</a>
-        <a href="/vendedor/agregar_producto">Agregar Productos</a>
-        <a href="/vendedor/mis_productos" class="activo">Mis Productos</a>
+        <a href="/vendedor/panel" {% if page == 'inicio' %}class="activo"{% endif %}>Home</a>
+        <a href="/vendedor/agregar_producto" {% if page == 'agregar' %}class="activo"{% endif %}>Agregar Productos</a>
+        <a href="/vendedor/mis_productos" {% if page == 'productos' %}class="activo"{% endif %}>Mis Productos</a>
         <a href="#" onclick="alert('Función próximamente')">Ventas</a>
+        <a href="/vendedor/chats" {% if page == 'chats' %}class="activo"{% endif %}>Chats</a>
         <a href="#" onclick="alert('Función próximamente')">Mi Perfil</a>
         <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
     </div>

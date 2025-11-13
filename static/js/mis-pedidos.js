@@ -229,6 +229,7 @@
                 ? pedido.productos.map((producto, idx) => {
                     const productoEstado = producto.estado_pedido || estadoPedido;
                     const vendedorNombre = producto.vendedor_nombre || 'Vendedor';
+                    const vendedorId = producto.vendedor_id || producto.vendedorId || '';
                     return `
                         <div class="pedido-producto-row">
                             <div class="pedido-left-content">
@@ -247,7 +248,7 @@
                             <div class="pedido-center-content">
                                 <div class="pedido-vendedor-info">
                                     <strong class="vendedor-nombre">${vendedorNombre}</strong>
-                                        <a class="btn-enviar-mensaje" href="/comprador/chats/${pedido.id}?vendedor=${encodeURIComponent(vendedorNombre)}">
+                                        <a class="btn-enviar-mensaje" href="/comprador/chats/${pedido.id}?vendedor=${encodeURIComponent(vendedorNombre)}${vendedorId ? `&vendedor_id=${encodeURIComponent(vendedorId)}` : ''}">
                                             <i class="fas fa-comment-dots"></i>
                                             Enviar mensaje
                                         </a>

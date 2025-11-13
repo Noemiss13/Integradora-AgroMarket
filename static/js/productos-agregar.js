@@ -13,6 +13,13 @@ let auth = null;
 let db = null;
 let storage = null;
 let currentUser = null;
+let stripeReady = false;
+let stripeChecking = false;
+let submitButton = null;
+let stripeWarningShown = false;
+let stripeStatusCache = null;
+const STRIPE_STATUS_CACHE_KEY = 'stripe_status_cache';
+const STRIPE_CACHE_EXPIRATION = 5 * 60 * 1000; // 5 minutos
 
 function cerrarSesion() {
     if (!auth) {
@@ -30,6 +37,115 @@ function cerrarSesion() {
 }
 
 window.cerrarSesion = cerrarSesion;
+
+function actualizarEstadoBoton() {
+    if (!submitButton) {
+        return;
+    }
+
+    if (stripeChecking && !stripeReady) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando permisos...';
+        return;
+    }
+
+    if (stripeReady) {
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-upload"></i> Publicar Producto';
+    } else {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-lock"></i> Completa tu configuración de cobros';
+    }
+}
+
+function mostrarRestriccionStripe(mensaje) {
+    if (!stripeWarningShown) {
+        mostrarMensaje(mensaje, 'warning');
+        stripeWarningShown = true;
+    }
+}
+
+async function verificarEstadoStripe(uid, email, options = {}) {
+    const { showLoader = true, forceRefresh = false } = options;
+
+    if (!uid) {
+        stripeReady = false;
+        mostrarRestriccionStripe('No identificamos al vendedor. Inicia sesión nuevamente.');
+        actualizarEstadoBoton();
+        return;
+    }
+
+    try {
+        let data = null;
+
+        if (!forceRefresh) {
+            data = loadCachedStatus(uid);
+            if (data) {
+                console.log('Stripe Cache: usando estado almacenado para', uid, data);
+            }
+        }
+
+        if (!data) {
+            if (showLoader) {
+        stripeChecking = true;
+        actualizarEstadoBoton();
+            }
+
+            const statusUrl = new URL(`/vendors/status/${encodeURIComponent(uid)}`, window.location.origin);
+            if (email) {
+                statusUrl.searchParams.set('email', email);
+            }
+
+            const response = await fetch(statusUrl.toString(), {
+            credentials: 'same-origin'
+        });
+            data = await response.json();
+
+        if (!response.ok) {
+                clearCachedStatus(uid);
+            throw new Error(data.error || 'No fue posible verificar tu configuración de cobros.');
+            }
+
+            console.log('Stripe Fetch: respuesta recibida', data);
+
+            if (data && !data.pending) {
+                saveCachedStatus(uid, data);
+            } else {
+                clearCachedStatus(uid);
+            }
+        }
+
+        if (data.pending) {
+            stripeReady = false;
+            stripeStatusCache = null;
+            mostrarRestriccionStripe('Completa tu configuración de cobros en tu panel antes de publicar productos.');
+            return;
+        }
+
+        const status = data.status || {};
+        stripeReady = Boolean(status.charges_enabled && status.payouts_enabled && status.details_submitted);
+        stripeStatusCache = data;
+
+        if (!stripeReady) {
+            if (status.requirements_due && status.requirements_due.length) {
+                mostrarRestriccionStripe('Tienes requisitos pendientes en Stripe. Completa la verificación para continuar.');
+            } else {
+                mostrarRestriccionStripe('Completa tu configuración de cobros en tu panel antes de publicar productos.');
+            }
+        } else {
+            mostrarMensaje('✅ Tu cuenta de Stripe está lista para recibir pagos.', 'success');
+            stripeWarningShown = false;
+        }
+    } catch (error) {
+        console.error('❌ Error verificando Stripe Connect:', error);
+        stripeReady = false;
+        mostrarRestriccionStripe(error.message || 'No fue posible validar tu cuenta de cobros.');
+        clearCachedStatus(uid);
+    } finally {
+        stripeChecking = false;
+        actualizarEstadoBoton();
+    }
+}
 
 function obtenerDatosFormulario() {
     const nombre = document.getElementById('nombre')?.value.trim() || '';
@@ -430,6 +546,19 @@ async function handleSubmit(event) {
     const form = event.currentTarget;
     const submitBtn = form.querySelector('.submit-btn');
 
+    if (!stripeReady) {
+        mostrarRestriccionStripe('Completa tu configuración de cobros antes de publicar productos.');
+        try {
+            if (typeof window.iniciarStripeConnectOnboarding === 'function') {
+                await window.iniciarStripeConnectOnboarding({ silent: true });
+            }
+        } catch (error) {
+            console.warn('No se pudo iniciar Stripe Connect automáticamente:', error);
+        }
+        actualizarEstadoBoton();
+        return;
+    }
+
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
@@ -468,10 +597,49 @@ async function handleSubmit(event) {
         console.error('❌ Error al guardar producto:', error);
         mostrarMensaje(`❌ Error: ${error.message || 'No se pudo guardar el producto'}`, 'error');
     } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-upload"></i> Publicar Producto';
+        actualizarEstadoBoton();
+    }
+}
+
+function saveCachedStatus(vendorId, payload) {
+    try {
+        const entry = {
+            vendorId,
+            payload,
+            savedAt: Date.now(),
+        };
+        sessionStorage.setItem(`${STRIPE_STATUS_CACHE_KEY}_${vendorId}`, JSON.stringify(entry));
+    } catch (error) {
+        console.warn('No se pudo guardar caché Stripe:', error);
+    }
+}
+
+function clearCachedStatus(vendorId) {
+    try {
+        sessionStorage.removeItem(`${STRIPE_STATUS_CACHE_KEY}_${vendorId}`);
+    } catch (error) {
+        console.warn('No se pudo limpiar caché Stripe:', error);
+    }
+}
+
+function loadCachedStatus(vendorId) {
+    try {
+        const raw = sessionStorage.getItem(`${STRIPE_STATUS_CACHE_KEY}_${vendorId}`);
+        if (!raw) {
+            return null;
         }
+        const entry = JSON.parse(raw);
+        if (!entry || !entry.payload || !entry.savedAt) {
+            return null;
+        }
+        if (Date.now() - entry.savedAt > STRIPE_CACHE_EXPIRATION) {
+            sessionStorage.removeItem(`${STRIPE_STATUS_CACHE_KEY}_${vendorId}`);
+            return null;
+        }
+        return entry.payload;
+    } catch (error) {
+        console.warn('No se pudo leer caché Stripe:', error);
+        return null;
     }
 }
 
@@ -480,6 +648,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!form) {
         return;
     }
+
+    submitButton = form.querySelector('.submit-btn');
+    stripeChecking = false;
+    actualizarEstadoBoton();
 
     setupImageHandling();
     setupValidaciones();
@@ -497,12 +669,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentUser = user;
             actualizarSaludoUsuario(user);
+
+            const cached = loadCachedStatus(user.uid);
+            if (cached) {
+                const status = cached.status || {};
+                stripeReady = Boolean(status.charges_enabled && status.payouts_enabled && status.details_submitted);
+                stripeStatusCache = cached;
+                stripeChecking = false;
+                actualizarEstadoBoton();
+            } else {
+                stripeReady = false;
+                stripeChecking = true;
+                actualizarEstadoBoton();
+            }
+
+            if (!cached) {
+                verificarEstadoStripe(user.uid, user.email, { showLoader: true, forceRefresh: true });
+            } else {
+                verificarEstadoStripe(user.uid, user.email, { showLoader: false, forceRefresh: true });
+            }
         });
 
         form.addEventListener('submit', handleSubmit);
     }).catch((error) => {
         console.error('❌ Error inicializando Firebase:', error);
         mostrarMensaje('❌ Error de conexión. Recarga la página.', 'error');
+        stripeChecking = false;
+        stripeReady = false;
+        actualizarEstadoBoton();
     });
 });
 

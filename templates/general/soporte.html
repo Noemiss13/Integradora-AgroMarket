@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Soporte - AgroMarket</title>
+
+  <!-- PWA: Manifest y theme color -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Iconos -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/icons/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icon-512.png') }}">
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_informacion.css') }}">
+</head>
+
+<body>
+  <!-- Navbar -->
+  <header class="site-header">
+    <div class="wrap nav">
+      <div class="brand">
+        <a href="{{ url_for('general.home') }}" style="color: inherit; text-decoration: none;">
+          <span>AGROMARKET</span>
+        </a>
+      </div>
+      <nav class="menu">
+        <a href="{{ url_for('general.sobre_nosotros') }}">Sobre nosotros</a>
+        <a href="{{ url_for('general.home') }}#quienes">Quiénes somos</a>
+        <a href="{{ url_for('general.home') }}#servicios">Servicios</a>
+        <a href="{{ url_for('general.home') }}#beneficios">Beneficios</a>
+        <a href="{{ url_for('general.home') }}#contacto">Contacto</a>
+      </nav>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-sm">Iniciar sesión</a>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="soporte-page">
+    <div class="wrap">
+      <div class="soporte-header">
+        <a href="{{ url_for('general.home') }}" class="btn-back">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h1>Centro de Soporte</h1>
+        <p class="soporte-subtitle">Estamos aquí para ayudarte. Encuentra respuestas rápidas o contáctanos directamente.</p>
+      </div>
+
+      <!-- Información de Contacto -->
+      <div class="soporte-contacto">
+        <div class="contacto-card">
+          <div class="contacto-icon">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <h3>Correo Electrónico</h3>
+          <p>Envíanos un correo y te responderemos en menos de 24 horas</p>
+          <a href="mailto:agromarket559@gmail.com" class="contacto-link">agromarket559@gmail.com</a>
+        </div>
+
+        <div class="contacto-card">
+          <div class="contacto-icon">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <h3>Horario de Atención</h3>
+          <p>Lunes a Viernes: 9:00 AM - 6:00 PM</p>
+          <p>Sábados: 10:00 AM - 2:00 PM</p>
+          <p class="horario-note">Horario del Centro de México (GMT-6)</p>
+        </div>
+
+        <div class="contacto-card">
+          <div class="contacto-icon">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <h3>Ubicación</h3>
+          <p>Ocosingo, Chiapas, México</p>
+          <p class="ubicacion-note">Atención principalmente en línea</p>
+        </div>
+      </div>
+
+      <!-- Preguntas Frecuentes -->
+      <div class="soporte-faq">
+        <h2>Preguntas Frecuentes</h2>
+        
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Cómo me registro en AgroMarket?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Para registrarte, haz clic en "Iniciar sesión" en la parte superior de la página y luego selecciona "Registrarse". Puedes elegir entre crear una cuenta de Comprador o Vendedor. Completa el formulario con tus datos y verifica tu correo electrónico.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Cómo publico mis productos como vendedor?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Una vez que tengas una cuenta de vendedor, accede a tu panel de control. Allí encontrarás la opción "Agregar Producto" donde podrás subir imágenes, descripción, precio y disponibilidad de tus productos agrícolas.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Cómo realizo un pago?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>AgroMarket utiliza Stripe como procesador de pagos seguro. Al realizar una compra, serás redirigido a una pasarela de pago segura donde podrás ingresar tus datos de tarjeta. Todos los pagos están protegidos y encriptados.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Puedo cancelar un pedido?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Sí, puedes cancelar un pedido siempre que el vendedor no lo haya enviado aún. Ve a la sección "Mis Pedidos" en tu panel y selecciona el pedido que deseas cancelar. Si el pedido ya fue enviado, deberás contactar directamente al vendedor.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Cómo contacto a un vendedor?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Puedes comunicarte con los vendedores a través del sistema de mensajería integrado en la plataforma. Ve al perfil del vendedor y haz clic en "Enviar mensaje" para iniciar una conversación.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Qué hago si tengo un problema con mi pedido?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Si tienes algún problema con tu pedido, primero intenta contactar directamente al vendedor a través del sistema de mensajería. Si no recibes respuesta o el problema persiste, puedes contactarnos en agromarket559@gmail.com y nuestro equipo de soporte te ayudará.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <h3>¿Cómo cambio mi contraseña?</h3>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+          <div class="faq-answer">
+            <p>Para cambiar tu contraseña, inicia sesión y ve a tu perfil. Allí encontrarás la opción "Cambiar contraseña". También puedes usar la opción "¿Olvidaste tu contraseña?" en la página de inicio de sesión.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Contacto -->
+      <div class="soporte-formulario">
+        <h2>Envíanos un Mensaje</h2>
+        <p class="formulario-desc">Si no encuentras la respuesta que buscas, completa el siguiente formulario y nos pondremos en contacto contigo.</p>
+        
+        <form class="contacto-form" onsubmit="enviarMensaje(event)">
+          <div class="form-group">
+            <label for="nombre">Nombre completo</label>
+            <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+          </div>
+
+          <div class="form-group">
+            <label for="email">Correo electrónico</label>
+            <input type="email" id="email" name="email" required placeholder="tu@email.com">
+          </div>
+
+          <div class="form-group">
+            <label for="asunto">Asunto</label>
+            <select id="asunto" name="asunto" required>
+              <option value="">Selecciona un asunto</option>
+              <option value="cuenta">Problemas con mi cuenta</option>
+              <option value="pedido">Consulta sobre un pedido</option>
+              <option value="pago">Problemas con el pago</option>
+              <option value="producto">Consulta sobre productos</option>
+              <option value="tecnico">Soporte técnico</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="mensaje">Mensaje</label>
+            <textarea id="mensaje" name="mensaje" rows="6" required placeholder="Describe tu consulta o problema..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-lg formulario-btn">
+            <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="wrap foot">
+      <p>© 2025 AgroMarket. Todos los derechos reservados.</p>
+      <nav>
+        <a href="{{ url_for('general.aviso_privacidad') }}">Aviso de Privacidad</a>
+        <a href="#terminos">Términos</a>
+        <a href="{{ url_for('general.soporte') }}">Soporte</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    function toggleFaq(element) {
+      const faqItem = element.parentElement;
+      const answer = faqItem.querySelector('.faq-answer');
+      const icon = element.querySelector('i');
+      
+      // Cerrar otros FAQs abiertos
+      document.querySelectorAll('.faq-item').forEach(item => {
+        if (item !== faqItem && item.classList.contains('active')) {
+          item.classList.remove('active');
+          item.querySelector('.faq-answer').style.maxHeight = null;
+          item.querySelector('.faq-question i').style.transform = 'rotate(0deg)';
+        }
+      });
+      
+      // Toggle del FAQ actual
+      faqItem.classList.toggle('active');
+      if (faqItem.classList.contains('active')) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        answer.style.maxHeight = null;
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function enviarMensaje(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      
+      // Aquí podrías enviar el formulario a un endpoint del backend
+      // Por ahora, simplemente redirigimos al correo
+      const nombre = formData.get('nombre');
+      const email = formData.get('email');
+      const asunto = formData.get('asunto');
+      const mensaje = formData.get('mensaje');
+      
+      const mailtoLink = `mailto:agromarket559@gmail.com?subject=${encodeURIComponent('Soporte AgroMarket: ' + asunto)}&body=${encodeURIComponent('Nombre: ' + nombre + '\nEmail: ' + email + '\n\nMensaje:\n' + mensaje)}`;
+      window.location.href = mailtoLink;
+      
+      // Mostrar mensaje de confirmación
+      alert('Se abrirá tu cliente de correo. Si prefieres, puedes copiar tu mensaje y enviarlo manualmente a agromarket559@gmail.com');
+    }
+  </script>
+</body>
+</html>
+

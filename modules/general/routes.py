@@ -30,6 +30,11 @@ def aviso_privacidad():
     """Página de aviso de privacidad"""
     return render_template("general/aviso_privacidad.html")
 
+@general_bp.route("/soporte")
+def soporte():
+    """Página de soporte"""
+    return render_template("general/soporte.html")
+
 @general_bp.route("/api/noticias")
 def api_noticias():
     """API para obtener noticias"""

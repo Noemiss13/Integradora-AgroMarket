@@ -25,6 +25,11 @@ def sobre_nosotros():
     """Página sobre nosotros"""
     return render_template("general/sobre_nosotros.html")
 
+@general_bp.route("/aviso_privacidad")
+def aviso_privacidad():
+    """Página de aviso de privacidad"""
+    return render_template("general/aviso_privacidad.html")
+
 @general_bp.route("/api/noticias")
 def api_noticias():
     """API para obtener noticias"""

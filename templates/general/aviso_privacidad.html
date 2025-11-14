@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aviso de Privacidad - AgroMarket</title>
+
+  <!-- PWA: Manifest y theme color -->
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#2e8b57">
+
+  <!-- Iconos -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/icons/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" sizes="512x512" href="{{ url_for('static', filename='images/icons/icon-512.png') }}">
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Iconos -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos_informacion.css') }}">
+</head>
+
+<body>
+  <!-- Navbar -->
+  <header class="site-header">
+    <div class="wrap nav">
+      <div class="brand">
+        <a href="{{ url_for('general.home') }}" style="color: inherit; text-decoration: none;">
+          <span>AGROMARKET</span>
+        </a>
+      </div>
+      <nav class="menu">
+        <a href="{{ url_for('general.sobre_nosotros') }}">Sobre nosotros</a>
+        <a href="{{ url_for('general.home') }}#quienes">Quiénes somos</a>
+        <a href="{{ url_for('general.home') }}#servicios">Servicios</a>
+        <a href="{{ url_for('general.home') }}#beneficios">Beneficios</a>
+        <a href="{{ url_for('general.home') }}#contacto">Contacto</a>
+      </nav>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-sm">Iniciar sesión</a>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="aviso-privacidad-page">
+    <div class="wrap">
+      <div class="aviso-privacidad-header">
+        <a href="{{ url_for('general.home') }}" class="btn-back">
+          <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h1>Aviso de Privacidad</h1>
+      </div>
+
+      <div class="aviso-privacidad-content">
+        <p class="aviso-intro">
+          La aplicación AgroMarket, desarrollada por la Empresa, con domicilio en Ocosingo, Chiapas, es responsable del uso y protección de los datos personales de sus usuarios.
+        </p>
+
+        <div class="aviso-section">
+          <h2>Datos que recopilamos</h2>
+          <p>AgroMarket recaba los siguientes datos personales, según el tipo de usuario:</p>
+          <ul>
+            <li><strong>Compradores:</strong> nombre completo, correo electrónico, contraseña, datos bancarios y ubicación.</li>
+            <li><strong>Vendedores:</strong> nombre completo, correo electrónico, contraseña, ubicación, datos bancarios y nombre del negocio.</li>
+          </ul>
+          <p>Estos datos son necesarios para garantizar el correcto funcionamiento de la plataforma y ofrecer los servicios disponibles dentro de la aplicación.</p>
+        </div>
+
+        <div class="aviso-section">
+          <h2>Finalidad del tratamiento</h2>
+          <p>Los datos personales que recopilamos se utilizarán para:</p>
+          <ul>
+            <li>Crear y administrar su cuenta de usuario (comprador o vendedor).</li>
+            <li>Facilitar las transacciones de compra y venta dentro de la plataforma.</li>
+            <li>Verificar la identidad de los usuarios y garantizar la seguridad de las operaciones.</li>
+            <li>Enviar notificaciones y actualizaciones relacionadas con sus actividades.</li>
+            <li>Mejorar la calidad y confiabilidad de los servicios ofrecidos.</li>
+          </ul>
+        </div>
+
+        <div class="aviso-section">
+          <h2>Transferencia de datos personales</h2>
+          <p>Sus datos personales podrán ser compartidos con proveedores tecnológicos que brindan servicios de alojamiento, mantenimiento, procesamiento de pagos y soporte técnico. Dichas transferencias se realizarán bajo estrictas medidas de confidencialidad y seguridad.</p>
+        </div>
+
+        <div class="aviso-section">
+          <h2>Derechos ARCO</h2>
+          <p>Usted tiene derecho a acceder, rectificar, cancelar u oponerse al tratamiento de sus datos personales (Derechos ARCO). Para ejercer estos derechos, puede enviar una solicitud al correo electrónico:</p>
+          <p class="aviso-email">
+            <a href="mailto:agromarket559@gmail.com">agromarket559@gmail.com</a>
+          </p>
+        </div>
+
+        <div class="aviso-section">
+          <h2>Cambios al aviso de privacidad</h2>
+          <p>AgroMarket se reserva el derecho de modificar o actualizar este aviso de privacidad en cualquier momento. Las actualizaciones se publicarán dentro de la aplicación y en el sitio web.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="wrap foot">
+      <p>© 2025 AgroMarket. Todos los derechos reservados.</p>
+      <nav>
+        <a href="{{ url_for('general.aviso_privacidad') }}">Aviso de Privacidad</a>
+        <a href="#terminos">Términos</a>
+        <a href="#soporte">Soporte</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
+

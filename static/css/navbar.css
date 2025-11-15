@@ -158,3 +158,105 @@ nav {
     background-color: rgba(52, 144, 220, 0.3);
     border-color: rgba(52, 144, 220, 0.5);
 }
+
+/* ===== ICONO DE NOTIFICACIONES ===== */
+.menu a.notification-icon {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.75rem !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    min-width: 2.5rem !important;
+    height: auto !important;
+    overflow: visible !important;
+    z-index: 10 !important;
+}
+
+.menu a.notification-icon:hover {
+    background-color: var(--navbar-hover) !important;
+    transform: translateY(-2px) !important;
+}
+
+.menu a.notification-icon i {
+    font-size: 1.2rem !important;
+    color: var(--navbar-text) !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Asegurar que el icono sea visible */
+.menu a.notification-icon {
+    text-decoration: none !important;
+}
+
+.menu a.notification-icon:focus,
+.menu a.notification-icon:active {
+    outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+    outline-offset: 2px !important;
+}
+
+/* Fallback: mostrar emoji solo si Font Awesome no está disponible */
+.menu a.notification-icon:not(:has(i.fa-bell))::before {
+    content: "🔔";
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+.menu a.notification-icon i.fa-bell {
+    display: inline-block !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
+.notification-badge {
+    position: absolute !important;
+    top: -0.25rem !important;
+    right: -0.25rem !important;
+    background-color: #e53935 !important;
+    color: white !important;
+    border-radius: 50% !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    border: 2px solid var(--navbar-bg) !important;
+    min-width: 1.5rem !important;
+    padding: 0 0.2rem !important;
+    box-sizing: border-box !important;
+    z-index: 1001 !important;
+    pointer-events: none !important;
+}
+
+/* Asegurar que el badge solo aparezca dentro del icono de notificaciones */
+.menu a.notification-icon .notification-badge {
+    position: absolute !important;
+    top: -0.25rem !important;
+    right: -0.25rem !important;
+}
+
+.notification-badge.hidden {
+    display: none;
+}
+
+.notification-badge.count-0 {
+    display: none;
+}
+
+/* Badge para números grandes */
+.notification-badge.count-large {
+    width: auto;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.4rem;
+    border-radius: 0.75rem;
+    font-size: 0.65rem;
+}

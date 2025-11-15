@@ -276,6 +276,21 @@
 
         suscribirseAChatMetadata();
         suscribirseAMensajes();
+        
+        // Marcar mensajes como leídos al abrir el chat
+        // Esperar un momento para que las suscripciones se establezcan
+        setTimeout(async () => {
+            const exito = await marcarMensajesComoLeidos();
+            if (!exito) {
+                // Intentar de nuevo después de 1 segundo
+                setTimeout(async () => {
+                    await marcarMensajesComoLeidos();
+                }, 1000);
+            }
+        }, 300);
+        
+        // También marcar inmediatamente
+        await marcarMensajesComoLeidos();
     }
 
     function construirChatId(pedidoId, compradorId, vendedorId) {
@@ -466,15 +481,57 @@
                     const mensajes = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
                     renderizarMensajes(mensajes);
 
-                    if (chatRef && currentUser) {
-                        chatRef
-                            .set(
-                                { [`unreadCounts.${currentUser.uid}`]: 0 },
-                                { merge: true }
-                            )
-                            .catch((error) =>
-                                console.warn("No se pudo actualizar unreadCounts:", error)
-                            );
+                    // Marcar como leído cuando se cargan los mensajes (solo si hay mensajes y es la primera carga)
+                    if (chatRef && currentUser && mensajes.length > 0) {
+                        // Solo marcar como leído si el chat está abierto (no en background)
+                        if (document.visibilityState === 'visible') {
+                            chatRef
+                                .update({
+                                    [`unreadCounts.${currentUser.uid}`]: 0
+                                })
+                                .then(() => {
+                                    console.log("✅ Mensajes marcados como leídos al cargar conversación");
+                                })
+                                .catch((error) => {
+                                    console.warn("⚠️ No se pudo actualizar unreadCounts al cargar mensajes, intentando con set:", error);
+                                    // Fallback a set
+                                    chatRef.set({
+                                        [`unreadCounts.${currentUser.uid}`]: 0
+                                    }, { merge: true }).catch(err => {
+                                        console.error("❌ Error en fallback:", err);
+                                    });
+                                });
+                            
+                            // Marcar los mensajes que el usuario actual envió como "read" cuando el otro usuario abre el chat
+                            const partnerId = dataset.partnerId || "";
+                            if (partnerId && currentUser) {
+                                const mensajesEnviadosPorMi = mensajes.filter(msg => {
+                                    const msgSenderId = msg.senderId || msg.sender_id || "";
+                                    // Mensajes que YO envié y que aún no están marcados como "read"
+                                    return msgSenderId === currentUser.uid && msg.status !== "read";
+                                });
+                                
+                                if (mensajesEnviadosPorMi.length > 0) {
+                                    const batch = db.batch();
+                                    const mensajesRef = chatRef.collection("messages");
+                                    mensajesEnviadosPorMi.forEach(msg => {
+                                        const msgRef = mensajesRef.doc(msg.id);
+                                        batch.update(msgRef, {
+                                            status: "read",
+                                            readAt: firebase.firestore.FieldValue.serverTimestamp()
+                                        });
+                                    });
+                                    
+                                    batch.commit()
+                                        .then(() => {
+                                            console.log(`✅ ${mensajesEnviadosPorMi.length} mensajes marcados como leídos`);
+                                        })
+                                        .catch(error => {
+                                            console.warn("⚠️ Error marcando mensajes como leídos:", error);
+                                        });
+                                }
+                            }
+                        }
                     }
                 },
                 (error) => {
@@ -552,9 +609,30 @@
 
             const timeEl = document.createElement("span");
             timeEl.className = "chat-message-time";
-            timeEl.textContent = fecha
+            const timeText = fecha
                 ? fecha.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })
                 : "";
+            timeEl.textContent = timeText;
+
+            // Agregar checkmarks de estado solo para mensajes propios
+            if (esPropio) {
+                const statusEl = document.createElement("span");
+                statusEl.className = "chat-message-status";
+                const status = mensaje.status || "sent";
+                
+                if (status === "read") {
+                    statusEl.innerHTML = '<i class="fas fa-check-double" style="color: #4a90e2;"></i>';
+                    statusEl.title = "Leído";
+                } else if (status === "delivered") {
+                    statusEl.innerHTML = '<i class="fas fa-check-double"></i>';
+                    statusEl.title = "Entregado";
+                } else {
+                    statusEl.innerHTML = '<i class="fas fa-check"></i>';
+                    statusEl.title = "Enviado";
+                }
+                
+                timeEl.appendChild(statusEl);
+            }
 
             bubbleEl.appendChild(textEl);
             bubbleEl.appendChild(timeEl);
@@ -657,7 +735,7 @@
                 type: "text",
                 senderId: currentUser.uid,
                 senderName: senderName,
-                status: "sent",
+                status: "sent", // Estados: "sent", "delivered", "read"
                 createdAt: serverTimestamp,
                 updatedAt: serverTimestamp,
                 created_at: serverTimestamp,
@@ -669,7 +747,19 @@
                 messageData.senderEmail = body.dataset.userEmail;
             }
 
-            await mensajesRef.add(messageData);
+            const messageRef = await mensajesRef.add(messageData);
+            
+            // Marcar como entregado después de un momento (el mensaje está en Firestore)
+            setTimeout(async () => {
+                try {
+                    await messageRef.update({
+                        status: "delivered",
+                        deliveredAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (error) {
+                    console.warn("⚠️ No se pudo marcar mensaje como entregado:", error);
+                }
+            }, 500);
 
             const partnerId = dataset.partnerId || "";
             const partnerName = dataset.partnerName || "";
@@ -853,6 +943,75 @@
             window.dispatchEvent(event);
         } catch (error) {
             console.warn("No se pudo notificar el último mensaje", error);
+        }
+    }
+
+    async function marcarMensajesComoLeidos() {
+        if (!chatRef || !currentUser) {
+            console.warn("⚠️ No se pueden marcar mensajes como leídos: chatRef o currentUser no disponible");
+            return false;
+        }
+
+        try {
+            const userId = currentUser.uid;
+            const chatId = chatRef.id;
+            console.log(`📖 Marcando mensajes como leídos para usuario ${userId} en chat ${chatId}`);
+            
+            // Obtener el documento actual para verificar el estado
+            const chatDoc = await chatRef.get();
+            if (!chatDoc.exists) {
+                console.warn("⚠️ El chat no existe en Firestore");
+                return false;
+            }
+            
+            const currentData = chatDoc.data();
+            const currentUnread = currentData.unreadCounts?.[userId] || 0;
+            console.log(`📊 Contador actual antes de marcar como leído: ${currentUnread}`);
+            
+            // Actualizar el contador de mensajes no leídos a 0 usando update en lugar de set
+            await chatRef.update({
+                [`unreadCounts.${userId}`]: 0
+            });
+            
+            console.log(`✅ Actualización enviada: unreadCounts.${userId} = 0`);
+            
+            // Verificar que se actualizó correctamente después de un momento
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const updatedDoc = await chatRef.get();
+            if (updatedDoc.exists) {
+                const updatedData = updatedDoc.data();
+                const updatedUnread = updatedData.unreadCounts?.[userId] || 0;
+                console.log(`✅ Verificado: contador después de actualizar = ${updatedUnread}`);
+                
+                if (updatedUnread === 0) {
+                    console.log(`✅✅ Mensajes marcados como leídos correctamente`);
+                    return true;
+                } else {
+                    console.warn(`⚠️ El contador no se actualizó correctamente. Sigue siendo ${updatedUnread}`);
+                    // Intentar de nuevo con set
+                    await chatRef.set({
+                        [`unreadCounts.${userId}`]: 0
+                    }, { merge: true });
+                    return false;
+                }
+            }
+            
+            return true;
+        } catch (error) {
+            console.error("❌ Error marcando mensajes como leídos:", error);
+            console.error("Stack:", error.stack);
+            
+            // Intentar con set como fallback
+            try {
+                await chatRef.set({
+                    [`unreadCounts.${currentUser.uid}`]: 0
+                }, { merge: true });
+                console.log("✅ Fallback: usado set en lugar de update");
+            } catch (fallbackError) {
+                console.error("❌ Error en fallback:", fallbackError);
+            }
+            
+            return false;
         }
     }
 })();

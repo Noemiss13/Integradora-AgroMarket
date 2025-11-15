@@ -116,6 +116,8 @@
     function agregarSuscripcion(query, uid) {
         const unsubscribe = query.onSnapshot(
             (snapshot) => {
+                let hayCambios = false;
+                
                 snapshot.docChanges().forEach((change) => {
                     const data = {
                         id: change.doc.id,
@@ -125,10 +127,28 @@
                     if (change.type === "removed") {
                         chatsMap.delete(change.doc.id);
                         lastMessageCache.delete(change.doc.id);
+                        hayCambios = true;
                         return;
                     }
 
+                    const chatAnterior = chatsMap.get(change.doc.id);
+                    const unreadAnterior = chatAnterior?.unreadCounts?.[uid] || 0;
+                    const unreadNuevo = data.unreadCounts?.[uid] || 0;
+
+                    // Si cambió el contador de mensajes no leídos, marcar como cambio importante
+                    if (unreadAnterior !== unreadNuevo) {
+                        console.log(`📬 Chat ${change.doc.id}: Contador cambió de ${unreadAnterior} a ${unreadNuevo}`);
+                        hayCambios = true;
+                    }
+
+                    // Siempre actualizar el mapa para tener los datos más recientes
                     chatsMap.set(change.doc.id, data);
+                    
+                    // Si el contador cambió a 0, forzar actualización
+                    if (unreadAnterior > 0 && unreadNuevo === 0) {
+                        console.log(`✅ Chat ${change.doc.id} marcado como leído - actualizando lista`);
+                        hayCambios = true;
+                    }
 
                     const preview = obtenerPreview(data);
                     if (preview && preview !== defaultPreview) {
@@ -138,6 +158,7 @@
                     }
                 });
 
+                // Renderizar siempre para asegurar que se actualicen los indicadores
                 const chats = Array.from(chatsMap.values());
                 chats.sort((a, b) => {
                     const fechaA = obtenerFecha(a);
@@ -145,10 +166,17 @@
                     return fechaB - fechaA;
                 });
 
-                renderChats(uid, chats);
+                try {
+                    renderChats(uid, chats);
+                } catch (error) {
+                    console.error("❌ Error renderizando chats:", error);
+                    mostrarLoading(false);
+                    mostrarEmptyState("Error al mostrar los chats. Por favor, recarga la página.");
+                }
             },
             (error) => {
                 console.error("❌ Error escuchando chats:", error);
+                mostrarLoading(false);
                 mostrarEmptyState("Ocurrió un error al cargar tus chats.");
             }
         );
@@ -224,14 +252,22 @@
         const fragment = document.createDocumentFragment();
 
         chats.forEach((chat) => {
-            const partner = obtenerOtroParticipante(chat, currentUserId);
-            const nombre = partner.nombre || "Contacto";
-            const iniciales = generarIniciales(nombre);
-            const pedidoId = obtenerPedidoId(chat);
-            const pedidoEtiqueta = obtenerEtiquetaPedido(chat, pedidoId);
-            const partnerId = partner.id || "";
-            let previewText = obtenerPreview(chat);
-            const fecha = obtenerFecha(chat);
+            try {
+                const partner = obtenerOtroParticipante(chat, currentUserId);
+                
+                // Validar que partner existe y tiene datos válidos
+                if (!partner || !partner.nombre) {
+                    console.warn(`⚠️ Chat ${chat.id} no tiene partner válido, saltando...`);
+                    return;
+                }
+                
+                const nombre = partner.nombre || "Contacto";
+                const iniciales = generarIniciales(nombre);
+                const pedidoId = obtenerPedidoId(chat);
+                const pedidoEtiqueta = obtenerEtiquetaPedido(chat, pedidoId);
+                const partnerId = partner.id || "";
+                let previewText = obtenerPreview(chat);
+                const fecha = obtenerFecha(chat);
 
             const enlace = document.createElement("a");
             enlace.className = "chat-item";
@@ -285,23 +321,34 @@
             if (tieneNuevosMensajes) {
                 enlace.classList.add("chat-item-unread");
 
+                // Badge con número de mensajes no leídos
                 const badge = document.createElement("span");
                 badge.className = "chat-unread-badge";
-                badge.textContent = partner.unread > 99 ? "99+" : partner.unread;
+                badge.textContent = partner.unread > 99 ? "99+" : partner.unread.toString();
+                badge.setAttribute("aria-label", `${partner.unread} mensaje${partner.unread > 1 ? 's' : ''} no leído${partner.unread > 1 ? 's' : ''}`);
                 header.appendChild(badge);
 
-                const indicador = document.createElement("span");
-                indicador.className = "chat-new-indicator";
-                indicador.textContent = "Nuevo mensaje";
-                info.appendChild(indicador);
-            } else if (partner.unread === 0 && enlace.classList.contains("chat-item-unread")) {
-                enlace.classList.remove("chat-item-unread");
+                console.log(`🔔 Chat ${chat.id} tiene ${partner.unread} mensajes no leídos`);
+            } else {
+                // Remover clases y elementos si no hay mensajes no leídos
+                if (enlace.classList.contains("chat-item-unread")) {
+                    enlace.classList.remove("chat-item-unread");
+                    // Remover badge si existe
+                    const existingBadge = header.querySelector(".chat-unread-badge");
+                    if (existingBadge) {
+                        existingBadge.remove();
+                    }
+                }
             }
 
             enlace.appendChild(avatar);
             enlace.appendChild(info);
 
             fragment.appendChild(enlace);
+            } catch (error) {
+                console.error(`❌ Error renderizando chat ${chat.id}:`, error);
+                console.error('Stack:', error.stack);
+            }
         });
 
         chatListEl.appendChild(fragment);
@@ -384,20 +431,31 @@
     }
 
     function obtenerOtroParticipante(chat, currentUserId) {
-        if (chat.participantsData) {
+        if (!chat || !currentUserId) {
+            console.warn("⚠️ obtenerOtroParticipante: chat o currentUserId no válidos");
+            return {
+                id: "",
+                nombre: "Contacto",
+                unread: 0
+            };
+        }
+
+        // Obtener el contador de mensajes no leídos del USUARIO ACTUAL, no del otro participante
+        const unreadCount = chat.unreadCounts && typeof chat.unreadCounts[currentUserId] === "number"
+            ? chat.unreadCounts[currentUserId]
+            : 0;
+
+        if (chat.participantsData && typeof chat.participantsData === "object") {
             for (const [id, datos] of Object.entries(chat.participantsData)) {
-                if (id !== currentUserId) {
+                if (id !== currentUserId && datos) {
                     return {
-                        id,
+                        id: id || "",
                         nombre:
                             datos.nombre ||
                             datos.nombre_tienda ||
-                            datos.email?.split("@")[0] ||
+                            (datos.email ? datos.email.split("@")[0] : null) ||
                             "Contacto",
-                        unread:
-                            chat.unreadCounts && typeof chat.unreadCounts[id] === "number"
-                                ? chat.unreadCounts[id]
-                                : 0,
+                        unread: unreadCount, // Contador del usuario actual
                     };
                 }
             }
@@ -405,26 +463,26 @@
 
         if (chat.comprador_id && chat.comprador_id !== currentUserId) {
             return {
-                id: chat.comprador_id,
-                nombre: chat.comprador_nombre,
-                unread: chat.unreadCounts?.[chat.comprador_id] || 0,
+                id: chat.comprador_id || "",
+                nombre: chat.comprador_nombre || "Comprador",
+                unread: unreadCount, // Contador del usuario actual
             };
         }
         if (chat.vendedor_id && chat.vendedor_id !== currentUserId) {
             return {
-                id: chat.vendedor_id,
-                nombre: chat.vendedor_nombre,
-                unread: chat.unreadCounts?.[chat.vendedor_id] || 0,
+                id: chat.vendedor_id || "",
+                nombre: chat.vendedor_nombre || "Vendedor",
+                unread: unreadCount, // Contador del usuario actual
             };
         }
 
         const participantes = Array.isArray(chat.participants) ? chat.participants : [];
-        const otherId = participantes.find((id) => id !== currentUserId) || "";
+        const otherId = participantes.find((id) => id && id !== currentUserId) || "";
 
         return {
             id: otherId,
-            nombre: chat[`perfil_${otherId}`] || chat.nombre_vendedor || "",
-            unread: chat.unreadCounts?.[otherId] || 0,
+            nombre: chat[`perfil_${otherId}`] || chat.nombre_vendedor || "Contacto",
+            unread: unreadCount, // Contador del usuario actual
         };
     }
 

@@ -1249,6 +1249,105 @@
                 await Promise.all(stockUpdatePromises);
                 console.log('✅ Todos los stocks actualizados');
                 
+                // Crear chats automáticamente por cada vendedor único
+                try {
+                    console.log('💬 Creando chats por vendedor...');
+                    
+                    // Obtener vendedores únicos de los productos
+                    const vendedoresUnicos = new Map();
+                    productosConVendedor.forEach(producto => {
+                        const vendedorId = producto.vendedor_id;
+                        if (vendedorId && !vendedoresUnicos.has(vendedorId)) {
+                            vendedoresUnicos.set(vendedorId, {
+                                id: vendedorId,
+                                productos: []
+                            });
+                        }
+                        if (vendedorId) {
+                            vendedoresUnicos.get(vendedorId).productos.push(producto);
+                        }
+                    });
+                    
+                    console.log(`📊 Vendedores únicos encontrados: ${vendedoresUnicos.size}`);
+                    
+                    // Obtener información de cada vendedor y crear chat
+                    const chatPromises = Array.from(vendedoresUnicos.values()).map(async (vendedorInfo) => {
+                        try {
+                            // Obtener información del vendedor
+                            const vendedorDoc = await db.collection('usuarios').doc(vendedorInfo.id).get();
+                            const vendedorData = vendedorDoc.exists ? vendedorDoc.data() : {};
+                            const vendedorNombre = vendedorData.nombre_tienda || vendedorData.nombre || 'Vendedor';
+                            
+                            // Información del comprador
+                            const compradorId = user.uid;
+                            const compradorNombre = userData.nombre || user.displayName || user.email.split('@')[0];
+                            
+                            // Crear ID único para el chat (compra_id + vendedor_id)
+                            const chatId = `${compraRef.id}_${compradorId}_${vendedorInfo.id}`.replace(/[^\w\-]+/g, '-');
+                            const chatRef = db.collection('chats').doc(chatId);
+                            
+                            // Verificar si el chat ya existe
+                            const chatDoc = await chatRef.get();
+                            
+                            if (!chatDoc.exists) {
+                                // Crear folio del pedido
+                                const pedidoFolio = `PED-${compraRef.id.substring(0, 8).toUpperCase()}`;
+                                
+                                // Crear el chat
+                                const chatData = {
+                                    pedido_id: compraRef.id,
+                                    pedido_folio: pedidoFolio,
+                                    metadata: {
+                                        orderId: compraRef.id,
+                                        vendorId: vendedorInfo.id
+                                    },
+                                    compra_id: compraRef.id,
+                                    comprador_id: compradorId,
+                                    comprador_nombre: compradorNombre,
+                                    vendedor_id: vendedorInfo.id,
+                                    vendedor_nombre: vendedorNombre,
+                                    participants: [compradorId, vendedorInfo.id],
+                                    participantsData: {
+                                        [compradorId]: {
+                                            id: compradorId,
+                                            nombre: compradorNombre,
+                                            rol_activo: 'comprador'
+                                        },
+                                        [vendedorInfo.id]: {
+                                            id: vendedorInfo.id,
+                                            nombre: vendedorNombre,
+                                            rol_activo: 'vendedor'
+                                        }
+                                    },
+                                    unreadCounts: {
+                                        [compradorId]: 0,
+                                        [vendedorInfo.id]: 0
+                                    },
+                                    productos: vendedorInfo.productos,
+                                    created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                                    updated_at: firebase.firestore.FieldValue.serverTimestamp(),
+                                    last_message: '',
+                                    last_message_at: firebase.firestore.FieldValue.serverTimestamp()
+                                };
+                                
+                                await chatRef.set(chatData, { merge: true });
+                                console.log(`✅ Chat creado para vendedor ${vendedorNombre} (${vendedorInfo.id})`);
+                            } else {
+                                console.log(`ℹ️ Chat ya existe para vendedor ${vendedorInfo.id}`);
+                            }
+                        } catch (error) {
+                            console.error(`❌ Error creando chat para vendedor ${vendedorInfo.id}:`, error);
+                            // No fallar la compra si hay error creando un chat
+                        }
+                    });
+                    
+                    await Promise.all(chatPromises);
+                    console.log(`✅ ${vendedoresUnicos.size} chat(s) creado(s) exitosamente`);
+                } catch (chatError) {
+                    console.error('❌ Error creando chats automáticamente:', chatError);
+                    // No bloquear la compra si falla la creación de chats
+                }
+                
                 // Enviar ticket de compra por correo
                 try {
                     const fechaCompra = new Date().toLocaleString('es-MX', {

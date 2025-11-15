@@ -105,7 +105,9 @@
             dataset.compradorName ||
             (partnerRole === "vendedor" ? "Vendedor" : "Cliente");
 
-        const existingChat = await buscarChatExistente(pedidoId, currentUserId);
+        // Si hay un vendedor_id específico, usarlo para buscar el chat correcto
+        const vendedorIdEspecifico = partnerId && chatRole === "comprador" ? partnerId : null;
+        const existingChat = await buscarChatExistente(pedidoId, currentUserId, vendedorIdEspecifico);
 
         if (existingChat) {
             chatDocId = existingChat.id;
@@ -283,7 +285,7 @@
         return `${safePedido}_${safeComprador}_${safeVendedor}`;
     }
 
-    async function buscarChatExistente(pedidoId, userId) {
+    async function buscarChatExistente(pedidoId, userId, vendedorIdEspecifico = null) {
         if (!pedidoId) {
             return null;
         }
@@ -291,20 +293,42 @@
         try {
             const candidatosMap = new Map();
 
-            let snapshot = await db
-                .collection("chats")
-                .where("metadata.orderId", "==", pedidoId)
-                .limit(10)
-                .get();
-            snapshot.forEach((doc) => candidatosMap.set(doc.id, doc));
-
-            if (candidatosMap.size === 0) {
-                snapshot = await db
+            // Si hay un vendedor_id específico, buscar directamente por pedido_id y vendedor_id
+            if (vendedorIdEspecifico) {
+                let snapshot = await db
                     .collection("chats")
-                    .where("pedido_id", "==", pedidoId)
+                    .where("metadata.orderId", "==", pedidoId)
+                    .where("vendedor_id", "==", vendedorIdEspecifico)
+                    .limit(5)
+                    .get();
+                snapshot.forEach((doc) => candidatosMap.set(doc.id, doc));
+
+                if (candidatosMap.size === 0) {
+                    snapshot = await db
+                        .collection("chats")
+                        .where("pedido_id", "==", pedidoId)
+                        .where("vendedor_id", "==", vendedorIdEspecifico)
+                        .limit(5)
+                        .get();
+                    snapshot.forEach((doc) => candidatosMap.set(doc.id, doc));
+                }
+            } else {
+                // Búsqueda general sin filtro de vendedor
+                let snapshot = await db
+                    .collection("chats")
+                    .where("metadata.orderId", "==", pedidoId)
                     .limit(10)
                     .get();
                 snapshot.forEach((doc) => candidatosMap.set(doc.id, doc));
+
+                if (candidatosMap.size === 0) {
+                    snapshot = await db
+                        .collection("chats")
+                        .where("pedido_id", "==", pedidoId)
+                        .limit(10)
+                        .get();
+                    snapshot.forEach((doc) => candidatosMap.set(doc.id, doc));
+                }
             }
 
             const candidatos = Array.from(candidatosMap.values());

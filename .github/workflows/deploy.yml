@@ -1,0 +1,29 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package.json" ]; then npm install; fi
+          if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+      - name: Run tests
+        run: |
+          if [ -f "package.json" ]; then npm test; fi
+          if [ -f "pytest.ini" ]; then pytest; fi
+
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:latest .

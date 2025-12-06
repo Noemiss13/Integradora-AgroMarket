@@ -25,6 +25,8 @@ from modules.general.routes import general_bp
 from modules.vendors import vendors_bp
 from modules.admin.routes import admin_bp
 
+from firebase_config import db, bucket
+
 # Inicializar Flask-Mail
 mail = Mail()
 
